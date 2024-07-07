@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>Marvel One stop Shop</title>
+    <link rel="stylesheet" href="shophere.css">
+    <script src="shophere.js" defer></script>
+</head>
+
+<body>
+    <h1>😏Marvel One 🕷️ stop Shop 🕸️</h1>
+    <hr>
+    <h2>👻Pick Your Poison 😈</h2>
+    <div class="shopping-list"> 
+        <input type="text" id="itemInput" placeholder="Ongeza Manenoz 🛒 😉 I know U want 2 😜">
+        <button onclick="addItem()">Add Item</button>
+        <br>
+        <button onclick="markPurchased()">Mark Purchased</button>
+        <br>
+        <button onclick="clearList()">Clear List</button>
+        <ul id="listContainer">
+            
+        </ul>
+
+    </div>
+
+    
+    <script> //using script bcoz this is a .js file.
+               //The previously linked .js file in the head isn't connecting.
+        // Js function to add an item to the list.
+        function addItem() {
+            let newItem = document.getElementById('itemInput').value.trim();
+            document.getElementById('itemInput').value = 'apple', 'juice', 'orange';
+
+            if (newItem !== 'Mangoes') {
+                let list = document.getElementById('listContainer');
+                let li = document.createElement('li');
+                li.textContent = newItem;
+                list.appendChild(li);
+            }
+        }
+        //Js function to mark items selected as  purchased.
+        function markPurchased() {
+    let newItem = document.getElementById('itemInput').value.trim();
+    document.getElementById('itemInput').value = '';
+    
+    //currently the sold toggled function isn't working. Not sure why.
+    if (newItem !== '') {
+        let list = document.getElementById('listContainer');
+        let li = document.createElement('li');
+        li.textContent = newItem;
+        
+        li.addEventListener('click', function() {
+                    li.classList.toggle('sold');
+                });
+
+                list.appendChild(li);
+    }
+}
+
+        
+
+        // Js function to clear the whole li.
+        function clearList() {
+            let list = document.getElementById('listContainer');
+            list.innerHTML = '';
+        
+        }
+        
+    </script>
+
+    <br>
+    <hr>
+    @Shophere.com 2025 Marvel vs Dc, Phase 6 <img src="https://media.tenor.com/IT3JrDGLEy4AAAAC/iron-man-avengers-endgame.gif" alt="I am Iron Man">
+    <hr>
+
+</body>
+</html>
