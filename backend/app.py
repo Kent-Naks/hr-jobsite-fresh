@@ -4,6 +4,11 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
+# Root route for Render health check or base access
+@app.route('/')
+def home():
+    return jsonify({"message": "HR Jobsite backend is running!"})
+
 # Sample job data
 jobs = [
     {
