@@ -7,6 +7,7 @@ import type { Job } from '@/types';
 import AdSlot from '@/components/AdSlot';
 
 
+
 export default function HomePage() {
   const [search, setSearch] = useState('');
 
