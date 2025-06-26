@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import jobs from '@/app/data/jobs.json';
-import type { Job } from '@/app/types';
-import AdSlot from '@/app/components/AdSlot';
+import jobs from '@/data/jobs.json';
+import type { Job } from '@/types';
+import AdSlot from '@/components/AdSlot';
 
 export default function HomePage() {
   const [search, setSearch] = useState('');
