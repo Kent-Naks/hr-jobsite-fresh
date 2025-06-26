@@ -1,0 +1,213 @@
+[
+    {
+      "id": "1",
+      "title": "Client Relations Manager",
+      "location": "Remote, Kenya",
+      "description": "Identify and develop new business opportunities and partnerships.",
+      "keywords": ["Client", "Relations", "Manager"]
+    },
+    {
+      "id": "2",
+      "title": "Business Development Manager",
+      "location": "Remote, Kenya",
+      "description": "Support sales activities and assist in closing business deals.",
+      "keywords": ["Business", "Development", "Manager"]
+    },
+    {
+      "id": "3",
+      "title": "Product Marketing Manager",
+      "location": "Remote, Kenya",
+      "description": "Prepare reports, analyze data and support management decisions.",
+      "keywords": ["Product", "Marketing", "Manager"]
+    },
+    {
+      "id": "4",
+      "title": "Sales & Marketing Executive",
+      "location": "Remote, Kenya",
+      "description": "Organize recruitment drives and onboard new hires.",
+      "keywords": ["Sales", "&", "Marketing", "Executive"]
+    },
+    {
+      "id": "5",
+      "title": "Business Strategist",
+      "location": "Remote, Kenya",
+      "description": "Oversee operational efficiency and process improvements.",
+      "keywords": ["Business", "Strategist"]
+    },
+    {
+      "id": "6",
+      "title": "Account Manager",
+      "location": "Remote, Kenya",
+      "description": "Handle documentation and manage internal communications.",
+      "keywords": ["Account", "Manager"]
+    },
+    {
+      "id": "7",
+      "title": "Administrative Coordinator",
+      "location": "Remote, Kenya",
+      "description": "Prepare reports, analyze data and support management decisions.",
+      "keywords": ["Administrative", "Coordinator"]
+    },
+    {
+      "id": "8",
+      "title": "Talent Acquisition Specialist",
+      "location": "Remote, Kenya",
+      "description": "Maintain office supplies and ensure smooth workflow.",
+      "keywords": ["Talent", "Acquisition", "Specialist"]
+    },
+    {
+      "id": "9",
+      "title": "Corporate Affairs Officer",
+      "location": "Remote, Kenya",
+      "description": "Support sales activities and assist in closing business deals.",
+      "keywords": ["Corporate", "Affairs", "Officer"]
+    },
+    {
+      "id": "10",
+      "title": "Business Analyst",
+      "location": "Nakuru, Kenya",
+      "description": "Handle documentation and manage internal communications.",
+      "keywords": ["Business", "Analyst"]
+    },
+    {
+      "id": "11",
+      "title": "HR Officer",
+      "location": "Remote, Kenya",
+      "description": "Lead team meetings and assist in executing strategic plans.",
+      "keywords": ["HR", "Officer"]
+    },
+    {
+      "id": "12",
+      "title": "Recruitment Officer",
+      "location": "Remote, Kenya",
+      "description": "Maintain office supplies and ensure smooth workflow.",
+      "keywords": ["Recruitment", "Officer"]
+    },
+    {
+      "id": "13",
+      "title": "Office Admin",
+      "location": "Remote, Kenya",
+      "description": "Identify and develop new business opportunities and partnerships.",
+      "keywords": ["Office", "Admin"]
+    },
+    {
+      "id": "14",
+      "title": "Digital Sales Specialist",
+      "location": "Remote, Kenya",
+      "description": "Lead team meetings and assist in executing strategic plans.",
+      "keywords": ["Digital", "Sales", "Specialist"]
+    },
+    {
+      "id": "15",
+      "title": "Staffing Specialist",
+      "location": "Kisumu, Kenya",
+      "description": "Prepare reports, analyze data and support management decisions.",
+      "keywords": ["Staffing", "Specialist"]
+    },
+    {
+      "id": "16",
+      "title": "Marketing Coordinator",
+      "location": "Remote, Kenya",
+      "description": "Lead team meetings and assist in executing strategic plans.",
+      "keywords": ["Marketing", "Coordinator"]
+    },
+    {
+      "id": "17",
+      "title": "Policy Analyst",
+      "location": "Eldoret, Kenya",
+      "description": "Coordinate office operations and provide administrative support.",
+      "keywords": ["Policy", "Analyst"]
+    },
+    {
+      "id": "18",
+      "title": "Customer Experience Officer",
+      "location": "Remote, Kenya",
+      "description": "Prepare reports, analyze data and support management decisions.",
+      "keywords": ["Customer", "Experience", "Officer"]
+    },
+    {
+      "id": "19",
+      "title": "Receptionist",
+      "location": "Remote, Kenya",
+      "description": "Lead team meetings and assist in executing strategic plans.",
+      "keywords": ["Receptionist"]
+    },
+    {
+      "id": "20",
+      "title": "Strategy Implementation Officer",
+      "location": "Remote, Kenya",
+      "description": "Manage customer relationships and respond to client inquiries.",
+      "keywords": ["Strategy", "Implementation", "Officer"]
+    },
+    {
+      "id": "21",
+      "title": "HR Manager",
+      "location": "Remote, Kenya",
+      "description": "Maintain office supplies and ensure smooth workflow.",
+      "keywords": ["HR", "Manager"]
+    },
+    {
+      "id": "22",
+      "title": "Partner Engagement Officer",
+      "location": "Remote, Kenya",
+      "description": "Prepare reports, analyze data and support management decisions.",
+      "keywords": ["Partner", "Engagement", "Officer"]
+    },
+    {
+      "id": "23",
+      "title": "Brand Manager",
+      "location": "Nairobi, Kenya",
+      "description": "Identify and develop new business opportunities and partnerships.",
+      "keywords": ["Brand", "Manager"]
+    },
+    {
+      "id": "24",
+      "title": "Operations Officer",
+      "location": "Remote, Kenya",
+      "description": "Oversee operational efficiency and process improvements.",
+      "keywords": ["Operations", "Officer"]
+    },
+    {
+      "id": "25",
+      "title": "Sales Officer",
+      "location": "Remote, Kenya",
+      "description": "Support sales activities and assist in closing business deals.",
+      "keywords": ["Sales", "Officer"]
+    },
+    {
+      "id": "26",
+      "title": "Administrative Assistant",
+      "location": "Mombasa, Kenya",
+      "description": "Coordinate office operations and provide administrative support.",
+      "keywords": ["Administrative", "Assistant"]
+    },
+    {
+      "id": "27",
+      "title": "Team Lead",
+      "location": "Remote, Kenya",
+      "description": "Lead team meetings and assist in executing strategic plans.",
+      "keywords": ["Team", "Lead"]
+    },
+    {
+      "id": "28",
+      "title": "Project Manager",
+      "location": "Remote, Kenya",
+      "description": "Prepare reports, analyze data and support management decisions.",
+      "keywords": ["Project", "Manager"]
+    },
+    {
+      "id": "29",
+      "title": "Field Operations Supervisor",
+      "location": "Remote, Kenya",
+      "description": "Oversee operational efficiency and process improvements.",
+      "keywords": ["Field", "Operations", "Supervisor"]
+    },
+    {
+      "id": "30",
+      "title": "Customer Service Representative",
+      "location": "Nakuru, Kenya",
+      "description": "Manage customer relationships and respond to client inquiries.",
+      "keywords": ["Customer", "Service", "Representative"]
+    }
+  ]
+  
