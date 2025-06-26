@@ -1,6 +1,13 @@
 'use client';
 import { useEffect, useState } from 'react';
 
+// Extend the Window interface to include adsbygoogle
+declare global {
+  interface Window {
+    adsbygoogle: unknown[];
+  }
+}
+
 export default function AdSlot({ slot }: { slot: string }) {
   const [adLoaded, setAdLoaded] = useState(false);
 
