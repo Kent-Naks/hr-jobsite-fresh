@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import jobs from '@/app/data/jobs.json';
-import type { Job } from '@/app/types';
-import AdSlot from '@/app/components/AdSlot';
+import jobs from '@/data/jobs.json';
+import type { Job } from '@/types';
+import AdSlot from '@/components/AdSlot';
+
 
 export default function JobDetail({ params }: { params: { id: string } }) {
   const job = (jobs as Job[]).find(j => j.id === params.id);
