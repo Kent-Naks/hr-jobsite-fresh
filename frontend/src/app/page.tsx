@@ -2,12 +2,17 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import jobs from '@/app/data/jobs.json';
-import type { Job } from '@/app/types';
-import AdSlot from '@/app/components/AdSlot';
+import jobs from '@/data/jobs.json';
+import AdSlot from '@/components/AdSlot';
+import type { Job } from '@/../types';
+
+
+
+
 
 export default function HomePage() {
   const [search, setSearch] = useState('');
+
 
   const filteredJobs = (jobs as Job[]).filter(job =>
     job.title.toLowerCase().includes(search.toLowerCase()) ||
