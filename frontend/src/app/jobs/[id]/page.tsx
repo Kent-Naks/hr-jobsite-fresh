@@ -4,13 +4,13 @@ import jobs from '@/data/jobs.json';
 import AdSlot from '@/components/AdSlot';
 import type { Job } from '@/../types';
 
-type Params = {
+type PageProps = {
   params: {
     id: string;
   };
 };
 
-export default function JobDetail({ params }: Params) {
+export default function JobDetail({ params }: PageProps) {
   const job = (jobs as Job[]).find(j => j.id === params.id);
 
   if (!job) return notFound();
