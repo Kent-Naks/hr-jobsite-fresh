@@ -1,8 +1,8 @@
 'use client';
 
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
 import { useState } from 'react';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import jobs from '@/data/jobs.json';
 import AdSlot from '@/components/AdSlot';
 import type { Job } from '@/../types';
@@ -20,7 +20,8 @@ export default function JobDetail({ params }: PageProps) {
   if (!job) return notFound();
 
   const recommendations = (jobs as Job[]).filter(j =>
-    j.id !== job.id && j.keywords.some(k => job.keywords.includes(k))
+    j.id !== job.id &&
+    j.keywords.some(k => job.keywords.includes(k))
   );
 
   return (
