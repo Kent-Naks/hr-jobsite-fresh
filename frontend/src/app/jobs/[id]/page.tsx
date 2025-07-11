@@ -1,10 +1,9 @@
 // frontend/src/app/jobs/[id]/page.tsx
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import jobs from '@/data/jobs.json'
 import type { Job } from '@/../types'
 import AdSlot from '@/components/AdSlot'
-import JobForm from './JobForm'    // <— import the client component
+import JobForm from './JobForm'
 
 export default async function JobDetail({
   params,
@@ -30,7 +29,6 @@ export default async function JobDetail({
         <AdSlot slot="1122334455" />
       </div>
 
-      {/* render the client-side form */}
       <JobForm recommendations={recommendations} />
     </div>
   )
