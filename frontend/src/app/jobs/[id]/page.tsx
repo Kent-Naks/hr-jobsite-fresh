@@ -8,11 +8,16 @@ import JobForm from './JobForm'
 export default async function JobDetail({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
-  const job = (jobs as Job[]).find((j) => j.id === params.id)
+  // Await the dynamic param
+  const { id } = await params
+
+  // Find your job
+  const job = (jobs as Job[]).find((j) => j.id === id)
   if (!job) return notFound()
 
+  // Build recommendations
   const recommendations = (jobs as Job[]).filter(
     (j) =>
       j.id !== job.id &&
