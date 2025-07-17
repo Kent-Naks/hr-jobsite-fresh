@@ -1,0 +1,23 @@
+[
+    {
+      "id": "4",
+      "title": "Sales & Marketing Executive",
+      "location": "Remote, Kenya",
+      "description": "Organize recruitment drives and onboard new hires.",
+      "keywords": ["Sales", "&", "Marketing", "Executive"]
+    },
+    {
+      "id": "14",
+      "title": "Digital Sales Specialist",
+      "location": "Remote, Kenya",
+      "description": "Lead team meetings and assist in executing strategic plans.",
+      "keywords": ["Digital", "Sales", "Specialist"]
+    },
+    {
+      "id": "25",
+      "title": "Sales Officer",
+      "location": "Remote, Kenya",
+      "description": "Support sales activities and assist in closing business deals.",
+      "keywords": ["Sales", "Officer"]
+    }
+  ]

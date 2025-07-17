@@ -1,0 +1,37 @@
+[
+    {
+      "id": "8",
+      "title": "Talent Acquisition Specialist",
+      "location": "Remote, Kenya",
+      "description": "Maintain office supplies and ensure smooth workflow.",
+      "keywords": ["Talent", "Acquisition", "Specialist"]
+    },
+    {
+      "id": "11",
+      "title": "HR Officer",
+      "location": "Remote, Kenya",
+      "description": "Lead team meetings and assist in executing strategic plans.",
+      "keywords": ["HR", "Officer"]
+    },
+    {
+      "id": "12",
+      "title": "Recruitment Officer",
+      "location": "Remote, Kenya",
+      "description": "Maintain office supplies and ensure smooth workflow.",
+      "keywords": ["Recruitment", "Officer"]
+    },
+    {
+      "id": "15",
+      "title": "Staffing Specialist",
+      "location": "Kisumu, Kenya",
+      "description": "Prepare reports, analyze data and support management decisions.",
+      "keywords": ["Staffing", "Specialist"]
+    },
+    {
+      "id": "21",
+      "title": "HR Manager",
+      "location": "Remote, Kenya",
+      "description": "Maintain office supplies and ensure smooth workflow.",
+      "keywords": ["HR", "Manager"]
+    }
+  ]

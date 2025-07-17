@@ -1,0 +1,23 @@
+[
+    {
+      "id": "3",
+      "title": "Product Marketing Manager",
+      "location": "Remote, Kenya",
+      "description": "Prepare reports, analyze data and support management decisions.",
+      "keywords": ["Product", "Marketing", "Manager"]
+    },
+    {
+      "id": "16",
+      "title": "Marketing Coordinator",
+      "location": "Remote, Kenya",
+      "description": "Lead team meetings and assist in executing strategic plans.",
+      "keywords": ["Marketing", "Coordinator"]
+    },
+    {
+      "id": "23",
+      "title": "Brand Manager",
+      "location": "Nairobi, Kenya",
+      "description": "Identify and develop new business opportunities and partnerships.",
+      "keywords": ["Brand", "Manager"]
+    }
+  ]

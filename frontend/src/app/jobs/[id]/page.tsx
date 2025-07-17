@@ -1,28 +1,52 @@
-// frontend/src/app/jobs/[id]/page.tsx
-import { notFound } from 'next/navigation'
-import jobs from '@/data/jobs.json'
-import type { Job } from '@/../types'
-import AdSlot from '@/components/AdSlot'
-import JobForm from './JobForm'
+// src/app/jobs/[id]/page.tsx
+import { notFound } from 'next/navigation';
+import type { Job } from '@/../types'             // adjust if your types live elsewhere
+import AdSlot from '../../components/AdSlot';
+import JobForm from './JobForm';
 
-export default async function JobDetail({
+// 1. Pull in every category file and flatten into one array:
+import business   from '../../data/business.json';
+import hr         from '../../data/hr.json';
+import admin      from '../../data/admin.json';
+import marketing  from '../../data/marketing.json';
+import sales      from '../../data/sales.json';
+import account    from '../../data/account.json';
+import operations from '../../data/operations.json';
+import projects   from '../../data/projects.json';
+import strategy   from '../../data/strategy.json';
+import logistics  from '../../data/logistics.json';
+import legal      from '../../data/legal.json';
+import it         from '../../data/it.json';
+
+const jobs: Job[] = [
+  ...business,
+  ...hr,
+  ...admin,
+  ...marketing,
+  ...sales,
+  ...account,
+  ...operations,
+  ...projects,
+  ...strategy,
+  ...logistics,
+  ...legal,
+  ...it,
+];
+
+export default function JobDetail({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: { id: string };
 }) {
-  // Await the dynamic param
-  const { id } = await params
+  const { id } = params;
+  const job = jobs.find((j) => j.id === id);
+  if (!job) return notFound();
 
-  // Find your job
-  const job = (jobs as Job[]).find((j) => j.id === id)
-  if (!job) return notFound()
-
-  // Build recommendations
-  const recommendations = (jobs as Job[]).filter(
+  const recommendations = jobs.filter(
     (j) =>
       j.id !== job.id &&
       j.keywords.some((k) => job.keywords.includes(k))
-  )
+  );
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
@@ -36,5 +60,5 @@ export default async function JobDetail({
 
       <JobForm recommendations={recommendations} />
     </div>
-  )
+  );
 }

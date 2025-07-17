@@ -1,0 +1,23 @@
+[
+    {
+      "id": "6",
+      "title": "Account Manager",
+      "location": "Remote, Kenya",
+      "description": "Handle documentation and manage internal communications.",
+      "keywords": ["Account", "Manager"]
+    },
+    {
+      "id": "18",
+      "title": "Customer Experience Officer",
+      "location": "Remote, Kenya",
+      "description": "Prepare reports, analyze data and support management decisions.",
+      "keywords": ["Customer", "Experience", "Officer"]
+    },
+    {
+      "id": "30",
+      "title": "Customer Service Representative",
+      "location": "Nakuru, Kenya",
+      "description": "Manage customer relationships and respond to client inquiries.",
+      "keywords": ["Customer", "Service", "Representative"]
+    }
+  ]

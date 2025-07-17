@@ -1,0 +1,30 @@
+[
+    {
+      "id": "7",
+      "title": "Administrative Coordinator",
+      "location": "Remote, Kenya",
+      "description": "Prepare reports, analyze data and support management decisions.",
+      "keywords": ["Administrative", "Coordinator"]
+    },
+    {
+      "id": "13",
+      "title": "Office Admin",
+      "location": "Remote, Kenya",
+      "description": "Identify and develop new business opportunities and partnerships.",
+      "keywords": ["Office", "Admin"]
+    },
+    {
+      "id": "19",
+      "title": "Receptionist",
+      "location": "Remote, Kenya",
+      "description": "Lead team meetings and assist in executing strategic plans.",
+      "keywords": ["Receptionist"]
+    },
+    {
+      "id": "26",
+      "title": "Administrative Assistant",
+      "location": "Mombasa, Kenya",
+      "description": "Coordinate office operations and provide administrative support.",
+      "keywords": ["Administrative", "Assistant"]
+    }
+  ]
