@@ -3,6 +3,9 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import AdSlot from '../../components/AdSlot';
 
+// Import Job type!
+import type { Job } from '@/../types';
+
 import business   from '../../data/business.json';
 import hr         from '../../data/hr.json';
 import admin      from '../../data/admin.json';
@@ -16,7 +19,8 @@ import logistics  from '../../data/logistics.json';
 import legal      from '../../data/legal.json';
 import it         from '../../data/it.json';
 
-const allData: Record<string, any[]> = {
+// Fix: Use Job[] instead of any[]
+const allData: Record<string, Job[]> = {
   business,
   hr,
   admin,
@@ -58,7 +62,6 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
           className="relative w-full h-64 bg-cover bg-center mb-6 rounded-lg overflow-hidden"
           style={{ backgroundImage: `url('${heroImage}')` }}
         >
-          
           <div className="relative z-10 flex h-full items-center justify-center text-white text-2xl font-bold">
             {title} Jobs
           </div>
