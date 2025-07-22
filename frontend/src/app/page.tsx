@@ -27,7 +27,7 @@ const categories: Category[] = [
   { slug: 'admin',     label: 'Administrative Jobs',      count: admin.length },
   { slug: 'marketing', label: 'Marketing & Brand',        count: marketing.length },
   { slug: 'sales',     label: 'Sales & Biz-Dev',          count: sales.length },
-  { slug: 'account',   label: 'Account & Client',         count: account.length },
+  { slug: 'account',   label: 'Account & Client Managment',         count: account.length },
   { slug: 'operations',label: 'Operations',               count: operations.length },
   { slug: 'projects',  label: 'Project Management',       count: projects.length },
   { slug: 'strategy',  label: 'Strategy & Policy',        count: strategy.length },
@@ -42,9 +42,9 @@ export default function HomePage() {
       {/* HERO */}
       <div
         className="w-full h-64 bg-cover bg-center mb-6 rounded-lg overflow-hidden"
-        style={{ backgroundImage: "url('/images/placeholder.jpg')" }}
+        style={{ backgroundImage: "url('https://i.pinimg.com/1200x/04/29/95/04299542ecddde63a7ffbd10f24990f8.jpg')" }}
       >
-        <div className="absolute inset-0 bg-black bg-opacity-30" />
+
         <div className="relative z-10 flex h-full items-center justify-center text-white text-2xl font-bold">
           Browse Jobs by Category
         </div>

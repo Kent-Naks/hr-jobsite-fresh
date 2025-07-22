@@ -1,10 +1,9 @@
 // src/app/jobs/[id]/page.tsx
 import { notFound } from 'next/navigation';
-import type { Job } from '@/../types'             // adjust if your types live elsewhere
+import type { Job } from '@/../types';
 import AdSlot from '../../components/AdSlot';
 import JobForm from './JobForm';
 
-// 1. Pull in every category file and flatten into one array:
 import business   from '../../data/business.json';
 import hr         from '../../data/hr.json';
 import admin      from '../../data/admin.json';
@@ -33,11 +32,7 @@ const jobs: Job[] = [
   ...it,
 ];
 
-export default function JobDetail({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default function JobDetail({ params }: { params: { id: string } }) {
   const { id } = params;
   const job = jobs.find((j) => j.id === id);
   if (!job) return notFound();
@@ -50,12 +45,18 @@ export default function JobDetail({
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
+      {/* Top Ad above description */}
+      <div className="mb-4">
+        <AdSlot slot="4455667788" />
+      </div>
+
       <h1 className="text-2xl font-bold mb-2">{job.title}</h1>
       <p className="mb-2">{job.location}</p>
       <p className="mb-6">{job.description}</p>
 
+      {/* Bottom Ad before form */}
       <div className="mb-4">
-        <AdSlot slot="1122334455" />
+        <AdSlot slot="5566778899" />
       </div>
 
       <JobForm recommendations={recommendations} />
