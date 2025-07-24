@@ -44,7 +44,7 @@ const categoryImages: Record<string, string> = {
   strategy:  'https://www.pinterest.com/pin/18788523441424706/',
   logistics: 'https://i.pinimg.com/736x/62/58/8a/62588a7473f2369ffaa9c13294c12bd7.jpg',
   legal:     'https://i.pinimg.com/1200x/75/1e/15/751e15d434a390b4374300508ccfbb1f.jpg',
-  it:        'https://i.pinimg.com/1200x/75/1e/15/751e15d434a390b4374300508ccfbb1f.jpg',
+  it:        'https://i.pinimg.com/1200x/e6/26/0f/e6260fb8c9cea2369d7daaf0cf8f64fa.jpg',
 };
 
 export default async function CategoryPage({
