@@ -33,8 +33,18 @@ const allData: Record<string, Job[]> = {
 };
 
 const categoryImages: Record<string, string> = {
-  hr: 'https://i.pinimg.com/1200x/fc/a0/34/fca03430751532c1476f1b25bc3c3079.jpg',
-  // add other slugs → image mappings here
+  business:  'https://i.pinimg.com/1200x/39/89/60/39896018cbbac2155cd77a9843ec6666.jpg',
+  hr:        'https://i.pinimg.com/1200x/fc/a0/34/fca03430751532c1476f1b25bc3c3079.jpg',
+  admin:     'https://i.pinimg.com/736x/05/72/ba/0572ba80787a7ec1c3afd11df80096cb.jpg',
+  marketing: 'https://i.pinimg.com/1200x/39/89/60/39896018cbbac2155cd77a9843ec6666.jpg',
+  sales:     'https://i.pinimg.com/1200x/f4/67/8b/f4678b8229e3429e80375750044ab59e.jpg',
+  account:   'https://i.pinimg.com/1200x/ae/f6/8e/aef68e55a79feac28d5dc9c3baf471ec.jpg',
+  operations:'https://i.pinimg.com/736x/62/58/8a/62588a7473f2369ffaa9c13294c12bd7.jpg',
+  projects:  'https://i.pinimg.com/1200x/36/c6/f9/36c6f95b343a2d7b679ad4526e9355ba.jpg',
+  strategy:  'https://www.pinterest.com/pin/18788523441424706/',
+  logistics: 'https://i.pinimg.com/736x/62/58/8a/62588a7473f2369ffaa9c13294c12bd7.jpg',
+  legal:     'https://i.pinimg.com/1200x/75/1e/15/751e15d434a390b4374300508ccfbb1f.jpg',
+  it:        'https://i.pinimg.com/1200x/75/1e/15/751e15d434a390b4374300508ccfbb1f.jpg',
 };
 
 export default async function CategoryPage({

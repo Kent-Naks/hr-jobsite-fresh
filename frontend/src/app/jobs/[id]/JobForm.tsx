@@ -69,7 +69,7 @@ export default function JobForm({ recommendations }: { recommendations: Job[] })
                 <h2 className="text-lg font-bold mb-2">Official Legal Notice & Consent</h2>
                 <div className="text-sm text-gray-700 mb-4 max-h-80 overflow-y-auto">
                   <p>
-                    <strong>AAJobs.ke (AfricaForAfricaJobsKenya)</strong> is a job listing platform that connects candidates with employers and opportunities across Africa. By submitting your application through this website, you acknowledge and consent to the following:
+                    <strong>AAJobs.ke (AfricaForAfricaJobsKenya)</strong> is a job listing platform intended to showcase employment opportunities across Africa. By submitting your application through this website, you acknowledge and consent that all listings, company profiles, and job openings may be illustrative, simulated, or used for any purposes. We do not guarantee the authenticity, availability, or outcome of any opportunity listed herein. Always exercise discretion and verify any opportunity independently.:
                   </p>
                   <ul className="list-disc pl-5 my-3 space-y-1">
                     <li>
