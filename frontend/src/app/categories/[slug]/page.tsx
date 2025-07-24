@@ -1,21 +1,20 @@
-// src/app/categories/[slug]/page.tsx
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import AdSlot from '../../components/AdSlot';
 import type { Job } from '@/../types';
 
-import business   from '../../data/business.json';
-import hr         from '../../data/hr.json';
-import admin      from '../../data/admin.json';
-import marketing  from '../../data/marketing.json';
-import sales      from '../../data/sales.json';
-import account    from '../../data/account.json';
+import business from '../../data/business.json';
+import hr from '../../data/hr.json';
+import admin from '../../data/admin.json';
+import marketing from '../../data/marketing.json';
+import sales from '../../data/sales.json';
+import account from '../../data/account.json';
 import operations from '../../data/operations.json';
-import projects   from '../../data/projects.json';
-import strategy   from '../../data/strategy.json';
-import logistics  from '../../data/logistics.json';
-import legal      from '../../data/legal.json';
-import it         from '../../data/it.json';
+import projects from '../../data/projects.json';
+import strategy from '../../data/strategy.json';
+import logistics from '../../data/logistics.json';
+import legal from '../../data/legal.json';
+import it from '../../data/it.json';
 
 const allData: Record<string, Job[]> = {
   business,
@@ -43,7 +42,7 @@ interface PageProps {
   };
 }
 
-export default async function CategoryPage({ params }: PageProps) {
+export default function CategoryPage({ params }: PageProps) {
   const { slug } = params;
   const jobs = allData[slug];
   if (!jobs) return notFound();
