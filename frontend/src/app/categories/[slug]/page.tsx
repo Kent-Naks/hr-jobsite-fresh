@@ -41,7 +41,7 @@ const categoryImages: Record<string, string> = {
   account:   'https://i.pinimg.com/1200x/ae/f6/8e/aef68e55a79feac28d5dc9c3baf471ec.jpg',
   operations:'https://i.pinimg.com/736x/62/58/8a/62588a7473f2369ffaa9c13294c12bd7.jpg',
   projects:  'https://i.pinimg.com/1200x/36/c6/f9/36c6f95b343a2d7b679ad4526e9355ba.jpg',
-  strategy:  'https://www.pinterest.com/pin/18788523441424706/',
+  strategy:  'https://i.pinimg.com/1200x/XX/XX/XX/your-strategy-image.jpg',
   logistics: 'https://i.pinimg.com/736x/62/58/8a/62588a7473f2369ffaa9c13294c12bd7.jpg',
   legal:     'https://i.pinimg.com/1200x/75/1e/15/751e15d434a390b4374300508ccfbb1f.jpg',
   it:        'https://i.pinimg.com/1200x/e6/26/0f/e6260fb8c9cea2369d7daaf0cf8f64fa.jpg',
@@ -52,54 +52,64 @@ export default async function CategoryPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  // wait for Next.js to give us the slug
   const { slug } = await params;
-
   const jobs = allData[slug];
   if (!jobs) return notFound();
 
   const title = slug
     .split('-')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
     .join(' & ');
 
   const heroImage = categoryImages[slug];
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      {/* HERO IMAGE */}
+    <>
+      {/* FULL‑WIDTH, RESPONSIVE HERO (always fully visible) */}
       {heroImage && (
         <div
-        className="relative w-full h-64 bg-contain bg-center bg-no-repeat mb-6 rounded-lg bg-gray-100"
-        style={{ backgroundImage: `url('${heroImage}')` }}
+          className="
+            relative 
+            w-full 
+            bg-center 
+            bg-no-repeat 
+            bg-contain 
+            rounded-b-3xl 
+            mb-6
+            h-48     sm:h-64 
+            md:h-80  lg:h-96
+          "
+          style={{ backgroundImage: `url('${heroImage}')` }}
         />
       )}
 
-      {/* TOP AD */}
-      <div className="mb-4">
-        <AdSlot slot="2233445566" />
-      </div>
+      <div className="p-6 max-w-4xl mx-auto">
+        {/* TOP AD */}
+        <div className="mb-4">
+          <AdSlot slot="2233445566" />
+        </div>
 
-      {/* CATEGORY TITLE & LIST */}
-      <h1 className="text-2xl font-bold mb-4">{title} Jobs</h1>
-      <ul className="space-y-4">
-        {jobs.map((job) => (
-          <li key={job.id}>
-            <Link
-              href={`/jobs/${job.id}`}
-              className="block p-4 border rounded hover:shadow transition"
-            >
-              <h2 className="text-lg font-semibold">{job.title}</h2>
-              <p className="text-sm text-gray-600">{job.location}</p>
-            </Link>
-          </li>
-        ))}
-      </ul>
+        {/* CATEGORY TITLE & LIST */}
+        <h1 className="text-2xl font-bold mb-4">{title} Jobs</h1>
+        <ul className="space-y-4">
+          {jobs.map((job) => (
+            <li key={job.id}>
+              <Link
+                href={`/jobs/${job.id}`}
+                className="block p-4 border rounded hover:shadow transition"
+              >
+                <h2 className="text-lg font-semibold">{job.title}</h2>
+                <p className="text-sm text-gray-600">{job.location}</p>
+              </Link>
+            </li>
+          ))}
+        </ul>
 
-      {/* BOTTOM AD */}
-      <div className="mt-6">
-        <AdSlot slot="3344556677" />
+        {/* BOTTOM AD */}
+        <div className="mt-6">
+          <AdSlot slot="3344556677" />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

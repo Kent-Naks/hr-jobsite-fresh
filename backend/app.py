@@ -1,15 +1,22 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from flask_restx import Api, Resource
 
 app = Flask(__name__)
 CORS(app)
 
-# Root route for Render health check or base access
-@app.route('/')
-def home():
-    return jsonify({"message": "HR Jobsite backend is running!"})
+# ─── Setup Swagger / OpenAPI via Flask-RESTX ─────────────────────────
+api = Api(
+    app,
+    version="1.0",
+    title="HR Jobsite API",
+    description="Interactive API docs for your job listings",
+    doc="/docs"             # ← swagger-ui at http://localhost:8000/docs
+)
 
-# Sample job data
+ns = api.namespace("jobs", description="Job operations")
+
+# ─── Sample job data ─────────────────────────────────────────────────
 jobs = [
     {
         "id": 1,
@@ -23,20 +30,37 @@ jobs = [
     }
 ]
 
-@app.route('/jobs', methods=['GET'])
-def get_jobs():
-    search = request.args.get('search', '').lower()
-    if search:
-        filtered = [job for job in jobs if search in job['title'].lower()]
-        return jsonify(filtered)
-    return jsonify(jobs)
+# ─── Jobs list & filter ───────────────────────────────────────────────
+@ns.route("/")
+class JobsList(Resource):
+    def get(self):
+        """List all jobs, or filter by ?search=term"""
+        search = request.args.get("search", "").lower()
+        if search:
+            return [j for j in jobs if search in j["title"].lower()]
+        return jobs
 
-@app.route('/jobs/<int:job_id>', methods=['GET'])
-def get_job(job_id):
-    for job in jobs:
-        if job['id'] == job_id:
-            return jsonify(job)
-    return jsonify({"error": "Job not found"}), 404
+# ─── Single job by ID ────────────────────────────────────────────────
+@ns.route("/<int:job_id>")
+class JobItem(Resource):
+    def get(self, job_id):
+        """Fetch a single job by its ID"""
+        for j in jobs:
+            if j["id"] == job_id:
+                return j
+        api.abort(404, "Job not found")
 
-if __name__ == '__main__':
+# ─── Health check for uptime probes ─────────────────────────────────
+@app.route("/health", methods=["GET"])
+def health():
+    """Simple health check endpoint"""
+    return jsonify({"status": "ok"}), 200
+
+# ─── (Optional) Root route for Render or sanity check ───────────────
+@app.route("/", methods=["GET"])
+def home():
+    return jsonify({"message": "HR Jobsite backend is running!"})
+
+# ─── Launch via Flask CLI in dev, or via Gunicorn in Docker ──────────
+if __name__ == "__main__":
     app.run(debug=True)

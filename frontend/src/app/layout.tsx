@@ -3,8 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
 
-
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -37,15 +35,20 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
       >
-        {/* Header */}
-        <header className="bg-blue-700 text-white p-4 shadow">
+        {/* Translucent, fixed Header */}
+        <header className="fixed inset-x-0 top-0 z-50 bg-gray-700/75 backdrop-blur-sm text-white p-4 shadow-lg">
           <div className="max-w-6xl mx-auto flex justify-between items-center">
             <h1 className="text-xl font-bold">HR Jobsite</h1>
             <nav>
-              <Link href="/" className="ml-4 hover:underline">Home</Link>
+              <Link href="/" className="ml-4 hover:underline">
+                Home
+              </Link>
             </nav>
           </div>
         </header>
+
+        {/* Spacer to push content below fixed header */}
+        <div className="h-16" />
 
         {/* Main */}
         <main className="flex-grow">{children}</main>
