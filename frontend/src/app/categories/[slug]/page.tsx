@@ -34,17 +34,23 @@ const allData: Record<string, Job[]> = {
 
 const categoryImages: Record<string, string> = {
   hr: 'https://i.pinimg.com/1200x/fc/a0/34/fca03430751532c1476f1b25bc3c3079.jpg',
-  // ...more mappings as needed
+  // ...add more if needed
 };
 
-export default async function CategoryPage(props: any) {
-  const { slug } = props.params;
+interface PageProps {
+  params: {
+    slug: string;
+  };
+}
+
+export default async function CategoryPage({ params }: PageProps) {
+  const { slug } = params;
   const jobs = allData[slug];
   if (!jobs) return notFound();
 
   const title = slug
     .split('-')
-    .map((part: string) => part.charAt(0).toUpperCase() + part.slice(1))
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' & ');
 
   const heroImage = categoryImages[slug];
