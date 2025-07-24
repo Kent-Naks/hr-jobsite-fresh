@@ -47,12 +47,12 @@ const categoryImages: Record<string, string> = {
   it:        'https://i.pinimg.com/1200x/e6/26/0f/e6260fb8c9cea2369d7daaf0cf8f64fa.jpg',
 };
 
-export default async function CategoryPage({
+export default function CategoryPage({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: { slug: string };
 }) {
-  const { slug } = await params;
+  const { slug } = params;
   const jobs = allData[slug];
   if (!jobs) return notFound();
 
@@ -65,20 +65,10 @@ export default async function CategoryPage({
 
   return (
     <>
-      {/* FULL‑WIDTH, RESPONSIVE HERO (always fully visible) */}
+      {/* FULL‑WIDTH CATEGORY HERO */}
       {heroImage && (
         <div
-          className="
-            relative 
-            w-full 
-            bg-center 
-            bg-no-repeat 
-            bg-contain 
-            rounded-b-3xl 
-            mb-6
-            h-48     sm:h-64 
-            md:h-80  lg:h-96
-          "
+          className="w-full h-96 bg-cover bg-center rounded-b-3xl"
           style={{ backgroundImage: `url('${heroImage}')` }}
         />
       )}
@@ -89,7 +79,7 @@ export default async function CategoryPage({
           <AdSlot slot="2233445566" />
         </div>
 
-        {/* CATEGORY TITLE & LIST */}
+        {/* CATEGORY TITLE & JOB LIST */}
         <h1 className="text-2xl font-bold mb-4">{title} Jobs</h1>
         <ul className="space-y-4">
           {jobs.map((job) => (
