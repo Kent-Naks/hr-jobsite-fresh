@@ -37,8 +37,15 @@ const categoryImages: Record<string, string> = {
   // ...more mappings as needed
 };
 
-export default function CategoryPage({ params }: { params: { slug: string } }) {
-  const { slug } = params;
+interface PageProps {
+  params: {
+    slug: string;
+  };
+}
+
+export default async function CategoryPage(props: PageProps) {
+  // Next.js 15+ expects async server components for dynamic routes!
+  const { slug } = props.params;
   const jobs = allData[slug];
   if (!jobs) return notFound();
 
@@ -56,10 +63,7 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
         <div
           className="relative w-full h-64 bg-cover bg-center mb-6 rounded-lg overflow-hidden"
           style={{ backgroundImage: `url('${heroImage}')` }}
-        >
-          {/* If you want a title over image, you can uncomment below */}
-          {/* <div className="relative z-10 flex h-full items-center justify-center text-white text-2xl font-bold">{title} Jobs</div> */}
-        </div>
+        />
       )}
 
       {/* TOP AD */}
