@@ -17,7 +17,7 @@ import logistics  from '../../data/logistics.json';
 import legal      from '../../data/legal.json';
 import it         from '../../data/it.json';
 
-const jobs: Job[] = [
+const allJobs: Job[] = [
   ...business,
   ...hr,
   ...admin,
@@ -32,12 +32,18 @@ const jobs: Job[] = [
   ...it,
 ];
 
-export default function JobDetail({ params }: { params: { id: string } }) {
-  const { id } = params;
-  const job = jobs.find((j) => j.id === id);
+export default async function JobDetail({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  // grab the dynamic `id`
+  const { id } = await params;
+
+  const job = allJobs.find((j) => j.id === id);
   if (!job) return notFound();
 
-  const recommendations = jobs.filter(
+  const recommendations = allJobs.filter(
     (j) =>
       j.id !== job.id &&
       j.keywords.some((k) => job.keywords.includes(k))

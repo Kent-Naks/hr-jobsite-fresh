@@ -1,20 +1,21 @@
+// src/app/categories/[slug]/page.tsx
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import AdSlot from '../../components/AdSlot';
 import type { Job } from '@/../types';
 
-import business from '../../data/business.json';
-import hr from '../../data/hr.json';
-import admin from '../../data/admin.json';
-import marketing from '../../data/marketing.json';
-import sales from '../../data/sales.json';
-import account from '../../data/account.json';
+import business   from '../../data/business.json';
+import hr         from '../../data/hr.json';
+import admin      from '../../data/admin.json';
+import marketing  from '../../data/marketing.json';
+import sales      from '../../data/sales.json';
+import account    from '../../data/account.json';
 import operations from '../../data/operations.json';
-import projects from '../../data/projects.json';
-import strategy from '../../data/strategy.json';
-import logistics from '../../data/logistics.json';
-import legal from '../../data/legal.json';
-import it from '../../data/it.json';
+import projects   from '../../data/projects.json';
+import strategy   from '../../data/strategy.json';
+import logistics  from '../../data/logistics.json';
+import legal      from '../../data/legal.json';
+import it         from '../../data/it.json';
 
 const allData: Record<string, Job[]> = {
   business,
@@ -33,17 +34,17 @@ const allData: Record<string, Job[]> = {
 
 const categoryImages: Record<string, string> = {
   hr: 'https://i.pinimg.com/1200x/fc/a0/34/fca03430751532c1476f1b25bc3c3079.jpg',
-  // ...add more if needed
+  // add other slugs → image mappings here
 };
 
-interface PageProps {
-  params: {
-    slug: string;
-  };
-}
+export default async function CategoryPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  // wait for Next.js to give us the slug
+  const { slug } = await params;
 
-export default function CategoryPage({ params }: PageProps) {
-  const { slug } = params;
   const jobs = allData[slug];
   if (!jobs) return notFound();
 
@@ -69,10 +70,10 @@ export default function CategoryPage({ params }: PageProps) {
         <AdSlot slot="2233445566" />
       </div>
 
-      {/* JOB LIST */}
+      {/* CATEGORY TITLE & LIST */}
       <h1 className="text-2xl font-bold mb-4">{title} Jobs</h1>
       <ul className="space-y-4">
-        {jobs.map(job => (
+        {jobs.map((job) => (
           <li key={job.id}>
             <Link
               href={`/jobs/${job.id}`}
