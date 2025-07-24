@@ -47,7 +47,7 @@ const categoryImages: Record<string, string> = {
   it:        'https://i.pinimg.com/1200x/e6/26/0f/e6260fb8c9cea2369d7daaf0cf8f64fa.jpg',
 };
 
-export default function CategoryPage({
+export default async function CategoryPage({
   params,
 }: {
   params: { slug: string };
@@ -58,48 +58,46 @@ export default function CategoryPage({
 
   const title = slug
     .split('-')
-    .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' & ');
 
   const heroImage = categoryImages[slug];
 
   return (
-    <>
-      {/* FULL‑WIDTH CATEGORY HERO */}
+    <div className="p-6 max-w-4xl mx-auto">
+      {/* HERO IMAGE */}
       {heroImage && (
         <div
-          className="w-full h-96 bg-cover bg-center rounded-b-3xl"
+          className="relative w-full h-64 bg-cover bg-center mb-6 rounded-lg overflow-hidden"
           style={{ backgroundImage: `url('${heroImage}')` }}
         />
       )}
 
-      <div className="p-6 max-w-4xl mx-auto">
-        {/* TOP AD */}
-        <div className="mb-4">
-          <AdSlot slot="2233445566" />
-        </div>
-
-        {/* CATEGORY TITLE & JOB LIST */}
-        <h1 className="text-2xl font-bold mb-4">{title} Jobs</h1>
-        <ul className="space-y-4">
-          {jobs.map((job) => (
-            <li key={job.id}>
-              <Link
-                href={`/jobs/${job.id}`}
-                className="block p-4 border rounded hover:shadow transition"
-              >
-                <h2 className="text-lg font-semibold">{job.title}</h2>
-                <p className="text-sm text-gray-600">{job.location}</p>
-              </Link>
-            </li>
-          ))}
-        </ul>
-
-        {/* BOTTOM AD */}
-        <div className="mt-6">
-          <AdSlot slot="3344556677" />
-        </div>
+      {/* TOP AD */}
+      <div className="mb-4">
+        <AdSlot slot="2233445566" />
       </div>
-    </>
+
+      {/* JOB LIST */}
+      <h1 className="text-2xl font-bold mb-4">{title} Jobs</h1>
+      <ul className="space-y-4">
+        {jobs.map(job => (
+          <li key={job.id}>
+            <Link
+              href={`/jobs/${job.id}`}
+              className="block p-4 border rounded hover:shadow transition"
+            >
+              <h2 className="text-lg font-semibold">{job.title}</h2>
+              <p className="text-sm text-gray-600">{job.location}</p>
+            </Link>
+          </li>
+        ))}
+      </ul>
+
+      {/* BOTTOM AD */}
+      <div className="mt-6">
+        <AdSlot slot="3344556677" />
+      </div>
+    </div>
   );
 }
