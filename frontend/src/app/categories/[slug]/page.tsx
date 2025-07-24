@@ -2,8 +2,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import AdSlot from '../../components/AdSlot';
-
-// Import Job type!
 import type { Job } from '@/../types';
 
 import business   from '../../data/business.json';
@@ -19,7 +17,6 @@ import logistics  from '../../data/logistics.json';
 import legal      from '../../data/legal.json';
 import it         from '../../data/it.json';
 
-// Fix: Use Job[] instead of any[]
 const allData: Record<string, Job[]> = {
   business,
   hr,
@@ -35,18 +32,22 @@ const allData: Record<string, Job[]> = {
   it,
 };
 
-// Category-specific hero images
 const categoryImages: Record<string, string> = {
   hr: 'https://i.pinimg.com/1200x/fc/a0/34/fca03430751532c1476f1b25bc3c3079.jpg',
   // ...more mappings as needed
 };
 
-export default function CategoryPage({ params }: { params: { slug: string } }) {
+interface PageProps {
+  params: {
+    slug: string;
+  };
+}
+
+export default function CategoryPage({ params }: PageProps) {
   const { slug } = params;
   const jobs = allData[slug];
   if (!jobs) return notFound();
 
-  // Title formatting
   const title = slug
     .split('-')
     .map(part => part.charAt(0).toUpperCase() + part.slice(1))
@@ -62,9 +63,7 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
           className="relative w-full h-64 bg-cover bg-center mb-6 rounded-lg overflow-hidden"
           style={{ backgroundImage: `url('${heroImage}')` }}
         >
-          <div className="relative z-10 flex h-full items-center justify-center text-white text-2xl font-bold">
-            {title} Jobs
-          </div>
+          {/* <div className="relative z-10 flex h-full items-center justify-center text-white text-2xl font-bold">{title} Jobs</div> */}
         </div>
       )}
 
