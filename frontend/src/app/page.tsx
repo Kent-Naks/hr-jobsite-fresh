@@ -41,7 +41,7 @@ export default function HomePage() {
     <div className="p-6 max-w-4xl mx-auto">
       {/* HERO */}
       <div
-        className="w-full h-64 bg-cover bg-center mb-6 rounded-lg overflow-hidden"
+        className="w-full h-64 bg-contain bg-center bg-no-repeat mb-6 rounded-lg bg-gray-100"
         style={{ backgroundImage: "url('https://i.pinimg.com/1200x/04/29/95/04299542ecddde63a7ffbd10f24990f8.jpg')" }}
       >
 

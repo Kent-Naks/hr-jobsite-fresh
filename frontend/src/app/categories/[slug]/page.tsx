@@ -70,8 +70,8 @@ export default async function CategoryPage({
       {/* HERO IMAGE */}
       {heroImage && (
         <div
-          className="relative w-full h-64 bg-cover bg-center mb-6 rounded-lg overflow-hidden"
-          style={{ backgroundImage: `url('${heroImage}')` }}
+        className="relative w-full h-64 bg-contain bg-center bg-no-repeat mb-6 rounded-lg bg-gray-100"
+        style={{ backgroundImage: `url('${heroImage}')` }}
         />
       )}
 
