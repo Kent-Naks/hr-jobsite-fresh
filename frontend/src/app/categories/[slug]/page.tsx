@@ -37,21 +37,14 @@ const categoryImages: Record<string, string> = {
   // ...more mappings as needed
 };
 
-interface PageProps {
-  params: {
-    slug: string;
-  };
-}
-
-export default async function CategoryPage(props: PageProps) {
-  // Next.js 15+ expects async server components for dynamic routes!
+export default async function CategoryPage(props: any) {
   const { slug } = props.params;
   const jobs = allData[slug];
   if (!jobs) return notFound();
 
   const title = slug
     .split('-')
-    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .map((part: string) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' & ');
 
   const heroImage = categoryImages[slug];
