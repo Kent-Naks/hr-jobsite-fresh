@@ -50,10 +50,9 @@ const categoryImages: Record<string, string> = {
 export default async function CategoryPage({
   params,
 }: {
-  params: Promise<{ slug: string }>
+  params: { slug: string }
 }) {
-  // pull out slug, not id
-  const { slug } = await params
+  const { slug } = params
 
   const jobs = allData[slug]
   if (!jobs) return notFound()
