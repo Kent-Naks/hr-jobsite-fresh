@@ -1,3 +1,4 @@
+// src/app/jobs/[id]/page.tsx
 import { notFound } from 'next/navigation'
 import type { Job } from '@/../types'
 import AdSlot from '../../components/AdSlot'
@@ -31,13 +32,14 @@ const allJobs: Job[] = [
   ...it,
 ]
 
+/* ────────────────────────────────────────────────────────────── */
+/* NOTE the async + Promise<{ id: string }>                       */
 export default async function JobDetail({
   params,
 }: {
-  /** Next passes the id synchronously; no Promise wrapper */
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
-  const { id } = params
+  const { id } = await params       // <- unwrap the promise here
 
   const job = allJobs.find(j => j.id === id)
   if (!job) return notFound()

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/consistent-type-definitions */
+
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import AdSlot from '../../components/AdSlot'
@@ -46,13 +48,18 @@ const categoryImages: Record<string, string> = {
   it:        'https://i.pinimg.com/1200x/e6/26/0f/e6260fb8c9cea2369d7daaf0cf8f64fa.jpg',
 }
 
-export default function CategoryPage({
+/**
+ * IMPORTANT:
+ *  ──────────
+ *  keep the function *async* **and** accept `params` as a **Promise**
+ *  so its type line-up matches the auto-generated `PageProps`.
+ */
+export default async function CategoryPage({
   params,
 }: {
-  /** Next passes the slug synchronously -- it is NOT a Promise */
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }) {
-  const { slug } = params
+  const { slug } = await params          // <- unwrap the promise here
 
   const jobs = allData[slug]
   if (!jobs) return notFound()
@@ -66,7 +73,6 @@ export default function CategoryPage({
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      {/* HERO IMAGE */}
       {heroImage && (
         <div
           className="relative w-full h-64 bg-cover bg-center mb-6 rounded-lg overflow-hidden"
@@ -74,12 +80,10 @@ export default function CategoryPage({
         />
       )}
 
-      {/* TOP AD */}
       <div className="mb-4">
         <AdSlot slot="2233445566" />
       </div>
 
-      {/* JOB LIST */}
       <h1 className="text-2xl font-bold mb-4">{title} Jobs</h1>
       <ul className="space-y-4">
         {jobs.map(job => (
@@ -95,7 +99,6 @@ export default function CategoryPage({
         ))}
       </ul>
 
-      {/* BOTTOM AD */}
       <div className="mt-6">
         <AdSlot slot="3344556677" />
       </div>
