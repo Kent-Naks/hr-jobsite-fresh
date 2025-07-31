@@ -1,23 +1,59 @@
 [
-    {
-      "id": "4",
-      "title": "Sales & Marketing Executive",
-      "location": "Remote, Kenya",
-      "description": "Organize recruitment drives and onboard new hires.",
-      "keywords": ["Sales", "&", "Marketing", "Executive"]
-    },
-    {
-      "id": "14",
-      "title": "Digital Sales Specialist",
-      "location": "Remote, Kenya",
-      "description": "Lead team meetings and assist in executing strategic plans.",
-      "keywords": ["Digital", "Sales", "Specialist"]
-    },
-    {
-      "id": "25",
-      "title": "Sales Officer",
-      "location": "Remote, Kenya",
-      "description": "Support sales activities and assist in closing business deals.",
-      "keywords": ["Sales", "Officer"]
-    }
-  ]
+  {
+    "id": "4",
+    "title": "Sales & Marketing Executive",
+    "location": "Remote, Kenya",
+    "description": "Organize recruitment drives and onboard new hires.",
+    "keywords": [
+      "Sales",
+      "&",
+      "Marketing",
+      "Executive"
+    ],
+    "salaryKES": "KSh 260,001 – KSh 310,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "Learning stipend"
+    ]
+  },
+  {
+    "id": "14",
+    "title": "Digital Sales Specialist",
+    "location": "Remote, Kenya",
+    "description": "Lead team meetings and assist in executing strategic plans.",
+    "keywords": [
+      "Digital",
+      "Sales",
+      "Specialist"
+    ],
+    "salaryKES": "KSh 145,000 – KSh 180,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "On-site meals",
+      "Work-from-home allowance",
+      "Life insurance"
+    ]
+  },
+  {
+    "id": "25",
+    "title": "Sales Officer",
+    "location": "Remote, Kenya",
+    "description": "Support sales activities and assist in closing business deals.",
+    "keywords": [
+      "Sales",
+      "Officer"
+    ],
+    "salaryKES": "KSh 310,001 – KSh 370,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "Life insurance",
+      "On-site meals"
+    ]
+  }
+]

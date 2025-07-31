@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    /* general flags … */
+    "baseUrl": "./frontend/src",        // ← updated
+    "paths": {
+      "@/*":     ["app/*"],
+      "@/types": ["types.ts"]
+    },
+    "plugins": [{ "name": "next" }]
+  },
+  "include": [
+    "frontend/src/**/*.ts",
+    "frontend/src/**/*.tsx",
+    "next-env.d.ts",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": ["node_modules"]
+}

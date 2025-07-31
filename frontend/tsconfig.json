@@ -1,28 +1,36 @@
 {
   "compilerOptions": {
+    /* ——— JavaScript / TypeScript targets ——— */
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
+
+    /* ——— General flags ——— */
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
-    "esModuleInterop": true,
+    "incremental": true,
+
+    /* ——— Module + bundler settings ——— */
     "module": "esnext",
     "moduleResolution": "bundler",
+    "esModuleInterop": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "incremental": true,
-    "baseUrl": "./src",                 // ✅ Important
+
+    /* ——— Path mapping ——— */
+    "baseUrl": "./src",
     "paths": {
-      "@/*": ["app/*"]                 // ✅ Map @ to src/app/*
+      "@/*":      ["app/*"],   // eg.  import AdSlot from "@/components/AdSlot";
+      "@/types":  ["types.ts"] // NEW → import { Job } from "@/types";
     },
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ]
+
+    /* ——— Enable Next.js’s TS plugin ——— */
+    "plugins": [{ "name": "next" }]
   },
+
+  /* ——— Include / exclude globs ——— */
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }

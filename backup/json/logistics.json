@@ -1,0 +1,44 @@
+[
+    {
+      "id": "31",
+      "title": "Logistics Coordinator",
+      "location": "Remote, Kenya",
+      "description": "Coordinate and optimize supply chain operations, including transportation and warehousing.",
+      "keywords": ["Logistics", "Coordinator", "Supply", "Chain"]
+    },
+    {
+      "id": "32",
+      "title": "Supply Chain Manager",
+      "location": "Nairobi, Kenya",
+      "description": "Oversee end-to-end supply chain processes and vendor relationships.",
+      "keywords": ["Supply", "Chain", "Manager"]
+    },
+    {
+      "id": "33",
+      "title": "Warehouse Supervisor",
+      "location": "Mombasa, Kenya",
+      "description": "Manage warehouse staff, inventory control, and shipping/receiving operations.",
+      "keywords": ["Warehouse", "Supervisor", "Inventory"]
+    },
+    {
+      "id": "34",
+      "title": "Procurement Officer",
+      "location": "Remote, Kenya",
+      "description": "Source and negotiate with suppliers to ensure cost-effective procurement.",
+      "keywords": ["Procurement", "Officer", "Suppliers"]
+    },
+    {
+      "id": "35",
+      "title": "Distribution Manager",
+      "location": "Kisumu, Kenya",
+      "description": "Plan and execute product distribution strategies across regions.",
+      "keywords": ["Distribution", "Manager", "Logistics"]
+    },
+    {
+      "id": "36",
+      "title": "Fleet Manager",
+      "location": "Remote, Kenya",
+      "description": "Maintain and optimize company vehicle fleet operations and compliance.",
+      "keywords": ["Fleet", "Manager", "Vehicles"]
+    }
+  ]

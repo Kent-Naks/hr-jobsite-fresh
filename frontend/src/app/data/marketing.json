@@ -1,23 +1,54 @@
 [
-    {
-      "id": "3",
-      "title": "Product Marketing Manager",
-      "location": "Remote, Kenya",
-      "description": "Prepare reports, analyze data and support management decisions.",
-      "keywords": ["Product", "Marketing", "Manager"]
-    },
-    {
-      "id": "16",
-      "title": "Marketing Coordinator",
-      "location": "Remote, Kenya",
-      "description": "Lead team meetings and assist in executing strategic plans.",
-      "keywords": ["Marketing", "Coordinator"]
-    },
-    {
-      "id": "23",
-      "title": "Brand Manager",
-      "location": "Nairobi, Kenya",
-      "description": "Identify and develop new business opportunities and partnerships.",
-      "keywords": ["Brand", "Manager"]
-    }
-  ]
+  {
+    "id": "3",
+    "title": "Product Marketing Manager",
+    "location": "Remote, Kenya",
+    "description": "Prepare reports, analyze data and support management decisions.",
+    "keywords": [
+      "Product",
+      "Marketing",
+      "Manager"
+    ],
+    "salaryKES": "KSh 310,001 – KSh 370,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "Interest-free staff loan"
+    ]
+  },
+  {
+    "id": "16",
+    "title": "Marketing Coordinator",
+    "location": "Remote, Kenya",
+    "description": "Lead team meetings and assist in executing strategic plans.",
+    "keywords": [
+      "Marketing",
+      "Coordinator"
+    ],
+    "salaryKES": "KSh 180,001 – KSh 220,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "On-site meals"
+    ]
+  },
+  {
+    "id": "23",
+    "title": "Brand Manager",
+    "location": "Nairobi, Kenya",
+    "description": "Identify and develop new business opportunities and partnerships.",
+    "keywords": [
+      "Brand",
+      "Manager"
+    ],
+    "salaryKES": "KSh 145,000 – KSh 180,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "Interest-free staff loan"
+    ]
+  }
+]

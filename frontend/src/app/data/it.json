@@ -1,44 +1,113 @@
 [
-    {
-      "id": "43",
-      "title": "IT Support Specialist",
-      "location": "Remote, Kenya",
-      "description": "Troubleshoot hardware/software issues and provide end-user support.",
-      "keywords": ["IT", "Support", "Specialist"]
-    },
-    {
-      "id": "44",
-      "title": "Software Engineer",
-      "location": "Nairobi, Kenya",
-      "description": "Design, develop, and maintain web applications and services.",
-      "keywords": ["Software", "Engineer", "Development"]
-    },
-    {
-      "id": "45",
-      "title": "DevOps Engineer",
-      "location": "Remote, Kenya",
-      "description": "Automate deployment pipelines and manage cloud infrastructure.",
-      "keywords": ["DevOps", "Engineer", "CI/CD"]
-    },
-    {
-      "id": "46",
-      "title": "Network Administrator",
-      "location": "Mombasa, Kenya",
-      "description": "Configure and maintain company network systems and security.",
-      "keywords": ["Network", "Administrator", "Security"]
-    },
-    {
-      "id": "47",
-      "title": "Database Administrator",
-      "location": "Remote, Kenya",
-      "description": "Manage database performance, backups, and schema design.",
-      "keywords": ["Database", "Administrator", "SQL"]
-    },
-    {
-      "id": "48",
-      "title": "Front-End Developer",
-      "location": "Nairobi, Kenya",
-      "description": "Build responsive UI components using React, Next.js, and Tailwind CSS.",
-      "keywords": ["Front-End", "Developer", "React"]
-    }
-  ]
+  {
+    "id": "43",
+    "title": "IT Support Specialist",
+    "location": "Remote, Kenya",
+    "description": "Troubleshoot hardware/software issues and provide end-user support.",
+    "keywords": [
+      "IT",
+      "Support",
+      "Specialist"
+    ],
+    "salaryKES": "KSh 220,001 – KSh 260,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "Flexible hours",
+      "Interest-free staff loan"
+    ]
+  },
+  {
+    "id": "44",
+    "title": "Software Engineer",
+    "location": "Nairobi, Kenya",
+    "description": "Design, develop, and maintain web applications and services.",
+    "keywords": [
+      "Software",
+      "Engineer",
+      "Development"
+    ],
+    "salaryKES": "KSh 310,001 – KSh 370,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "Flexible hours"
+    ]
+  },
+  {
+    "id": "45",
+    "title": "DevOps Engineer",
+    "location": "Remote, Kenya",
+    "description": "Automate deployment pipelines and manage cloud infrastructure.",
+    "keywords": [
+      "DevOps",
+      "Engineer",
+      "CI/CD"
+    ],
+    "salaryKES": "KSh 220,001 – KSh 260,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "On-site meals",
+      "Flexible hours"
+    ]
+  },
+  {
+    "id": "46",
+    "title": "Network Administrator",
+    "location": "Mombasa, Kenya",
+    "description": "Configure and maintain company network systems and security.",
+    "keywords": [
+      "Network",
+      "Administrator",
+      "Security"
+    ],
+    "salaryKES": "KSh 310,001 – KSh 370,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "Interest-free staff loan"
+    ]
+  },
+  {
+    "id": "47",
+    "title": "Database Administrator",
+    "location": "Remote, Kenya",
+    "description": "Manage database performance, backups, and schema design.",
+    "keywords": [
+      "Database",
+      "Administrator",
+      "SQL"
+    ],
+    "salaryKES": "KSh 220,001 – KSh 260,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "Interest-free staff loan"
+    ]
+  },
+  {
+    "id": "48",
+    "title": "Front-End Developer",
+    "location": "Nairobi, Kenya",
+    "description": "Build responsive UI components using React, Next.js, and Tailwind CSS.",
+    "keywords": [
+      "Front-End",
+      "Developer",
+      "React"
+    ],
+    "salaryKES": "KSh 260,001 – KSh 310,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "Interest-free staff loan",
+      "Gym membership"
+    ]
+  }
+]

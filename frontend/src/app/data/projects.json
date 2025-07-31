@@ -1,16 +1,37 @@
 [
-    {
-      "id": "27",
-      "title": "Team Lead",
-      "location": "Remote, Kenya",
-      "description": "Lead team meetings and assist in executing strategic plans.",
-      "keywords": ["Team", "Lead"]
-    },
-    {
-      "id": "28",
-      "title": "Project Manager",
-      "location": "Remote, Kenya",
-      "description": "Prepare reports, analyze data and support management decisions.",
-      "keywords": ["Project", "Manager"]
-    }
-  ]
+  {
+    "id": "27",
+    "title": "Team Lead",
+    "location": "Remote, Kenya",
+    "description": "Lead team meetings and assist in executing strategic plans.",
+    "keywords": [
+      "Team",
+      "Lead"
+    ],
+    "salaryKES": "KSh 310,001 – KSh 370,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "Gym membership"
+    ]
+  },
+  {
+    "id": "28",
+    "title": "Project Manager",
+    "location": "Remote, Kenya",
+    "description": "Prepare reports, analyze data and support management decisions.",
+    "keywords": [
+      "Project",
+      "Manager"
+    ],
+    "salaryKES": "KSh 260,001 – KSh 310,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "Flexible hours",
+      "Gym membership"
+    ]
+  }
+]

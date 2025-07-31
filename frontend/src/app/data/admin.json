@@ -1,30 +1,73 @@
 [
-    {
-      "id": "7",
-      "title": "Administrative Coordinator",
-      "location": "Remote, Kenya",
-      "description": "Prepare reports, analyze data and support management decisions.",
-      "keywords": ["Administrative", "Coordinator"]
-    },
-    {
-      "id": "13",
-      "title": "Office Admin",
-      "location": "Remote, Kenya",
-      "description": "Identify and develop new business opportunities and partnerships.",
-      "keywords": ["Office", "Admin"]
-    },
-    {
-      "id": "19",
-      "title": "Receptionist",
-      "location": "Remote, Kenya",
-      "description": "Lead team meetings and assist in executing strategic plans.",
-      "keywords": ["Receptionist"]
-    },
-    {
-      "id": "26",
-      "title": "Administrative Assistant",
-      "location": "Mombasa, Kenya",
-      "description": "Coordinate office operations and provide administrative support.",
-      "keywords": ["Administrative", "Assistant"]
-    }
-  ]
+  {
+    "id": "7",
+    "title": "Administrative Coordinator",
+    "location": "Remote, Kenya",
+    "description": "Prepare reports, analyze data and support management decisions.",
+    "keywords": [
+      "Administrative",
+      "Coordinator"
+    ],
+    "salaryKES": "KSh 260,001 – KSh 310,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "Work-from-home allowance",
+      "Flexible hours",
+      "Interest-free staff loan"
+    ]
+  },
+  {
+    "id": "13",
+    "title": "Office Admin",
+    "location": "Remote, Kenya",
+    "description": "Identify and develop new business opportunities and partnerships.",
+    "keywords": [
+      "Office",
+      "Admin"
+    ],
+    "salaryKES": "KSh 260,001 – KSh 310,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "Life insurance",
+      "Learning stipend"
+    ]
+  },
+  {
+    "id": "19",
+    "title": "Receptionist",
+    "location": "Remote, Kenya",
+    "description": "Lead team meetings and assist in executing strategic plans.",
+    "keywords": [
+      "Receptionist"
+    ],
+    "salaryKES": "KSh 145,000 – KSh 180,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "Gym membership"
+    ]
+  },
+  {
+    "id": "26",
+    "title": "Administrative Assistant",
+    "location": "Mombasa, Kenya",
+    "description": "Coordinate office operations and provide administrative support.",
+    "keywords": [
+      "Administrative",
+      "Assistant"
+    ],
+    "salaryKES": "KSh 310,001 – KSh 370,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "Gym membership",
+      "Life insurance"
+    ]
+  }
+]

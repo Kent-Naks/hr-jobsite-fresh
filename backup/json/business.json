@@ -1,0 +1,44 @@
+[
+    {
+      "id": "1",
+      "title": "Client Relations Manager",
+      "location": "Remote, Kenya",
+      "description": "Identify and develop new business opportunities and partnerships.",
+      "keywords": ["Client", "Relations", "Manager"]
+    },
+    {
+      "id": "2",
+      "title": "Business Development Manager",
+      "location": "Remote, Kenya",
+      "description": "Support sales activities and assist in closing business deals.",
+      "keywords": ["Business", "Development", "Manager"]
+    },
+    {
+      "id": "5",
+      "title": "Business Strategist",
+      "location": "Remote, Kenya",
+      "description": "Oversee operational efficiency and process improvements.",
+      "keywords": ["Business", "Strategist"]
+    },
+    {
+      "id": "9",
+      "title": "Corporate Affairs Officer",
+      "location": "Remote, Kenya",
+      "description": "Support sales activities and assist in closing business deals.",
+      "keywords": ["Corporate", "Affairs", "Officer"]
+    },
+    {
+      "id": "10",
+      "title": "Business Analyst",
+      "location": "Nakuru, Kenya",
+      "description": "Handle documentation and manage internal communications.",
+      "keywords": ["Business", "Analyst"]
+    },
+    {
+      "id": "22",
+      "title": "Partner Engagement Officer",
+      "location": "Remote, Kenya",
+      "description": "Prepare reports, analyze data and support management decisions.",
+      "keywords": ["Partner", "Engagement", "Officer"]
+    }
+  ]

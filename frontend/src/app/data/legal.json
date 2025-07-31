@@ -1,44 +1,116 @@
 [
-    {
-      "id": "37",
-      "title": "Legal Counsel",
-      "location": "Nairobi, Kenya",
-      "description": "Provide legal advice and draft contracts to support corporate activities.",
-      "keywords": ["Legal", "Counsel", "Contracts"]
-    },
-    {
-      "id": "38",
-      "title": "Compliance Officer",
-      "location": "Remote, Kenya",
-      "description": "Ensure company policies and procedures comply with regulations and standards.",
-      "keywords": ["Compliance", "Officer", "Regulations"]
-    },
-    {
-      "id": "39",
-      "title": "Contract Manager",
-      "location": "Remote, Kenya",
-      "description": "Negotiate, review, and manage all contractual agreements.",
-      "keywords": ["Contract", "Manager", "Agreements"]
-    },
-    {
-      "id": "40",
-      "title": "Paralegal",
-      "location": "Mombasa, Kenya",
-      "description": "Support lawyers by conducting research and preparing legal documents.",
-      "keywords": ["Paralegal", "Research", "Legal"]
-    },
-    {
-      "id": "41",
-      "title": "Corporate Lawyer",
-      "location": "Nairobi, Kenya",
-      "description": "Advise on mergers, acquisitions, and corporate governance matters.",
-      "keywords": ["Corporate", "Lawyer", "M&A"]
-    },
-    {
-      "id": "42",
-      "title": "Regulatory Affairs Specialist",
-      "location": "Remote, Kenya",
-      "description": "Monitor and interpret regulatory changes affecting the business.",
-      "keywords": ["Regulatory", "Affairs", "Specialist"]
-    }
-  ]
+  {
+    "id": "37",
+    "title": "Legal Counsel",
+    "location": "Nairobi, Kenya",
+    "description": "Provide legal advice and draft contracts to support corporate activities.",
+    "keywords": [
+      "Legal",
+      "Counsel",
+      "Contracts"
+    ],
+    "salaryKES": "KSh 310,001 – KSh 370,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "On-site meals",
+      "Interest-free staff loan"
+    ]
+  },
+  {
+    "id": "38",
+    "title": "Compliance Officer",
+    "location": "Remote, Kenya",
+    "description": "Ensure company policies and procedures comply with regulations and standards.",
+    "keywords": [
+      "Compliance",
+      "Officer",
+      "Regulations"
+    ],
+    "salaryKES": "KSh 145,000 – KSh 180,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "On-site meals",
+      "Flexible hours",
+      "Gym membership"
+    ]
+  },
+  {
+    "id": "39",
+    "title": "Contract Manager",
+    "location": "Remote, Kenya",
+    "description": "Negotiate, review, and manage all contractual agreements.",
+    "keywords": [
+      "Contract",
+      "Manager",
+      "Agreements"
+    ],
+    "salaryKES": "KSh 310,001 – KSh 370,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "Flexible hours"
+    ]
+  },
+  {
+    "id": "40",
+    "title": "Paralegal",
+    "location": "Mombasa, Kenya",
+    "description": "Support lawyers by conducting research and preparing legal documents.",
+    "keywords": [
+      "Paralegal",
+      "Research",
+      "Legal"
+    ],
+    "salaryKES": "KSh 260,001 – KSh 310,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "Work-from-home allowance",
+      "Interest-free staff loan",
+      "Flexible hours"
+    ]
+  },
+  {
+    "id": "41",
+    "title": "Corporate Lawyer",
+    "location": "Nairobi, Kenya",
+    "description": "Advise on mergers, acquisitions, and corporate governance matters.",
+    "keywords": [
+      "Corporate",
+      "Lawyer",
+      "M&A"
+    ],
+    "salaryKES": "KSh 260,001 – KSh 310,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "Work-from-home allowance"
+    ]
+  },
+  {
+    "id": "42",
+    "title": "Regulatory Affairs Specialist",
+    "location": "Remote, Kenya",
+    "description": "Monitor and interpret regulatory changes affecting the business.",
+    "keywords": [
+      "Regulatory",
+      "Affairs",
+      "Specialist"
+    ],
+    "salaryKES": "KSh 310,001 – KSh 370,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "Interest-free staff loan",
+      "Flexible hours"
+    ]
+  }
+]

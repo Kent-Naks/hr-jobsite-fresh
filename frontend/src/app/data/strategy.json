@@ -1,16 +1,39 @@
 [
-    {
-      "id": "17",
-      "title": "Policy Analyst",
-      "location": "Eldoret, Kenya",
-      "description": "Coordinate office operations and provide administrative support.",
-      "keywords": ["Policy", "Analyst"]
-    },
-    {
-      "id": "20",
-      "title": "Strategy Implementation Officer",
-      "location": "Remote, Kenya",
-      "description": "Manage customer relationships and respond to client inquiries.",
-      "keywords": ["Strategy", "Implementation", "Officer"]
-    }
-  ]
+  {
+    "id": "17",
+    "title": "Policy Analyst",
+    "location": "Eldoret, Kenya",
+    "description": "Coordinate office operations and provide administrative support.",
+    "keywords": [
+      "Policy",
+      "Analyst"
+    ],
+    "salaryKES": "KSh 310,001 – KSh 370,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "Work-from-home allowance"
+    ]
+  },
+  {
+    "id": "20",
+    "title": "Strategy Implementation Officer",
+    "location": "Remote, Kenya",
+    "description": "Manage customer relationships and respond to client inquiries.",
+    "keywords": [
+      "Strategy",
+      "Implementation",
+      "Officer"
+    ],
+    "salaryKES": "KSh 145,000 – KSh 180,000",
+    "benefits": [
+      "Comprehensive medical cover",
+      "Dental cover",
+      "Optical cover",
+      "Flexible hours",
+      "Interest-free staff loan",
+      "Gym membership"
+    ]
+  }
+]

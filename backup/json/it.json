@@ -1,0 +1,44 @@
+[
+    {
+      "id": "43",
+      "title": "IT Support Specialist",
+      "location": "Remote, Kenya",
+      "description": "Troubleshoot hardware/software issues and provide end-user support.",
+      "keywords": ["IT", "Support", "Specialist"]
+    },
+    {
+      "id": "44",
+      "title": "Software Engineer",
+      "location": "Nairobi, Kenya",
+      "description": "Design, develop, and maintain web applications and services.",
+      "keywords": ["Software", "Engineer", "Development"]
+    },
+    {
+      "id": "45",
+      "title": "DevOps Engineer",
+      "location": "Remote, Kenya",
+      "description": "Automate deployment pipelines and manage cloud infrastructure.",
+      "keywords": ["DevOps", "Engineer", "CI/CD"]
+    },
+    {
+      "id": "46",
+      "title": "Network Administrator",
+      "location": "Mombasa, Kenya",
+      "description": "Configure and maintain company network systems and security.",
+      "keywords": ["Network", "Administrator", "Security"]
+    },
+    {
+      "id": "47",
+      "title": "Database Administrator",
+      "location": "Remote, Kenya",
+      "description": "Manage database performance, backups, and schema design.",
+      "keywords": ["Database", "Administrator", "SQL"]
+    },
+    {
+      "id": "48",
+      "title": "Front-End Developer",
+      "location": "Nairobi, Kenya",
+      "description": "Build responsive UI components using React, Next.js, and Tailwind CSS.",
+      "keywords": ["Front-End", "Developer", "React"]
+    }
+  ]
