@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/consistent-type-definitions */
+
 
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
