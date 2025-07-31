@@ -34,9 +34,10 @@ const allJobs: Job[] = [
 export default async function JobDetail({
   params,
 }: {
-  params: Promise<{ id: string }>
+  /** Next passes the id synchronously; no Promise wrapper */
+  params: { id: string }
 }) {
-  const { id } = await params             // already correct
+  const { id } = params
 
   const job = allJobs.find(j => j.id === id)
   if (!job) return notFound()
