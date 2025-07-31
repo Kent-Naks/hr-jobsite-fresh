@@ -47,12 +47,12 @@ const categoryImages: Record<string, string> = {
   it:        'https://i.pinimg.com/1200x/e6/26/0f/e6260fb8c9cea2369d7daaf0cf8f64fa.jpg',
 }
 
-export default function CategoryPage({
+export default async function CategoryPage({
   params,
 }: {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }) {
-  const { slug } = params
+  const { slug } = await params
   const jobs = allData[slug]
   if (!jobs) return notFound()
 
