@@ -10,6 +10,7 @@ function parseId(idRaw: string) {
   return id;
 }
 
+/** "Marketing & Brand" -> "marketing-brand" */
 function slugify(label: string) {
   return label
     .trim()
@@ -22,9 +23,11 @@ function slugify(label: string) {
     .slice(0, 60);
 }
 
+/** Ensure slug uniqueness while ignoring the current record */
 async function ensureUniqueSlug(base: string, ignoreId: number) {
   let candidate = base || "category";
   let n = 2;
+  // loop until a unique slug (excluding current id) is found
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const exists = await prisma.category.findFirst({
@@ -36,7 +39,7 @@ async function ensureUniqueSlug(base: string, ignoreId: number) {
   }
 }
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(_req: Request, { params }: any) {
   try {
     const id = parseId(params.id);
     const cat = await prisma.category.findUnique({ where: { id } });
@@ -54,7 +57,7 @@ const UpdateSchema = z.object({
   label: z.string().trim().min(2, "Label too short").max(80, "Label too long"),
 });
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: any) {
   try {
     const id = parseId(params.id);
     const raw = await req.json().catch(() => ({}));
@@ -89,10 +92,11 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_req: Request, { params }: any) {
   try {
     const id = parseId(params.id);
 
+    // Block deletion if jobs still reference this category
     const count = await prisma.job.count({ where: { categoryId: id } });
     if (count > 0) {
       return Response.json(

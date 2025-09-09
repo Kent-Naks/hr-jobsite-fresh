@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { JobInputSchema } from "@/lib/validation";
 
+export const dynamic = "force-dynamic";
+
 /** Convert many input shapes into Date|null|undefined; throw on invalid */
 function toDateOrNull(input: unknown): Date | null | undefined {
   if (input === undefined) return undefined; // don't touch field
@@ -41,13 +43,16 @@ function toDateOrNull(input: unknown): Date | null | undefined {
   return dObj;
 }
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
-  const job = await prisma.job.findUnique({ where: { id: params.id }, include: { category: true } });
+export async function GET(_req: Request, { params }: any) {
+  const job = await prisma.job.findUnique({
+    where: { id: params.id },
+    include: { category: true },
+  });
   if (!job) return Response.json({ error: "Not found" }, { status: 404 });
   return Response.json(job);
 }
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: any) {
   try {
     const body = await req.json().catch(() => ({}));
 
@@ -92,7 +97,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_req: Request, { params }: any) {
   try {
     await prisma.job.delete({ where: { id: params.id } });
     return Response.json({ ok: true }, { status: 200 });
