@@ -1,3 +1,4 @@
+// src/app/categories/[slug]/page.tsx
 import Link from "next/link";
 import AdSlot from "@/components/AdSlot";
 import { headers } from "next/headers";
@@ -25,8 +26,12 @@ type DisplayJob = {
   _source?: "db" | "json";
 };
 
-export default async function CategoryPage({ params }: { params: { slug: string } }) {
-  const { slug } = params;
+export default async function CategoryPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params; // 👈 important change
 
   // Build absolute base URL for dev / proxy-friendly fetch
   const h = headers();

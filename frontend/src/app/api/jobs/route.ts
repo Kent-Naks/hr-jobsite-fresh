@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"; // fine for APIs; we set Cache-Control manually
 
 /** Current slugification in your categories API */
 function slugifyCurrent(label: string) {
@@ -45,6 +46,24 @@ const LEGACY_SLUG_TO_LABEL: Record<string, string> = {
   it:        "IT & Tech",
 };
 
+function mapJob(j: any) {
+  const salaryKES =
+    j.salaryMin != null && j.salaryMax != null
+      ? `K sh ${Number(j.salaryMin).toLocaleString()} – ${Number(
+          j.salaryMax
+        ).toLocaleString()} gross / month`
+      : undefined;
+
+  return {
+    id: j.id,
+    title: j.title,
+    description: j.description ?? "",
+    salaryKES,
+    _source: "db" as const,
+    _category: j.category?.slug ?? j.category?.label,
+  };
+}
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const slugParam = searchParams.get("category") ?? undefined;
@@ -55,13 +74,16 @@ export async function GET(req: Request) {
     OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
   };
 
+  // If no category is provided, return latest jobs overall (newest first)
   if (!slugParam) {
     const jobs = await prisma.job.findMany({
       where: baseWhere,
       include: { category: true },
-      orderBy: [{ publishedAt: "asc" }, { createdAt: "desc" }],
+      orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
     });
-    return Response.json(jobs.map(mapJob), { status: 200 });
+    const res = NextResponse.json(jobs.map(mapJob));
+    res.headers.set("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
+    return res;
   }
 
   // Resolve the slugParam to a real Category.id
@@ -80,7 +102,9 @@ export async function GET(req: Request) {
   }
 
   if (!cat) {
-    return Response.json([], { status: 200 });
+    const res = NextResponse.json([]);
+    res.headers.set("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
+    return res;
   }
 
   const jobs = await prisma.job.findMany({
@@ -89,23 +113,7 @@ export async function GET(req: Request) {
     orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
   });
 
-  return Response.json(jobs.map(mapJob), { status: 200 });
-}
-
-function mapJob(j: any) {
-  const salaryKES =
-    j.salaryMin != null && j.salaryMax != null
-      ? `K sh ${Number(j.salaryMin).toLocaleString()} – ${Number(
-          j.salaryMax
-        ).toLocaleString()} gross / month`
-      : undefined;
-
-  return {
-    id: j.id,
-    title: j.title,
-    description: j.description ?? "",
-    salaryKES,
-    _source: "db" as const,
-    _category: j.category?.slug ?? j.category?.label,
-  };
+  const res = NextResponse.json(jobs.map(mapJob));
+  res.headers.set("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
+  return res;
 }

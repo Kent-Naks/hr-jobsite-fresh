@@ -8,15 +8,15 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p $PORT",
     "lint": "next lint",
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset --force",
     "db:generate": "prisma generate",
     "db:seed": "prisma db seed",
     "studio": "prisma studio",
-
-    "import:json": "node scripts/import-json-to-db.mjs"
+    "import:json": "node scripts/import-json-to-db.mjs",
+    "prebuild": "npx prisma generate && npx prisma migrate deploy"
   },
   "dependencies": {
     "@prisma/client": "^6.15.0",

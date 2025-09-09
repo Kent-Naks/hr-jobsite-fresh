@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import AdSlot from "@/components/AdSlot";
-import JobForm from "./JobForm";
+import JobForm from "./JobForm"; // adjust the relative path if your components are elsewhere
 import { prisma } from "@/lib/prisma";
 
 import business   from "../../data/business.json";
@@ -15,6 +15,8 @@ import strategy   from "../../data/strategy.json";
 import logistics  from "../../data/logistics.json";
 import legal      from "../../data/legal.json";
 import it         from "../../data/it.json";
+
+export const revalidate = 60; // ISR to reduce DB pressure
 
 const allStatic = [
   ...business,
@@ -46,7 +48,7 @@ export default async function JobDetail({
 
   if (dbJob) {
     const salaryKES =
-      dbJob.salaryMin && dbJob.salaryMax
+      dbJob.salaryMin != null && dbJob.salaryMax != null
         ? `K sh ${Number(dbJob.salaryMin).toLocaleString()} – ${Number(
             dbJob.salaryMax
           ).toLocaleString()} gross / month`
@@ -100,7 +102,9 @@ export default async function JobDetail({
   if (!job) return notFound();
 
   const recommendations = (allStatic as any[]).filter(
-    (j) => j.id !== job.id && j.keywords?.some((k: string) => job.keywords?.includes(k))
+    (j) =>
+      j.id !== job.id &&
+      j.keywords?.some((k: string) => job.keywords?.includes(k))
   );
 
   return (
@@ -111,7 +115,9 @@ export default async function JobDetail({
       </div>
 
       <h1 className="text-2xl font-bold mb-1">{job.title}</h1>
-      {job.location && <p className="mb-4 text-sm text-gray-500">{job.location}</p>}
+      {job.location && (
+        <p className="mb-4 text-sm text-gray-500">{job.location}</p>
+      )}
 
       {job.salaryKES && (
         <p className="mb-4 font-medium text-emerald-400">

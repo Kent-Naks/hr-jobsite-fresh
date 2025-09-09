@@ -1,12 +1,12 @@
 // frontend/prisma/schema.prisma
-
 generator client {
-  provider = "prisma-client-js"   // keep default output to node_modules
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")              // pooled via Neon PgBouncer
+  directUrl = env("DIRECT_URL")     // direct for migrations/admin
 }
 
 model Category {
@@ -19,7 +19,7 @@ model Category {
 model Job {
   id                  String   @id @default(cuid())
   title               String
-  description         String            // ⬅️ removed @db.Text (not supported on SQLite)
+  description         String
   categoryId          Int
   category            Category @relation(fields: [categoryId], references: [id])
   salaryMin           Int?
@@ -36,4 +36,5 @@ model Job {
 
   @@index([categoryId])
   @@index([status, publishedAt])
+  @@index([status, expiresAt])
 }
