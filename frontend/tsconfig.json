@@ -22,8 +22,11 @@
     /* ——— Path mapping ——— */
     "baseUrl": "./src",
     "paths": {
-      "@/*":      ["app/*"],   // eg.  import AdSlot from "@/components/AdSlot";
-      "@/types":  ["types.ts"] // NEW → import { Job } from "@/types";
+      "@/*":            ["app/*"],          // e.g. import Foo from "@/components/Foo"
+      "@/components/*": ["app/components/*"],
+      "@/data/*":       ["app/data/*"],     // e.g. import jobs from "@/data/jobs.json"
+      "@/lib/*":        ["lib/*"],          // for helpers like "@/lib/jobs"
+      "@/types":        ["types.ts"]        // e.g. import { Job } from "@/types"
     },
 
     /* ——— Enable Next.js’s TS plugin ——— */

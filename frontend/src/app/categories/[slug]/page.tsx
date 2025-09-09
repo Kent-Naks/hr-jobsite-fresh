@@ -1,35 +1,6 @@
-import { notFound } from "next/navigation";
-import Link   from "next/link";
+import Link from "next/link";
 import AdSlot from "@/components/AdSlot";
-import type { Job } from "@/types";
-
-import business   from "../../data/business.json";
-import hr         from "../../data/hr.json";
-import admin      from "../../data/admin.json";
-import marketing  from "../../data/marketing.json";
-import sales      from "../../data/sales.json";
-import account    from "../../data/account.json";
-import operations from "../../data/operations.json";
-import projects   from "../../data/projects.json";
-import strategy   from "../../data/strategy.json";
-import logistics  from "../../data/logistics.json";
-import legal      from "../../data/legal.json";
-import it         from "../../data/it.json";
-
-const allData: Record<string, Job[]> = {
-  business,
-  hr,
-  admin,
-  marketing,
-  sales,
-  account,
-  operations,
-  projects,
-  strategy,
-  logistics,
-  legal,
-  it,
-};
+import { headers } from "next/headers";
 
 const categoryImages: Record<string, string> = {
   business:  "https://i.pinimg.com/1200x/37/cf/1e/37cf1e0eeff2e9ed56861d49f6195f64.jpg",
@@ -46,25 +17,47 @@ const categoryImages: Record<string, string> = {
   it:        "https://i.pinimg.com/1200x/e6/26/0f/e6260fb8c9cea2369d7daaf0cf8f64fa.jpg",
 };
 
-export default async function CategoryPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;   // <-- Promise
-}) {
-  const { slug } = await params;       // <-- unwrap it
-  const jobs = allData[slug];
-  if (!jobs) return notFound();
+type DisplayJob = {
+  id: string;
+  title: string;
+  description?: string;
+  salaryKES?: string;
+  _source?: "db" | "json";
+};
 
-  const title = slug
-    .split("-")
-    .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
-    .join(" & ");
+export default async function CategoryPage({ params }: { params: { slug: string } }) {
+  const { slug } = params;
+
+  // Build absolute base URL for dev / proxy-friendly fetch
+  const h = headers();
+  const proto = h.get("x-forwarded-proto") ?? "http";
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  const base = process.env.NEXT_PUBLIC_BASE_URL ?? `${proto}://${host}`;
+
+  // Fetch jobs for this category
+  const res = await fetch(`${base}/api/jobs?category=${encodeURIComponent(slug)}`, {
+    cache: "no-store",
+  });
+  const jobs: DisplayJob[] = res.ok ? await res.json() : [];
+
+  // Fetch live categories to resolve the human label (optional but nice)
+  const catsRes = await fetch(`${base}/api/categories`, { cache: "no-store" });
+  const cats: { slug: string; label: string }[] = catsRes.ok ? await catsRes.json() : [];
+  const catLabel = cats.find((c) => c.slug === slug)?.label;
+
+  // Prefer DB label; fall back to prettified slug
+  const title =
+    catLabel ??
+    slug
+      .split("-")
+      .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+      .join(" ");
 
   const heroImage = categoryImages[slug];
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      {/* Hero image */}
+      {/* Hero image (optional for unknown slugs) */}
       {heroImage && (
         <div
           className="relative w-full h-64 mb-6 rounded-lg bg-cover bg-center overflow-hidden"
@@ -73,26 +66,35 @@ export default async function CategoryPage({
       )}
 
       {/* Ad above list */}
-      <AdSlot slot="2233445566"/>
+      <AdSlot slot="2233445566" />
 
       {/* Job list */}
       <h1 className="text-2xl font-bold mb-4">{title} Jobs</h1>
-      <ul className="space-y-4">
-        {jobs.map((job) => (
-          <li key={job.id}>
-            <Link
-              href={`/jobs/${job.id}`}
-              className="block p-4 border rounded hover:shadow transition"
-            >
-              <h2 className="text-lg font-semibold">{job.title}</h2>
-              <p className="text-sm text-gray-500">{job.location}</p>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      {jobs.length === 0 ? (
+        <p>No jobs found.</p>
+      ) : (
+        <ul className="space-y-4">
+          {jobs.map((job) => (
+            <li key={job.id}>
+              <Link
+                href={`/jobs/${job.id}`}
+                className="block p-4 border rounded hover:shadow transition"
+              >
+                <h2 className="text-lg font-semibold">{job.title}</h2>
+                {job.description && (
+                  <p className="text-sm text-gray-500 line-clamp-2">{job.description}</p>
+                )}
+                {job.salaryKES && (
+                  <p className="text-sm text-emerald-500">{job.salaryKES}</p>
+                )}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {/* Ad below list */}
-      <AdSlot slot="3344556677"/>
+      <AdSlot slot="3344556677" />
     </div>
   );
 }

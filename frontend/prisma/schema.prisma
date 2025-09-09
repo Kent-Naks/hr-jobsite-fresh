@@ -1,0 +1,39 @@
+// frontend/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"   // keep default output to node_modules
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id    Int    @id @default(autoincrement())
+  slug  String @unique
+  label String
+  jobs  Job[]
+}
+
+model Job {
+  id                  String   @id @default(cuid())
+  title               String
+  description         String            // ⬅️ removed @db.Text (not supported on SQLite)
+  categoryId          Int
+  category            Category @relation(fields: [categoryId], references: [id])
+  salaryMin           Int?
+  salaryMax           Int?
+  currency            String?  @default("KES")
+  requireCV           Boolean  @default(false)
+  requireCoverLetter  Boolean  @default(false)
+  questions           Json?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  publishedAt         DateTime?
+  expiresAt           DateTime?
+  status              String   @default("draft") // draft | published | archived
+
+  @@index([categoryId])
+  @@index([status, publishedAt])
+}
