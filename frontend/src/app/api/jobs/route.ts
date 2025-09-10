@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
+export const revalidate = 60; // cache job lists for 1 minute
+
 export const dynamic = "force-dynamic"; // fine for APIs; we set Cache-Control manually
 
 /** Current slugification in your categories API */

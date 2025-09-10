@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/prisma";
 
+export const revalidate = 300; // cache categories for 5 minutes
+
+
 function slugify(label: string) {
   return label
     .toLowerCase()
