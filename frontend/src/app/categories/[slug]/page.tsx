@@ -39,14 +39,15 @@ export default async function CategoryPage({
   const host = h.get("x-forwarded-host") ?? h.get("host");
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? `${proto}://${host}`;
 
-  // Fetch jobs for this category
-  const res = await fetch(`${base}/api/jobs?category=${encodeURIComponent(slug)}`, {
-    cache: "no-store",
-  });
+  // Fetch jobs for this category (revalidate every 60s)
+  const res = await fetch(
+    `${base}/api/jobs?category=${encodeURIComponent(slug)}`,
+    { next: { revalidate: 60 } }
+  );
   const jobs: DisplayJob[] = res.ok ? await res.json() : [];
 
-  // Fetch live categories to resolve the human label (optional but nice)
-  const catsRes = await fetch(`${base}/api/categories`, { cache: "no-store" });
+  // Fetch live categories to resolve the human label (revalidate every 5m)
+  const catsRes = await fetch(`${base}/api/categories`, { next: { revalidate: 300 } });
   const cats: { slug: string; label: string }[] = catsRes.ok ? await catsRes.json() : [];
   const catLabel = cats.find((c) => c.slug === slug)?.label;
 
