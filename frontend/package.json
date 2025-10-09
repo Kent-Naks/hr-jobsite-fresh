@@ -4,7 +4,6 @@
   "private": true,
   "engines": { "node": "20.x" },
 
-
   "prisma": {
     "schema": "prisma/schema.prisma",
     "seed": "node prisma/seed.js"
@@ -25,8 +24,11 @@
 
     "import:json": "node scripts/import-json-to-db.mjs",
 
+    "postinstall": "prisma generate --schema prisma/schema.prisma",
 
-    "postinstall": "prisma generate --schema prisma/schema.prisma"
+    "export:categories": "node scripts/export-categories.mjs",
+    "seed:categories": "node scripts/seed-categories.mjs",
+    "seed": "npm run seed:categories"
   },
 
   "dependencies": {

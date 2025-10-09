@@ -1,0 +1,97 @@
+[
+  {
+    "id": 4,
+    "slug": "admin",
+    "label": "Administrative Jobs"
+  },
+  {
+    "id": 15,
+    "slug": "agriculture-fishing-forestry",
+    "label": "Agriculture, Fishing & Forestry"
+  },
+  {
+    "id": 14,
+    "slug": "education",
+    "label": "Education"
+  },
+  {
+    "id": 18,
+    "slug": "engineering",
+    "label": "Engineering"
+  },
+  {
+    "id": 7,
+    "slug": "finance-accounting",
+    "label": "Finance & Accounting"
+  },
+  {
+    "id": 3,
+    "slug": "hr",
+    "label": "HR & Recruitment"
+  },
+  {
+    "id": 1,
+    "slug": "hospitality",
+    "label": "Hospitality"
+  },
+  {
+    "id": 16,
+    "slug": "humanities-ngos",
+    "label": "Humanities & NGOs"
+  },
+  {
+    "id": 12,
+    "slug": "legal",
+    "label": "Legal & Compliance"
+  },
+  {
+    "id": 11,
+    "slug": "logistics",
+    "label": "Logistics & Supply Chain"
+  },
+  {
+    "id": 5,
+    "slug": "marketing",
+    "label": "Marketing & Brand"
+  },
+  {
+    "id": 19,
+    "slug": "media-entertainment-events",
+    "label": "Media, Entertainment & Events"
+  },
+  {
+    "id": 8,
+    "slug": "operations",
+    "label": "Operations"
+  },
+  {
+    "id": 6,
+    "slug": "sales",
+    "label": "Sales & Biz-Dev"
+  },
+  {
+    "id": 17,
+    "slug": "sports",
+    "label": "Sports"
+  },
+  {
+    "id": 10,
+    "slug": "strategy",
+    "label": "Strategy & Policy"
+  },
+  {
+    "id": 22,
+    "slug": "whyyyy",
+    "label": "Whyyyy"
+  },
+  {
+    "id": 20,
+    "slug": "me",
+    "label": "me"
+  },
+  {
+    "id": 21,
+    "slug": "me-2",
+    "label": "me 2"
+  }
+]

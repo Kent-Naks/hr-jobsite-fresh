@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { JobInputSchema } from "@/lib/validation";
+import { scheduleExportJobs } from "@/lib/exportData"; // ✅ NEW import
 
 /** Same converter used in the [id] route */
 function toDateOrNull(input: unknown): Date | null | undefined {
@@ -68,6 +69,9 @@ export async function POST(req: Request) {
         publishedAt: d.publish ? new Date() : null,
       },
     });
+
+    // ✅ NEW — automatically export all jobs to data-backups/jobs-latest.json
+    scheduleExportJobs();
 
     return Response.json(job, { status: 201 });
   } catch (e: any) {

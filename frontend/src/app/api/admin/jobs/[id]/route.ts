@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { JobInputSchema } from "@/lib/validation";
+import { scheduleExportJobs } from "@/lib/exportData"; // ✅ NEW
 
 export const dynamic = "force-dynamic";
 
@@ -91,6 +92,8 @@ export async function PUT(req: Request, { params }: any) {
       data: updateData,
     });
 
+    scheduleExportJobs(); // ✅ NEW: export after update
+
     return Response.json(job, { status: 200 });
   } catch (e: any) {
     return Response.json({ error: e?.message ?? "Unknown error" }, { status: 400 });
@@ -100,6 +103,9 @@ export async function PUT(req: Request, { params }: any) {
 export async function DELETE(_req: Request, { params }: any) {
   try {
     await prisma.job.delete({ where: { id: params.id } });
+
+    scheduleExportJobs(); // ✅ NEW: export after delete
+
     return Response.json({ ok: true }, { status: 200 });
   } catch (e: any) {
     return Response.json({ error: e?.message ?? "Unknown error" }, { status: 400 });
