@@ -1,7 +1,9 @@
+// src/app/jobs/[id]/JobForm.tsx
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import AdSlot from "@/components/AdSlot";
 import type { Job } from "@/types";
 
@@ -12,6 +14,8 @@ type UIQuestion = {
   required?: boolean;
   order?: number;
 };
+
+const REDIRECT_DELAY_MS = 1200; // ~1.2s: show banner on job page, then go Home
 
 export default function JobForm({
   recommendations,
@@ -26,16 +30,19 @@ export default function JobForm({
   requireCV?: boolean;
   requireCoverLetter?: boolean;
 }) {
-  const [submitted, setSubmitted] = useState(false);
+  const router = useRouter();
+  const [submitting, setSubmitting] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [showLegal, setShowLegal] = useState(false);
   const [cv, setCv] = useState<File | null>(null);
   const [cover, setCover] = useState<File | null>(null);
   const [answers, setAnswers] = useState<Record<string, any>>({});
 
-  const sortedQs = [...questions].sort(
-    (a, b) => (a.order ?? 0) - (b.order ?? 0)
-  );
+  // success banner (on the job page)
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [fadeOut, setFadeOut] = useState(false);
+
+  const sortedQs = [...questions].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   function updateAnswer(key: string, value: any) {
     setAnswers((s) => ({ ...s, [key]: value }));
@@ -43,58 +50,33 @@ export default function JobForm({
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // In a real app you would POST to /api/apply with jobId, answers, and files.
-    // Here we just simulate success.
-    await new Promise((r) => setTimeout(r, 500));
-    setSubmitted(true);
-  }
+    setSubmitting(true);
 
-  if (submitted) {
-    return (
-      <div>
-        <p className="text-green-600 font-medium">Application submitted successfully!</p>
-        {recommendations?.length > 0 && (
-          <>
-            <h3 className="text-lg font-semibold mt-6">Recommended Jobs:</h3>
-            <ul className="list-disc pl-6">
-              {recommendations.slice(0, 5).map((j) => (
-                <li key={j.id}>
-                  <Link href={`/jobs/${j.id}`} className="text-blue-700 underline">
-                    {j.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-      </div>
-    );
+    // TODO: replace with real POST (only redirect on success)
+    await new Promise((r) => setTimeout(r, 500));
+
+    // 1) Show success on this page
+    setShowSuccess(true);
+    setTimeout(() => setFadeOut(true), 300); // begin fade
+
+    // 2) Prime Home to show the same banner for ~4s
+    try {
+      sessionStorage.setItem("flash_banner", "Application submitted successfully!");
+    } catch {}
+
+    // 3) Navigate to Home after a short delay
+    setTimeout(() => {
+      router.replace("/"); // replace avoids back-button re-submit
+    }, REDIRECT_DELAY_MS);
   }
 
   return (
     <div>
-      {/* (keep ad below or above as you prefer; page already renders an ad before form) */}
-
       <form onSubmit={onSubmit} className="space-y-4">
         {/* Basic info */}
-        <input
-          type="text"
-          placeholder="Full Name"
-          required
-          className="w-full p-2 border rounded"
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          required
-          className="w-full p-2 border rounded"
-        />
-        <input
-          type="tel"
-          placeholder="Phone Number"
-          required
-          className="w-full p-2 border rounded"
-        />
+        <input type="text" placeholder="Full Name" required className="w-full p-2 border rounded" />
+        <input type="email" placeholder="Email" required className="w-full p-2 border rounded" />
+        <input type="tel" placeholder="Phone Number" required className="w-full p-2 border rounded" />
 
         {/* Admin-defined questions */}
         {sortedQs.length > 0 && (
@@ -147,12 +129,12 @@ export default function JobForm({
           </>
         )}
 
-        {/* >>> NEW AD SLOT — right before the Documents section <<< */}
+        {/* Ad slot */}
         <div className="my-4">
           <AdSlot slot="1122334455" />
         </div>
 
-        {/* Attachments controlled by admin flags */}
+        {/* Documents */}
         {(requireCV || requireCoverLetter) && (
           <>
             <h2 className="text-lg font-semibold">Documents</h2>
@@ -171,7 +153,6 @@ export default function JobForm({
                   />
                 </label>
               )}
-              
               {requireCoverLetter && (
                 <label className="block">
                   <span className="text-sm font-medium">
@@ -191,21 +172,9 @@ export default function JobForm({
         )}
 
         {/* Optional extras */}
-        <input
-          type="url"
-          placeholder="LinkedIn Profile URL"
-          className="w-full p-2 border rounded"
-        />
-        <input
-          type="url"
-          placeholder="Portfolio / GitHub URL"
-          className="w-full p-2 border rounded"
-        />
-        <input
-          type="number"
-          placeholder="Expected Salary (KES)"
-          className="w-full p-2 border rounded"
-        />
+        <input type="url" placeholder="LinkedIn Profile URL" className="w-full p-2 border rounded" />
+        <input type="url" placeholder="Portfolio / GitHub URL" className="w-full p-2 border rounded" />
+        <input type="number" placeholder="Expected Salary (KES)" className="w-full p-2 border rounded" />
         <label className="block">
           <span className="text-sm font-medium">Available From</span>
           <input type="date" className="mt-1 block w-full p-2 border rounded" />
@@ -235,10 +204,10 @@ export default function JobForm({
 
         <button
           type="submit"
-          disabled={!accepted}
+          disabled={!accepted || submitting}
           className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
         >
-          Submit Application
+          {submitting ? "Submitting…" : "Submit Application"}
         </button>
       </form>
 
@@ -267,13 +236,24 @@ export default function JobForm({
                 information through this website.
               </p>
             </div>
-            <button
-              className="bg-blue-600 text-white px-4 py-2 rounded"
-              onClick={() => setShowLegal(false)}
-            >
+            <button className="bg-blue-600 text-white px-4 py-2 rounded" onClick={() => setShowLegal(false)}>
               Close
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Success toast (on job page) that fades out */}
+      {showSuccess && (
+        <div
+          className={[
+            "fixed bottom-6 left-1/2 -translate-x-1/2 z-50",
+            "rounded-md bg-emerald-600 text-white px-4 py-2 shadow-lg",
+            "transition-opacity duration-1000",
+            fadeOut ? "opacity-0" : "opacity-100",
+          ].join(" ")}
+        >
+          Application submitted successfully!
         </div>
       )}
 

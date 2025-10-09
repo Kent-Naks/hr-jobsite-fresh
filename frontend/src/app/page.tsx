@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import AdSlot from "./components/AdSlot";
+import FlashBanner from "./components/FlashBanner"; // ⟵ NEW
 import { headers } from "next/headers";
 
 type Category = { slug: string; label: string; count: number };
@@ -31,6 +32,9 @@ export default async function HomePage() {
       </div>
 
       <div className="p-6 max-w-4xl mx-auto">
+        {/* Flash banner (shows for ~4s if set in sessionStorage) */}
+        <FlashBanner /> {/* ⟵ NEW */}
+
         {/* TOP AD */}
         <div className="mb-4">
           <AdSlot slot="1234567890" />

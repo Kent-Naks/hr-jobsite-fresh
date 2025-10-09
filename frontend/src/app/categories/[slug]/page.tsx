@@ -10,7 +10,7 @@ const categoryImages: Record<string, string> = {
   marketing: "https://i.pinimg.com/1200x/39/89/60/39896018cbbac2155cd77a9843ec6666.jpg",
   sales:     "https://i.pinimg.com/1200x/f4/67/8b/f4678b8229e3429e80375750044ab59e.jpg",
   account:   "https://i.pinimg.com/1200x/ae/f6/8e/aef68e55a79feac28d5dc9c3baf471ec.jpg",
-  operations:"https://i.pinimg.com/736x/62/58/8a/62588a7473f2369ffaa9c13294c12bd7.jpg",
+  operations:"https://as2.ftcdn.net/v2/jpg/06/36/54/45/1000_F_636544591_kB9slleGGbjewzLH1F2S7qVZrEWgqXcD.jpg",
   projects:  "https://i.pinimg.com/1200x/36/c6/f9/36c6f95b343a2d7b679ad4526e9355ba.jpg",
   strategy:  "https://i.pinimg.com/1200x/29/0c/fc/290cfc31133166ddb68d6d0d731924bb.jpg",
   logistics: "https://i.pinimg.com/736x/42/6b/20/426b204c1133f76b1763fad8a9190c71.jpg",

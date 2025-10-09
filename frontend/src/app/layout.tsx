@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "HR Jobsite",
+  title: "Talent Africa",
   description: "Find and apply for jobs",
 };
 
@@ -45,7 +45,7 @@ export default function RootLayout({
       >
         <header className="fixed inset-x-0 top-0 z-50 bg-gray-700/75 backdrop-blur-sm text-white p-4 shadow-lg">
           <div className="max-w-6xl mx-auto flex justify-between items-center">
-            <h1 className="text-xl font-bold">HR Jobsite</h1>
+            <h1 className="text-xl font-bold">Talent Africa</h1>
             <nav className="flex items-center gap-4">
               <Link href="/" className="hover:underline">
                 Home
@@ -71,7 +71,7 @@ export default function RootLayout({
         <main className="flex-grow">{children}</main>
 
         <footer className="bg-gray-900 text-white p-4 text-center text-sm">
-          <p>© {new Date().getFullYear()} HR Jobsite | All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Talent Africa | All rights reserved.</p>
         </footer>
       </body>
     </html>
