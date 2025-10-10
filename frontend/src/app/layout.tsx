@@ -4,6 +4,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import "./globals.css";
 import LogoutButton from "./components/LogoutButton";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
