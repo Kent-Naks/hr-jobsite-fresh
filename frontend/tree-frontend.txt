@@ -1,0 +1,58 @@
+.
+├── Dockerfile
+├── README.md
+├── README.md.save
+├── backup
+│   └── route.jsondata.bak.ts
+├── eslint.config.mjs
+├── next-env.d.ts
+├── next.config.ts
+├── next.config.ts.bak
+├── package-lock.json
+├── package.json
+├── postcss.config.mjs
+├── prisma
+│   ├── dev.db
+│   ├── migrations
+│   │   ├── 20250909153621_init_neon
+│   │   └── migration_lock.toml
+│   ├── migrations_sqlite_backup_20250909_183527
+│   │   ├── 20250903133609_init
+│   │   └── migration_lock.toml
+│   ├── perf.sql
+│   ├── schema.prisma
+│   └── seed.js
+├── public
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── images
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── render.yaml
+├── requirements.txt
+├── scripts
+│   └── import-json-to-db.mjs
+├── src
+│   ├── app
+│   │   ├── admin
+│   │   ├── api
+│   │   ├── categories
+│   │   ├── components
+│   │   ├── data
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── jobs
+│   │   ├── layout.tsx
+│   │   ├── login
+│   │   └── page.tsx
+│   ├── backup
+│   ├── lib
+│   │   ├── prisma.ts
+│   │   └── validation.ts
+│   ├── middleware.ts
+│   └── types.ts
+├── tree-frontend.txt
+└── tsconfig.json
+
+20 directories, 36 files
