@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
+import { scheduleExportCategories } from "@/lib/exportData";
 
 export const dynamic = "force-dynamic";
 
@@ -63,6 +64,9 @@ export async function POST(req: Request) {
     const cat = await prisma.category.create({
       data: { label, slug },
     });
+
++   // kick off a debounced export of categories to data-backups/categories-latest.json
++   scheduleExportCategories();
 
     return Response.json(cat, { status: 201 });
   } catch (e: any) {

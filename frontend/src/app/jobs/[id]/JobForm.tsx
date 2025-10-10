@@ -211,37 +211,189 @@ export default function JobForm({
         </button>
       </form>
 
-      {/* Legal Modal */}
-      {showLegal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white max-w-lg w-full rounded p-6 shadow-lg">
-            <h2 className="text-lg font-bold mb-2">Official Legal Notice &amp; Consent</h2>
-            <div className="text-sm text-gray-700 mb-4 max-h-80 overflow-y-auto space-y-2">
-              <p>
-                <strong>AAJobs.ke (AfricaForAfricaJobsKenya)</strong> is a job listing platform intended to showcase
-                employment opportunities across Africa. By submitting your application through this website, you
-                acknowledge and consent that all listings, company profiles, and job openings may be illustrative,
-                simulated, or used for any purposes. We do not guarantee the authenticity, availability, or outcome
-                of any opportunity listed herein. Always exercise discretion and verify any opportunity independently.
-              </p>
-              <ul className="list-disc pl-5">
-                <li>All information you provide is submitted voluntarily and at your own discretion. You are solely responsible for the accuracy and truthfulness of all details shared.</li>
-                <li>By submitting your application, you grant AAJobs.ke and its administrators the right to store, process, and share your information with potential employers, partners, or service providers as deemed necessary for recruitment or networking purposes.</li>
-                <li>AAJobs.ke administrators may retain submitted information for record keeping, analytics, and service improvement, in accordance with our privacy policy.</li>
-                <li>You may request the deletion of your information at any time, but we cannot guarantee the removal of data already shared with third parties prior to your request.</li>
-              </ul>
-              <p className="font-semibold">
-                By accepting these terms and submitting your application, you agree to the collection, storage,
-                and sharing of your personal data as described above. If you do not agree, please do not submit your
-                information through this website.
-              </p>
-            </div>
-            <button className="bg-blue-600 text-white px-4 py-2 rounded" onClick={() => setShowLegal(false)}>
-              Close
-            </button>
-          </div>
+{/* Legal Modal (scrollable, accessible, sticky footer) */}
+{showLegal && (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="legal-title"
+    onKeyDown={(e) => e.key === "Escape" && setShowLegal(false)}
+  >
+    {/* Backdrop click closes */}
+    <div
+      className="absolute inset-0"
+      onClick={() => setShowLegal(false)}
+      aria-hidden="true"
+    />
+
+    {/* Dialog panel */}
+    <div className="relative z-10 mx-4 w-full max-w-3xl rounded-lg bg-white shadow-xl">
+      {/* Header (sticky) */}
+      <div className="sticky top-0 z-10 border-b bg-white px-6 py-4">
+        <h2 id="legal-title" className="text-lg font-bold">
+          Official Legal Notice &amp; Consent
+        </h2>
+      </div>
+
+      {/* Scrollable content */}
+      <div
+        className="legal-scroll max-h-[80vh] min-h-[40vh] overflow-y-auto px-6 py-4"
+        tabIndex={0}
+      >
+        {/* START CONTENT */}
+        <h3 className="mt-2 font-semibold">1. Introduction</h3>
+        <p className="text-sm text-gray-700">
+          This Official Legal Notice &amp; Consent (&quot;Notice&quot;) governs your access to and use of the
+          Talent Africa website, applications, and related services (collectively, the &quot;Platform&quot;).
+          By continuing to access, browse, or submit information through the Platform, you acknowledge that you have
+          read, understood, and agree to be bound by this Notice in addition to any other applicable terms, policies,
+          or guidelines published by Talent Africa.
+        </p>
+
+        <h3 className="mt-4 font-semibold">2. Voluntary Submission of Data</h3>
+        <p className="text-sm text-gray-700">
+          Any personal, professional, or contact information you submit is provided voluntarily and at your discretion.
+          You represent and warrant that such information is accurate, complete, lawful, and that you possess the
+          authority to disclose it. Submitting data does not create any fiduciary, confidential, agency, or employment
+          relationship between you and Talent Africa.
+        </p>
+
+        <h3 className="mt-4 font-semibold">3. Consent to Data Processing</h3>
+        <p className="text-sm text-gray-700">
+          You grant Talent Africa, its affiliates, subprocessors, and authorized service providers a perpetual,
+          worldwide, royalty-free license to collect, host, store, reproduce, transmit, analyze, process, and use your
+          submitted data for legitimate operational purposes, including but not limited to: recruitment facilitation,
+          application routing, platform analytics, service improvement, record maintenance, legal compliance, fraud
+          prevention, and security. Processing may occur on cloud infrastructure inside or outside your jurisdiction,
+          subject to appropriate safeguards.
+        </p>
+
+        <h3 className="mt-4 font-semibold">4. Data Retention &amp; Deletion</h3>
+        <p className="text-sm text-gray-700">
+          Talent Africa retains data for as long as necessary to fulfill the purposes described herein, comply with
+          applicable laws, resolve disputes, and enforce agreements. You may request deletion via the contact channel
+          in our Privacy Policy; however, deletion will not apply to information already shared with third parties,
+          anonymized datasets, system backups retained for integrity, or content we are legally required to preserve.
+        </p>
+
+        <h3 className="mt-4 font-semibold">5. No Guarantee or Warranty</h3>
+        <p className="text-sm text-gray-700">
+          The Platform and all content are provided strictly on an &quot;as is&quot; and &quot;as available&quot;
+          basis without warranties of any kind, whether express, implied, or statutory, including any warranties of
+          merchantability, fitness for a particular purpose, non-infringement, accuracy, or uninterrupted availability.
+          Talent Africa does not guarantee that use of the Platform will result in employment, interviews, offers, or
+          professional advancement.
+        </p>
+
+        <h3 className="mt-4 font-semibold">6. Limitation of Liability</h3>
+        <p className="text-sm text-gray-700">
+          To the maximum extent permitted by law, Talent Africa and its directors, officers, employees, agents,
+          licensors, and affiliates shall not be liable for indirect, incidental, special, consequential, exemplary,
+          punitive, or similar damages, including loss of profits, goodwill, data, or business interruption, arising
+          from or related to your use of the Platform. Where liability cannot be fully disclaimed, it is limited to
+          the greater of (i) the amount you paid (if any) to access the Platform in the 12 months preceding the claim,
+          or (ii) USD $100.
+        </p>
+
+        <h3 className="mt-4 font-semibold">7. Third-Party Content &amp; Links</h3>
+        <p className="text-sm text-gray-700">
+          The Platform may reference or link to external websites, APIs, or services operated by third parties.
+          Talent Africa does not endorse and is not responsible for any third-party content, privacy practices,
+          availability, or security. Access to such resources is at your sole risk and subject to the third party’s
+          terms and policies.
+        </p>
+
+        <h3 className="mt-4 font-semibold">8. Intellectual Property</h3>
+        <p className="text-sm text-gray-700">
+          All trademarks, service marks, trade names, designs, logos, software, text, graphics, and other content
+          displayed on the Platform are the property of Talent Africa or its licensors and are protected by applicable
+          intellectual-property laws. Unauthorized reproduction, distribution, reverse engineering, scraping, or
+          creation of derivative works is strictly prohibited.
+        </p>
+
+        <h3 className="mt-4 font-semibold">9. Prohibited Uses</h3>
+        <ul className="list-disc pl-5 text-sm text-gray-700 space-y-2">
+          <li>Submitting false, misleading, or fraudulent information;</li>
+          <li>Harassing, abusing, or harming other users or Talent Africa personnel;</li>
+          <li>Interfering with or compromising the security or integrity of the Platform;</li>
+          <li>Mining, harvesting, or scraping data except as explicitly permitted;</li>
+          <li>Using the Platform for unlawful purposes or in violation of any applicable law or regulation.</li>
+        </ul>
+
+        <h3 className="mt-4 font-semibold">10. No Employment Relationship</h3>
+        <p className="text-sm text-gray-700">
+          Nothing on the Platform constitutes an offer of employment or creates an employer-employee, principal-agent,
+          or joint-venture relationship with Talent Africa. Opportunities listed on the Platform may be illustrative,
+          simulated, expired, or posted by third parties.
+        </p>
+
+        <h3 className="mt-4 font-semibold">11. Compliance &amp; Governing Law</h3>
+        <p className="text-sm text-gray-700">
+          You agree to comply with all applicable laws, including data-protection, privacy, export, and anti-spam laws.
+          Unless otherwise required by mandatory local law, this Notice is governed by the laws of the jurisdiction in
+          which Talent Africa primarily operates, without regard to conflict-of-law rules, and disputes shall be
+          resolved in the competent courts of that jurisdiction.
+        </p>
+
+        <h3 className="mt-4 font-semibold">12. International Transfers</h3>
+        <p className="text-sm text-gray-700">
+          Your information may be transferred to, stored in, or processed within jurisdictions that may provide
+          different levels of data protection than your own. By using the Platform, you consent to such transfers
+          subject to appropriate safeguards and contractual protections.
+        </p>
+
+        <h3 className="mt-4 font-semibold">13. Changes to this Notice</h3>
+        <p className="text-sm text-gray-700">
+          Talent Africa may update this Notice at any time. Material changes will be indicated by updating the
+          effective date or by reasonable means. Continued use of the Platform after changes take effect constitutes
+          your acceptance of the revised Notice.
+        </p>
+
+        <h3 className="mt-4 font-semibold">14. Contact</h3>
+        <p className="text-sm text-gray-700">
+          Questions or requests (including access, correction, deletion, or complaint handling) should be directed to
+          Talent Africa via the contact method listed in our Privacy Policy.
+        </p>
+
+        <h3 className="mt-4 font-semibold">15. Acknowledgement</h3>
+        <p className="text-sm text-gray-700">
+          By closing this dialog or submitting any information through the Platform, you acknowledge that you have
+          read and understood this Notice and that you consent to the collection, processing, storage, and disclosure
+          of your information as described above.
+        </p>
+        {/* END CONTENT */}
+      </div>
+
+      {/* Footer (sticky) */}
+      <div className="sticky bottom-0 z-10 flex items-center justify-between gap-3 border-t bg-white px-6 py-3">
+        <span className="text-xs text-gray-500">
+          Press <kbd className="rounded border px-1">Esc</kbd> to close
+        </span>
+        <div className="flex gap-2">
+          <button
+            className="rounded border px-3 py-2 text-sm hover:bg-gray-50"
+            onClick={() => window.print()}
+            type="button"
+          >
+            Print / Save PDF
+          </button>
+          <button
+            className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            onClick={() => setShowLegal(false)}
+            autoFocus
+            type="button"
+          >
+            Close
+          </button>
         </div>
-      )}
+      </div>
+    </div>
+  </div>
+)}
+
+
+
 
       {/* Success toast (on job page) that fades out */}
       {showSuccess && (
