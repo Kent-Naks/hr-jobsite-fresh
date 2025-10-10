@@ -7,7 +7,7 @@ export default function LoginPage() {
         <h1 className="text-2xl font-bold mb-4">Admin Login</h1>
         <LoginForm />
         <p className="text-xs text-gray-500 mt-4">
-          Tip: set <code>ADMIN_PASSWORD</code> and <code>ADMIN_SESSION_TOKEN</code> in <code>.env.local</code>.
+          
         </p>
       </div>
     </main>
