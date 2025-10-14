@@ -5,10 +5,18 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 export default async function AdminHome() {
-  const jobs = await prisma.job.findMany({
-    include: { category: true },
-    orderBy: { updatedAt: "desc" },
-  });
+  let jobs = [];
+  let dbError = false;
+
+  try {
+    jobs = await prisma.job.findMany({
+      include: { category: true },
+      orderBy: { updatedAt: "desc" },
+    });
+  } catch (err) {
+    console.error("prisma.job.findMany error in admin:", err);
+    dbError = true;
+  }
 
   return (
     <main className="p-6 max-w-5xl mx-auto">
@@ -24,6 +32,12 @@ export default async function AdminHome() {
         </div>
       </div>
 
+      {dbError && (
+        <div className="mb-4 rounded border border-yellow-400 bg-yellow-50 p-3 text-sm text-yellow-800">
+          Warning: cannot reach the database — showing cached/empty results. Check your DATABASE_URL or start a local Postgres.
+        </div>
+      )}
+
       <table className="w-full text-sm border">
         <thead className="bg-gray-50">
           <tr>
@@ -36,22 +50,30 @@ export default async function AdminHome() {
           </tr>
         </thead>
         <tbody>
-          {jobs.map((j) => (
-            <tr key={j.id} className="border-t">
-              <td className="p-2">{j.title}</td>
-              <td className="p-2">{j.category?.label}</td>
-              <td className="p-2">{j.status}</td>
-              <td className="p-2">
-                {j.publishedAt ? new Date(j.publishedAt).toLocaleString() : "-"}
-              </td>
-              <td className="p-2">{new Date(j.updatedAt).toLocaleString()}</td>
-              <td className="p-2 text-right">
-                <Link href={`/admin/jobs/${j.id}`} className="underline">
-                  Edit
-                </Link>
+          {jobs.length === 0 ? (
+            <tr>
+              <td colSpan={6} className="p-4 text-center text-sm text-gray-500">
+                No jobs available.
               </td>
             </tr>
-          ))}
+          ) : (
+            jobs.map((j: any) => (
+              <tr key={j.id} className="border-t">
+                <td className="p-2">{j.title}</td>
+                <td className="p-2">{j.category?.label}</td>
+                <td className="p-2">{j.status}</td>
+                <td className="p-2">
+                  {j.publishedAt ? new Date(j.publishedAt).toLocaleString() : "-"}
+                </td>
+                <td className="p-2">{new Date(j.updatedAt).toLocaleString()}</td>
+                <td className="p-2 text-right">
+                  <Link href={`/admin/jobs/${j.id}`} className="underline">
+                    Edit
+                  </Link>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </main>

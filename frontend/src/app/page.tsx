@@ -1,17 +1,18 @@
+// src/app/page.tsx
 import React from "react";
 import Link from "next/link";
 import AdSlot from "./components/AdSlot";
-import FlashBanner from "./components/FlashBanner"; // ⟵ NEW
+import FlashBanner from "./components/FlashBanner";
 import { headers } from "next/headers";
 
 type Category = { slug: string; label: string; count: number };
 
 export default async function HomePage() {
   // Build absolute URL that works locally and behind proxies (Render/Vercel)
-  const h = headers();
+  const h = await headers();
   const proto = h.get("x-forwarded-proto") ?? "http";
-  const host  = h.get("x-forwarded-host")  ?? h.get("host");
-  const base  = process.env.NEXT_PUBLIC_BASE_URL ?? `${proto}://${host}`;
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
+  const base = process.env.NEXT_PUBLIC_BASE_URL ?? `${proto}://${host}`;
 
   const res = await fetch(`${base}/api/categories`, { cache: "no-store" });
   const categories: Category[] = res.ok ? await res.json() : [];
@@ -32,15 +33,12 @@ export default async function HomePage() {
       </div>
 
       <div className="p-6 max-w-4xl mx-auto">
-        {/* Flash banner (shows for ~4s if set in sessionStorage) */}
-        <FlashBanner /> {/* ⟵ NEW */}
+        <FlashBanner />
 
-        {/* TOP AD */}
         <div className="mb-4">
           <AdSlot slot="1234567890" />
         </div>
 
-        {/* CATEGORY GRID */}
         <h2 className="text-2xl font-semibold mb-4">Job Categories</h2>
         {categories.length === 0 ? (
           <p className="text-sm text-gray-500 mb-8">No categories yet.</p>
@@ -54,7 +52,6 @@ export default async function HomePage() {
                 >
                   <div className="flex justify-between">
                     <span className="font-semibold">{cat.label}</span>
-                    
                   </div>
                 </Link>
               </li>
@@ -62,7 +59,6 @@ export default async function HomePage() {
           </ul>
         )}
 
-        {/* BOTTOM AD */}
         <div className="mt-6">
           <AdSlot slot="0987654321" />
         </div>

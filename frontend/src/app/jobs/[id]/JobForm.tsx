@@ -82,7 +82,7 @@ export default function JobForm({
             Partition: Personal + Contact
            ========================= */}
         <section className="rounded-lg p-5">
-          <h2 className="text-lg font-semibold mb-3">Personal & Contact</h2>
+          <h2 className="text-lg font-semibold mb-3">APPLY BELOW:<br />Personal & Contact</h2>
           <div className="grid gap-3 sm:grid-cols-3">
             <input
               type="text"

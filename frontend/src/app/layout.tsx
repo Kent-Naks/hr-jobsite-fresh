@@ -1,3 +1,4 @@
+// src/app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
@@ -21,12 +22,13 @@ export const metadata: Metadata = {
   description: "Find and apply for jobs",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cookieStore = cookies();
+  // cookies() is async in Next.js server components — await it
+  const cookieStore = await cookies();
   const session = cookieStore.get("admin_session")?.value;
   const expected = process.env.ADMIN_SESSION_TOKEN;
   const authed = !!session && !!expected && session === expected;
@@ -50,6 +52,12 @@ export default function RootLayout({
             <nav className="flex items-center gap-4">
               <Link href="/" className="hover:underline">
                 Home
+              </Link>
+              <Link href="/about" className="hover:underline">
+                About
+              </Link>
+              <Link href="/contact" className="hover:underline">
+                Contact
               </Link>
               <Link href="/admin" className="hover:underline">
                 Admin

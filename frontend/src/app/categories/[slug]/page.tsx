@@ -36,7 +36,7 @@ export default async function CategoryPage({
   // Build absolute base URL for dev / proxy-friendly fetch
   const h = headers();
   const proto = h.get("x-forwarded-proto") ?? "http";
-  const host = h.get("x-forwarded-host") ?? h.get("host");
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? `${proto}://${host}`;
 
   // Fetch jobs for this category (revalidate every 60s)
