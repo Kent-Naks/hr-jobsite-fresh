@@ -54,7 +54,7 @@ export default async function HomePage() {
                 >
                   <div className="flex justify-between">
                     <span className="font-semibold">{cat.label}</span>
-                    <span className="text-gray-500">({cat.count})</span>
+                    
                   </div>
                 </Link>
               </li>

@@ -16244,9 +16244,9 @@
     ],
     "status": "published",
     "createdAt": "2025-09-11T13:07:54.700Z",
-    "updatedAt": "2025-09-11T13:07:54.700Z",
+    "updatedAt": "2025-10-14T14:33:37.188Z",
     "publishedAt": "2025-09-11T13:07:54.696Z",
-    "expiresAt": "2025-10-31T13:06:00.000Z"
+    "expiresAt": "2025-10-31T10:06:00.000Z"
   },
   {
     "id": "cmffex2ny001fxmauv5qq3g76",
@@ -16366,9 +16366,9 @@
     ],
     "status": "published",
     "createdAt": "2025-09-11T12:51:22.861Z",
-    "updatedAt": "2025-09-11T12:51:22.861Z",
+    "updatedAt": "2025-10-14T14:32:59.849Z",
     "publishedAt": "2025-09-11T12:51:22.859Z",
-    "expiresAt": "2025-10-31T12:49:00.000Z"
+    "expiresAt": "2025-10-31T09:49:00.000Z"
   },
   {
     "id": "cmffejg0w001bxmaupbjvt8ot",
@@ -16446,7 +16446,7 @@
   {
     "id": "cmffe31u50019xmaubyu7zwob",
     "title": "Accountant – General Ledger (GL)",
-    "description": "Openings: 1\nLocation: Nairobi\n\nOverview:\nOur client is looking for a detail-obsessed GL Accountant to own month-end close, reconciliations, and statutory filings—keeping the books clean and audits painless.\n\nKey Responsibilities\n\n-Prepare journals; maintain GL, accruals, prepayments, fixed assets & depreciation.\n- Perform bank/AR/AP/payroll reconciliations; clear aged recon items quickly.\n- Support audit packs, schedules, and walkthroughs for internal/external audits.\n- File VAT/PAYE/NSSF/NHIF & WHT accurately and on time.\n- Maintain finance SOPs; enforce control checklists and close calendars.\n- Assist budgeting/forecast updates; draft monthly variance commentary.\n- Drive month-end timetable and publish close status to stakeholders.\n\nEducation & Experience:\n- BCom/BSc Finance & Accounting; CPA II+ preferred.\n- 2–4 years GL accounting experience.\n\nSkills & Tools:\n- SAP/Odoo/QuickBooks, Excel (pivots/lookups), attention to detail, deadline discipline.\n\nKPIs:\n- Close cycle time; recon ageing; filing timeliness; audit issues closed.\n\nCompensation (Kenya):\nKES 120,000–200,000 + annual bonus (10–15%).\nFigures are estimates provided by our clients and vary based on your experience, interview performance, certifications, and company pay bands.\n\nBenefits:\n- Medical, pension, and CPD budget.\n\nGrowth Path (hierarchy/expected promotions):\n- Senior Accountant → Finance Supervisor → Finance Manager.\nThis is the ideal hierarchy inside the client’s company and thus the expected growth cycle for this position.",
+    "description": "Openings: 1\nLocation: Nairobi\n\n\nOverview:\nOur client is looking for a detail-obsessed GL Accountant to own the month-end close, reconciliations, and statutory filings, keeping the books clean and audits painless.\n\nKey Responsibilities\n\n-Prepare journals; maintain GL, accruals, prepayments, fixed assets & depreciation.\n- Perform bank/AR/AP/payroll reconciliations; clear aged recon items quickly.\n- Support audit packs, schedules, and walkthroughs for internal/external audits.\n- File VAT/PAYE/NSSF/NHIF & WHT accurately and on time.\n- Maintain finance SOPs; enforce control checklists and close calendars.\n- Assist budgeting/forecast updates; draft monthly variance commentary.\n- Drive month-end timetable and publish close status to stakeholders.\n\nEducation & Experience:\n- BCom/BSc Finance & Accounting; CPA II+ preferred.\n- 2–4 years GL accounting experience.\n\nSkills & Tools:\n- SAP/Odoo/QuickBooks, Excel (pivots/lookups), attention to detail, deadline discipline.\n\nKPIs:\n- Close cycle time; recon ageing; filing timeliness; audit issues closed.\n\nCompensation (Kenya):\nKES 120,000–200,000 + annual bonus (10–15%).\nFigures are estimates provided by our clients and vary based on your experience, interview performance, certifications, and company pay bands.\n\nBenefits:\n- Medical, pension, and CPD budget.\n\nGrowth Path (hierarchy/expected promotions):\n- Senior Accountant → Finance Supervisor → Finance Manager.\nThis is the ideal hierarchy inside the client’s company and thus the expected growth cycle for this position.",
     "categoryId": 7,
     "categorySlug": "finance-accounting",
     "salaryMin": 120000,
@@ -16501,14 +16501,14 @@
         "type": "text",
         "order": 7,
         "prompt": "What’s your notice period?",
-        "required": false
+        "required": true
       }
     ],
     "status": "published",
     "createdAt": "2025-09-11T12:33:12.985Z",
-    "updatedAt": "2025-09-11T12:33:12.985Z",
+    "updatedAt": "2025-10-14T14:46:45.262Z",
     "publishedAt": "2025-09-11T12:33:12.984Z",
-    "expiresAt": "2025-10-31T07:35:00.000Z"
+    "expiresAt": "2025-10-31T01:35:00.000Z"
   },
   {
     "id": "cmfe3ie1x0005xmausb092vbc",
@@ -17718,6 +17718,24 @@
     "expiresAt": "2025-10-31T14:40:00.000Z"
   },
   {
+    "id": "752d98c4838bf69a71000d10",
+    "title": "Front Desk Receptionist",
+    "description": "Welcome guests, manage check-ins, coordinate reservations, answer phones.",
+    "categoryId": 1,
+    "categorySlug": "hospitality",
+    "salaryMin": 30000,
+    "salaryMax": 45000,
+    "currency": "KES",
+    "requireCV": true,
+    "requireCoverLetter": false,
+    "questions": [],
+    "status": "published",
+    "createdAt": "2025-09-09T18:01:38.390Z",
+    "updatedAt": "2025-09-09T18:01:38.390Z",
+    "publishedAt": "2025-09-09T18:01:38.390Z",
+    "expiresAt": "2025-10-24T18:01:38.390Z"
+  },
+  {
     "id": "92b52a5a4dca1493ee96a7ef",
     "title": "Digital Marketing Associate",
     "description": "Run campaigns, manage social channels, track metrics.",
@@ -17772,13 +17790,13 @@
     "expiresAt": "2025-10-24T18:01:38.390Z"
   },
   {
-    "id": "752d98c4838bf69a71000d10",
-    "title": "Front Desk Receptionist",
-    "description": "Welcome guests, manage check-ins, coordinate reservations, answer phones.",
-    "categoryId": 1,
-    "categorySlug": "hospitality",
-    "salaryMin": 30000,
-    "salaryMax": 45000,
+    "id": "1c473a30d291b3e33f5c47b9",
+    "title": "Operations Coordinator",
+    "description": "Coordinate daily ops, SLAs, and cross-team logistics.",
+    "categoryId": 8,
+    "categorySlug": "operations",
+    "salaryMin": 50000,
+    "salaryMax": 85000,
     "currency": "KES",
     "requireCV": true,
     "requireCoverLetter": false,
@@ -17833,24 +17851,6 @@
     "categorySlug": "strategy",
     "salaryMin": 70000,
     "salaryMax": 110000,
-    "currency": "KES",
-    "requireCV": true,
-    "requireCoverLetter": false,
-    "questions": [],
-    "status": "published",
-    "createdAt": "2025-09-09T18:01:38.390Z",
-    "updatedAt": "2025-09-09T18:01:38.390Z",
-    "publishedAt": "2025-09-09T18:01:38.390Z",
-    "expiresAt": "2025-10-24T18:01:38.390Z"
-  },
-  {
-    "id": "1c473a30d291b3e33f5c47b9",
-    "title": "Operations Coordinator",
-    "description": "Coordinate daily ops, SLAs, and cross-team logistics.",
-    "categoryId": 8,
-    "categorySlug": "operations",
-    "salaryMin": 50000,
-    "salaryMax": 85000,
     "currency": "KES",
     "requireCV": true,
     "requireCoverLetter": false,
