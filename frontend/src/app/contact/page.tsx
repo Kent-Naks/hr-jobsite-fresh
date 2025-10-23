@@ -109,7 +109,7 @@ export default function ContactPage() {
         <aside className="space-y-4">
           <div className="bg-white/5 border border-white/10 rounded-lg p-4">
             <h3 className="font-semibold">Contact details</h3> 
-            <p className="text-sm text-gray-300 mt-2">Email: <a href="mailto:thetalentafrica@zohomail.com" className="underline">hello@talent.africa</a></p>
+            <p className="text-sm text-gray-300 mt-2">Email: <a href="mailto:thetalentafrica@zohomail.com" className="underline">thetalentafrica@zohomail.com</a></p>
             <p className="text-sm text-gray-300">Support hours: Mon–Fri, 9:00–17:00 (EAT)</p>
           </div>
 
