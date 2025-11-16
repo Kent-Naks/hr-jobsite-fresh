@@ -70,8 +70,10 @@ export default function AdSlot({ slot }: { slot: string }) {
 
   // Render the real <ins> only if ad client looks like a real id. This avoids accidental policy issues.
   const isDev = process.env.NODE_ENV === "development";
-const isValidClient =
-  !isDev && typeof AD_CLIENT === "string" && AD_CLIENT.startsWith("ca-pub-");
+  const isValidClient =
+  typeof AD_CLIENT === "string" &&
+  AD_CLIENT.startsWith("ca-pub-") &&
+  AD_CLIENT !== "placeholder";
 
 
   if (!isValidClient) {
