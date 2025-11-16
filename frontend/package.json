@@ -2,51 +2,53 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
-  "engines": { "node": "20.x" },
-
+  "engines": {
+    "node": "20.x"
+  },
   "prisma": {
     "schema": "prisma/schema.prisma",
     "seed": "node prisma/seed.js"
   },
-
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "build:vercel": "prisma generate --schema prisma/schema.prisma && next build",
     "start": "next start -p $PORT",
     "lint": "next lint",
-
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset --force",
     "db:generate": "prisma generate --schema prisma/schema.prisma",
     "db:seed": "prisma db seed",
     "studio": "prisma studio",
-
     "import:json": "node scripts/import-json-to-db.mjs",
-
     "postinstall": "prisma generate --schema prisma/schema.prisma",
-
     "export:categories": "node scripts/export-categories.mjs",
     "seed:categories": "node scripts/seed-categories.mjs",
     "seed": "npm run seed:categories"
   },
-
   "dependencies": {
-    "@prisma/client": "^6.15.0",
+    "@prisma/client": "^6.18.0",
+    "framer-motion": "^12.23.24",
+    "geoip-lite": "^1.4.10",
     "next": "15.3.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "recharts": "^3.3.0",
+    "ua-parser-js": "^2.0.6",
+    "uuid": "^13.0.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@types/geoip-lite": "^1.4.4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/ua-parser-js": "^0.7.39",
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
-    "prisma": "^6.15.0",
+    "prisma": "^6.18.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

@@ -6,15 +6,7 @@ import { cookies } from "next/headers";
 import "./globals.css";
 import LogoutButton from "./components/LogoutButton";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
-import SiteAnalytics from "../components/Analytics";
-import Script from "next/script"; // ✅ import Script
-
-<script
-  async
-  src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_ID}`}
-  crossOrigin="anonymous"
-/>
-
+import SiteAnalytics from "@/components/Analytics";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,9 +25,10 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
+  // cookies() is async in Next.js server components — await it
   const cookieStore = await cookies();
   const session = cookieStore.get("admin_session")?.value;
   const expected = process.env.ADMIN_SESSION_TOKEN;
@@ -44,14 +37,11 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* ✅ Proper AdSense script setup */}
-        <Script
-          id="adsbygoogle-init"
+        <script
           async
-          strategy="afterInteractive"
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
           crossOrigin="anonymous"
-        />
+        ></script>
       </head>
       <body
         suppressHydrationWarning
@@ -90,14 +80,12 @@ export default async function RootLayout({
         <div className="h-16" />
         <main className="flex-grow">{children}</main>
 
+        {/* client-side analytics component (records pageviews / pings / unload) */}
         <SiteAnalytics />
 
         <footer className="bg-gray-900 text-white p-4 text-center text-sm">
           <p>© {new Date().getFullYear()} Talent Africa | All rights reserved.</p>
         </footer>
-
-        {/* Optional: Vercel Analytics */}
-        <VercelAnalytics />
       </body>
     </html>
   );

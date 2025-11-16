@@ -34,7 +34,7 @@ export default async function CategoryPage({
   const { slug } = await params; // 👈 important change
 
   // Build absolute base URL for dev / proxy-friendly fetch
-  const h = headers();
+  const h = await headers();
   const proto = h.get("x-forwarded-proto") ?? "http";
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? `${proto}://${host}`;

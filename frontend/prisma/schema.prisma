@@ -38,3 +38,19 @@ model Job {
   @@index([status, publishedAt])
   @@index([status, expiresAt])
 }
+
+model AnalyticsEvent {
+  id         String   @id @default(cuid())
+  sessionId  String
+  type       String   // "pageview" | "ping" | "unload"
+  path       String?
+  referrer   String?
+  userAgent  String?
+  ip         String?
+  country    String?
+  deviceType String?
+  createdAt  DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([createdAt])
+}
