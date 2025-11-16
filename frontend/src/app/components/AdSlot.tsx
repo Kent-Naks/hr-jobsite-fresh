@@ -78,7 +78,8 @@ const isValidClient =
     // helpful placeholder so you can see slots in dev and not accidentally send traffic to Google
     return (
       <div className="bg-gray-100 text-gray-500 text-sm py-6 text-center border border-dashed border-gray-300">
-        Google Ad Placeholder – Slot: {slot} (set NEXT_PUBLIC_ADSENSE_ID)
+        Google Ad Placeholder – Slot: {slot} 
+        
       </div>
     );
   }
