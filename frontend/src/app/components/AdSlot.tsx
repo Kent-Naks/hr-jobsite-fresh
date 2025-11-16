@@ -3,6 +3,8 @@
 
 import React, { useEffect, useRef, useState } from "react";
 
+console.log("AD_CLIENT:", process.env.NEXT_PUBLIC_ADSENSE_ID);
+
 /**
  * AdSlot
  * - Single, idempotent attempt to initialise adsbygoogle for this slot.
@@ -67,7 +69,10 @@ export default function AdSlot({ slot }: { slot: string }) {
   }, []);
 
   // Render the real <ins> only if ad client looks like a real id. This avoids accidental policy issues.
-  const isValidClient = typeof AD_CLIENT === "string" && AD_CLIENT.startsWith("ca-pub-");
+  const isDev = process.env.NODE_ENV === "development";
+const isValidClient =
+  !isDev && typeof AD_CLIENT === "string" && AD_CLIENT.startsWith("ca-pub-");
+
 
   if (!isValidClient) {
     // helpful placeholder so you can see slots in dev and not accidentally send traffic to Google
