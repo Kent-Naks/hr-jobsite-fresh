@@ -65,6 +65,11 @@
     "label": "Operations"
   },
   {
+    "id": 23,
+    "slug": "protective-services-security-personnel",
+    "label": "Protective Services/ Security Personnel"
+  },
+  {
     "id": 6,
     "slug": "sales",
     "label": "Sales & Biz-Dev"
@@ -78,20 +83,5 @@
     "id": 10,
     "slug": "strategy",
     "label": "Strategy & Policy"
-  },
-  {
-    "id": 22,
-    "slug": "whyyyy",
-    "label": "Whyyyy"
-  },
-  {
-    "id": 20,
-    "slug": "me",
-    "label": "me"
-  },
-  {
-    "id": 21,
-    "slug": "me-2",
-    "label": "me 2"
   }
 ]

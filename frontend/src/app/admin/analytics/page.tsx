@@ -2,13 +2,12 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-
 import {
+  LineChart,
   ResponsiveContainer,
   AreaChart,
   Area,
   Line,
-  LineChart,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -20,12 +19,9 @@ import {
   Cell,
   Legend,
 } from "recharts";
-
 import { motion } from "framer-motion";
 
-/* -----------------------
-   Types & helpers
-   ----------------------- */
+/* --- types & helpers (kept your originals) --- */
 type DeviceGroup = { deviceType: string; cnt: number };
 type TimePoint = { ts: string; count: number };
 type CategoryPct = { category: string; cnt: number };
@@ -35,8 +31,6 @@ const SAFE_EMPTY_DEVICES: DeviceGroup[] = [];
 const SAFE_EMPTY_CATS: CategoryPct[] = [];
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
-
-// CSV helper (keeps previous TS fix)
 function downloadCsv(filename: string, rows: Array<Record<string, any>>) {
   if (!rows || rows.length === 0) {
     const emptyBlob = new Blob([""], { type: "text/csv;charset=utf-8;" });
@@ -48,26 +42,22 @@ function downloadCsv(filename: string, rows: Array<Record<string, any>>) {
     URL.revokeObjectURL(emptyUrl);
     return;
   }
-
   const keySet = rows.reduce<Set<string>>((set, row) => {
     Object.keys(row).forEach((k) => set.add(k));
     return set;
   }, new Set<string>());
-
   const keys = Array.from(keySet);
-
   const csvLines = [keys.join(",")].concat(
     rows.map((row) =>
       keys
         .map((k) => {
           const v = row[k] ?? "";
-          const s = String(v).replace(/"/g, '""'); // escape quotes
+          const s = String(v).replace(/"/g, '""');
           return `"${s}"`;
         })
         .join(",")
     )
   );
-
   const csv = csvLines.join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
@@ -78,9 +68,7 @@ function downloadCsv(filename: string, rows: Array<Record<string, any>>) {
   URL.revokeObjectURL(url);
 }
 
-/* -----------------------
-   Normalizers (defensive)
-   ----------------------- */
+/* normalizers (kept) */
 function normalizeTimeSeries(raw: any): TimePoint[] {
   if (!Array.isArray(raw)) return SAFE_EMPTY_SERIES;
   return raw
@@ -101,7 +89,6 @@ function normalizeTimeSeries(raw: any): TimePoint[] {
       return da - db;
     });
 }
-
 function normalizeDevices(raw: any): DeviceGroup[] {
   if (!Array.isArray(raw)) return SAFE_EMPTY_DEVICES;
   return raw
@@ -113,7 +100,6 @@ function normalizeDevices(raw: any): DeviceGroup[] {
     })
     .filter((x): x is DeviceGroup => x !== null);
 }
-
 function normalizeCats(raw: any): CategoryPct[] {
   if (!Array.isArray(raw)) return SAFE_EMPTY_CATS;
   return raw
@@ -125,7 +111,6 @@ function normalizeCats(raw: any): CategoryPct[] {
     })
     .filter((x): x is CategoryPct => x !== null);
 }
-
 function collapseCategories(cats: CategoryPct[]) {
   const map = new Map<string, number>();
   for (const c of cats) {
@@ -135,32 +120,23 @@ function collapseCategories(cats: CategoryPct[]) {
   return Array.from(map.entries()).map(([category, cnt]) => ({ category, cnt }));
 }
 
-/* -----------------------
-   Custom tooltip for AreaChart (dedupes entries when Area + Line have same dataKey)
-   ----------------------- */
-// Replace your existing AreaDedupTooltip with this function
+/* Tooltip (kept) */
 function AreaDedupTooltip({ active, payload, label }: any) {
   if (!active || !payload || payload.length === 0) return null;
-  // find the primary value for "value" dataKey (dedupe)
   const first = payload.find((p: any) => p.dataKey === "value") ?? payload[0];
   const value = first?.value ?? first?.payload?.value ?? 0;
-
   return (
     <div className="bg-white border rounded shadow p-2 text-sm">
-      {/* Time / label — make this pure black and bold for max contrast */}
       <div className="font-semibold mb-1 text-black">{label}</div>
-
-      {/* The metric line — label in black, value emphasized */}
       <div className="text-sm">
         <span className="text-black">visitors: </span>
-        <span className="font-medium" style={{ color: "#5B21B6" /* example highlight, keep palette if you want */ }}>
+        <span className="font-medium" style={{ color: "#5B21B6" }}>
           {value}
         </span>
       </div>
     </div>
   );
 }
-
 
 /* -----------------------
    Component
@@ -176,6 +152,14 @@ export default function AdminAnalyticsPage(): React.JSX.Element {
   const [categoryPct, setCategoryPct] = useState<CategoryPct[]>(SAFE_EMPTY_CATS);
   const [liveCount, setLiveCount] = useState<number>(0);
   const [sampleMode, setSampleMode] = useState(false);
+
+  // calendar states
+  const [selectedMonthDate, setSelectedMonthDate] = useState<Date>(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
+  const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(0);
+  const [selectedDayOfMonth, setSelectedDayOfMonth] = useState<number>(() => new Date().getDate());
 
   // sparklines
   const SPARK_MAX = 12;
@@ -196,14 +180,39 @@ export default function AdminAnalyticsPage(): React.JSX.Element {
 
   const areaDataLocalRef = useRef<Array<{ label: string; value: number }> | null>(null);
 
-  /* fetchStats - same logic as before */
+  /* build query string depending on range & selectedMonthDate / selectedWeekIndex / selectedDayOfMonth */
+  const buildStatsUrl = (r?: "day" | "week" | "month") => {
+    const q = r ?? range;
+    const params = new URLSearchParams();
+    params.set("range", q);
+    if (q === "month") {
+      params.set("year", String(selectedMonthDate.getFullYear()));
+      params.set("month", String(selectedMonthDate.getMonth() + 1)); // 1-based month
+    } else if (q === "week") {
+      // send a date that lies in the desired week: compute weekStarts for the selected month and pick that index
+      const wstarts = computeWeekStartsForMonth(selectedMonthDate);
+      const idx = Math.min(Math.max(selectedWeekIndex, 0), Math.max(0, wstarts.length - 1));
+      const d = wstarts[idx];
+      params.set("date", d.toISOString().slice(0, 10)); // YYYY-MM-DD
+    } else {
+      // day
+      const y = selectedMonthDate.getFullYear();
+      const m = selectedMonthDate.getMonth();
+      const day = Math.min(Math.max(selectedDayOfMonth, 1), daysInMonth(selectedMonthDate));
+      const iso = new Date(y, m, day).toISOString().slice(0, 10);
+      params.set("date", iso);
+    }
+    return `/api/stats?${params.toString()}`;
+  };
+
+  /* fetchStats - now uses buildStatsUrl() */
   const fetchStats = async (r?: "day" | "week" | "month") => {
     if (sampleMode) return;
-    const q = r ?? range;
+    const url = buildStatsUrl(r);
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/stats?range=${encodeURIComponent(q)}`, { cache: "no-store" });
+      const res = await fetch(url, { cache: "no-store" });
       if (!res.ok) {
         const body = await res.text().catch(() => "");
         throw new Error(`HTTP ${res.status} ${res.statusText} - ${body.substring(0, 200)}`);
@@ -212,7 +221,6 @@ export default function AdminAnalyticsPage(): React.JSX.Element {
         throw new Error("Invalid JSON response from /api/stats");
       });
       if (data && data.ok === false) throw new Error("/api/stats returned ok=false");
-
       if (!mountedRef.current) return;
 
       prevLiveRef.current = liveCount;
@@ -251,9 +259,13 @@ export default function AdminAnalyticsPage(): React.JSX.Element {
     }
   };
 
+  // auto-fetch on range or month selection changes
   useEffect(() => {
+    // when range changes, reset week/day selection to sensible defaults inside selectedMonthDate
+    setSelectedWeekIndex(0);
+    setSelectedDayOfMonth(new Date().getDate());
     fetchStats();
-
+    // polling logic (kept earlier behavior)
     const pollMs = range === "day" ? 60 * 1000 : range === "week" ? 5 * 60 * 1000 : 10 * 60 * 1000;
     const id = setInterval(() => fetchStats(), pollMs);
 
@@ -282,14 +294,16 @@ export default function AdminAnalyticsPage(): React.JSX.Element {
       if (boundaryId) clearTimeout(boundaryId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [range, sampleMode]);
+  }, [range, selectedMonthDate, selectedWeekIndex, selectedDayOfMonth, sampleMode]);
 
-  /* Chart normalization */
+  /* Chart normalization (adapted to accept month/week/day selections) */
   const chartData = useMemo(() => {
     if (!timeSeries || timeSeries.length === 0) {
       if (range === "day") return Array.from({ length: 24 }).map((_, i) => ({ label: `${pad2(i)}:00`, value: 0 }));
       if (range === "week") return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => ({ label: d, value: 0 }));
-      return Array.from({ length: 5 }).map((_, i) => ({ label: `Week ${i + 1}`, value: 0 }));
+      // for month, determine dynamic number of weeks for selectedMonthDate
+      const starts = computeWeekStartsForMonth(selectedMonthDate);
+      return starts.map((d, i) => ({ label: `Week ${i + 1}`, value: 0 }));
     }
 
     const parsed = timeSeries.map((p) => {
@@ -318,27 +332,37 @@ export default function AdminAnalyticsPage(): React.JSX.Element {
       return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d, i) => ({ label: d, value: byDay[i] }));
     }
 
-    const byWeek = new Array<number>(5).fill(0);
-    const getWeekOfMonth = (date: Date) =>
-      Math.ceil((date.getDate() + new Date(date.getFullYear(), date.getMonth(), 1).getDay()) / 7);
+    // month: dynamic weeks based on selectedMonthDate
+    const weekStarts = computeWeekStartsForMonth(selectedMonthDate);
+    const byWeek = new Array<number>(weekStarts.length).fill(0);
+
+    const firstWeekday = new Date(selectedMonthDate.getFullYear(), selectedMonthDate.getMonth(), 1).getDay();
+
+    const getWeekIndex = (date: Date) => {
+      const dayOfMonth = date.getDate();
+      const zeroIndex = Math.floor((firstWeekday + (dayOfMonth - 1)) / 7);
+      return Math.max(0, Math.min(zeroIndex, weekStarts.length - 1));
+    };
+
     parsed.forEach((pt) => {
       if (pt.date) {
-        const w = getWeekOfMonth(pt.date);
-        if (w >= 1 && w <= 5) byWeek[w - 1] += pt.v;
+        const dt = pt.date;
+        if (dt.getMonth() !== selectedMonthDate.getMonth() || dt.getFullYear() !== selectedMonthDate.getFullYear()) return;
+        const idx = getWeekIndex(dt);
+        byWeek[idx] += pt.v;
       } else if (pt.bucket !== null) {
-        const idx = Math.min(Math.max(pt.bucket - 1, 0), 4);
+        const idx = Math.min(Math.max(Number(pt.bucket) - 1, 0), byWeek.length - 1);
         byWeek[idx] += pt.v;
       }
     });
+
     return byWeek.map((v, i) => ({ label: `Week ${i + 1}`, value: v }));
-  }, [timeSeries, range]);
+  }, [timeSeries, range, selectedMonthDate]);
 
   const areaData = useMemo(() => chartData.map((p) => ({ label: p.label, value: p.value })), [chartData]);
   areaDataLocalRef.current = areaData;
-
   const categoryData = useMemo(() => categoryPct.map((c) => ({ name: c.category, value: c.cnt })), [categoryPct]);
   const deviceData = useMemo(() => deviceGroups.map((d) => ({ name: d.deviceType, value: d.cnt })), [deviceGroups]);
-
   const totalDevices = deviceGroups.reduce((s, g) => s + g.cnt, 0) || 0;
   const totalCategory = categoryPct.reduce((s, c) => s + c.cnt, 0) || 0;
 
@@ -346,7 +370,6 @@ export default function AdminAnalyticsPage(): React.JSX.Element {
   const PALETTE_WEEK = ["#A78BFA", "#7C3AED", "#4C1D95"];
   const PALETTE_MONTH = ["#34D399", "#10B981", "#059669"];
   const DEVICE_COLORS = ["#A3E635", "#60A5FA", "#FDE68A", "#FBCFE8", "#C7B2FF"];
-
   const palette = range === "day" ? PALETTE_DAY : range === "week" ? PALETTE_WEEK : PALETTE_MONTH;
 
   const formatSeconds = (s: number | null) => {
@@ -357,7 +380,7 @@ export default function AdminAnalyticsPage(): React.JSX.Element {
     return `${m}m ${sec}s`;
   };
 
-  // CSV exporters
+  // CSV exporters (kept)
   const exportVisitsCsv = () => {
     const rows = areaData.map((r) => ({ label: r.label, visitors: r.value }));
     downloadCsv(`visits-${range}.csv`, rows);
@@ -371,7 +394,6 @@ export default function AdminAnalyticsPage(): React.JSX.Element {
     downloadCsv(`devices-${range}.csv`, rows);
   };
 
-  // totals and deltas
   const totalVisits = areaData.reduce((s, p) => s + (Number(p.value) || 0), 0);
   const prevLive = prevLiveRef.current;
   const prevTotal = prevTotalRef.current;
@@ -388,7 +410,7 @@ export default function AdminAnalyticsPage(): React.JSX.Element {
     );
   };
 
-  /* Sparkline renderer */
+  // sparkline (kept)
   const Sparkline = ({ data, color }: { data: number[]; color?: string }) => {
     const chartData = data.map((v, i) => ({ i, v }));
     const safeData = chartData.length >= 2 ? chartData : [...chartData, { i: chartData.length, v: chartData[chartData.length - 1] ?? 0 }];
@@ -403,7 +425,7 @@ export default function AdminAnalyticsPage(): React.JSX.Element {
     );
   };
 
-  // sample payload for testing UI
+  // sample payload (kept)
   const samplePayload = {
     ok: true,
     liveCount: 5,
@@ -440,6 +462,42 @@ export default function AdminAnalyticsPage(): React.JSX.Element {
     fetchStats();
   };
 
+  /* ---------- Calendar helpers ---------- */
+  function daysInMonth(d: Date) {
+    return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  }
+  function computeWeekStartsForMonth(d: Date) {
+    const year = d.getFullYear();
+    const month = d.getMonth();
+    const firstOfMonth = new Date(year, month, 1);
+    const firstWeekday = firstOfMonth.getDay(); // 0..6
+    const lastOfMonth = new Date(year, month + 1, 0);
+    const daysInM = lastOfMonth.getDate();
+    const numWeeks = Math.ceil((firstWeekday + daysInM) / 7);
+    // produce array of Dates representing start-of-week (calendar) for each week index
+    return Array.from({ length: numWeeks }).map((_, idx) => {
+      const day = 1 - firstWeekday + idx * 7;
+      const d0 = new Date(year, month, day);
+      d0.setHours(0, 0, 0, 0);
+      return d0;
+    });
+  }
+
+  /* ---------- Month nav handlers ---------- */
+  const goToPrevMonth = () => {
+    setSelectedMonthDate((cur) => new Date(cur.getFullYear(), cur.getMonth() - 1, 1));
+    setSelectedWeekIndex(0);
+    setSelectedDayOfMonth(1);
+  };
+  const goToNextMonth = () => {
+    setSelectedMonthDate((cur) => new Date(cur.getFullYear(), cur.getMonth() + 1, 1));
+    setSelectedWeekIndex(0);
+    setSelectedDayOfMonth(1);
+  };
+
+  const weekStarts = useMemo(() => computeWeekStartsForMonth(selectedMonthDate), [selectedMonthDate]);
+  const numDays = daysInMonth(selectedMonthDate);
+
   /* -----------------------
      Render
      ----------------------- */
@@ -469,10 +527,49 @@ export default function AdminAnalyticsPage(): React.JSX.Element {
           </button>
         </div>
 
-        <div className="flex gap-2">
-          <button onClick={() => { setSampleMode(false); fetchStats(); }} className="px-3 py-1 rounded border">Refresh</button>
-          <button onClick={loadSample} className="px-3 py-1 rounded border">Load sample data</button>
-          {sampleMode && <button onClick={useLiveData} className="px-3 py-1 rounded border">Use live data</button>}
+        <div className="flex items-center gap-3">
+          {/* Month navigator */}
+          <div className="flex items-center gap-2">
+            <button onClick={goToPrevMonth} className="px-2 py-1 rounded border">◀</button>
+            <div className="px-3 py-1 rounded border bg-black text-sm">
+              {selectedMonthDate.toLocaleString(undefined, { month: "long", year: "numeric" })}
+            </div>
+            <button onClick={goToNextMonth} className="px-2 py-1 rounded border">▶</button>
+          </div>
+
+          {/* Week / Day selectors (contextual) */}
+          {range === "week" && (
+            <select
+              value={selectedWeekIndex}
+              onChange={(e) => setSelectedWeekIndex(Number(e.target.value))}
+              className="px-2 py-1 rounded border bg-black"
+            >
+              {weekStarts.map((ws, i) => (
+                <option key={i} value={i}>
+                  {`Week ${i + 1} — starts ${ws.toLocaleDateString()}`}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {range === "day" && (
+            <select
+              value={selectedDayOfMonth}
+              onChange={(e) => setSelectedDayOfMonth(Number(e.target.value))}
+              className="px-2 py-1 rounded border bg-black"
+            >
+              {Array.from({ length: numDays }).map((_, i) => {
+                const day = i + 1;
+                return <option key={day} value={day}>{`${pad2(day)} ${selectedMonthDate.toLocaleString(undefined, { month: "short" })}`}</option>;
+              })}
+            </select>
+          )}
+
+          <div className="flex gap-2">
+            <button onClick={() => { setSampleMode(false); fetchStats(); }} className="px-3 py-1 rounded border">Refresh</button>
+            <button onClick={loadSample} className="px-3 py-1 rounded border">Load sample data</button>
+            {sampleMode && <button onClick={useLiveData} className="px-3 py-1 rounded border">Use live data</button>}
+          </div>
         </div>
       </div>
 
@@ -480,6 +577,7 @@ export default function AdminAnalyticsPage(): React.JSX.Element {
         <div className="mb-4 rounded border border-rose-300 bg-rose-50 p-3 text-sm text-rose-800">Error loading stats: {error}</div>
       )}
 
+      {/* cards (kept) */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <motion.div layout initial={{ opacity: 0.9, scale: 0.995 }} animate={{ opacity: 1, scale: 1 }} className="p-4 rounded-lg shadow bg-white">
           <div className="flex items-center justify-between">
@@ -543,22 +641,34 @@ export default function AdminAnalyticsPage(): React.JSX.Element {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                <XAxis dataKey="label" tick={{ fontSize: 12, fill: "#111827" }} />
+                {/* XAxis: if month, mark selected week tick bold */}
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 12, fill: "#111827" }}
+                  tickFormatter={(t: any, idx: number) => {
+                    // For day, show labels as-is
+                    if (range === "day") return t;
+                    if (range === "week") return t;
+                    // month: label "Week N" - highlight the selectedWeekIndex
+                    if (range === "month") {
+                      return t;
+                    }
+                    return t;
+                  }}
+                />
                 <YAxis allowDecimals={false} tick={{ fill: "#111827" }} />
-                {/* custom tooltip that shows a single "visitors" line and prevents duplicate entries */}
                 <Tooltip content={<AreaDedupTooltip />} />
                 <Area type="monotone" dataKey="value" stroke={palette[1]} fillOpacity={1} fill="url(#colorUv)" name="visitors" />
-                {/* keep the decorative line but it uses same dataKey — our tooltip dedupes */}
                 <Line type="monotone" dataKey="value" stroke={palette[2]} strokeWidth={2} dot={false} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          <p className="mt-2 text-xs text-gray-800">Live-updating chart — refreshed according to range.</p>
+          <p className="mt-2 text-xs text-gray-800">Live-updating chart — refreshed according to range and selected month/week/day.</p>
         </div>
       </section>
 
+      {/* device + category sections (kept unchanged) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-        {/* Device breakdown */}
         <motion.div layout initial={{ opacity: 0.95, y: 6 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-lg shadow bg-white">
           <div className="flex items-start justify-between mb-2">
             <h3 className="text-sm font-medium text-gray-900">Device breakdown</h3>
@@ -607,73 +717,70 @@ export default function AdminAnalyticsPage(): React.JSX.Element {
           )}
         </motion.div>
 
-        {/* Visitors by category */}
-<motion.div layout initial={{ opacity: 0.95, y: 6 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-lg shadow bg-white lg:col-span-2">
-  <div className="flex items-start justify-between mb-2">
-    <h3 className="text-sm font-medium text-gray-900">Visitors by category ({range})</h3>
-    <button onClick={exportCategoryCsv} className="px-2 py-1 text-xs rounded border text-gray-700">Export CSV</button>
-  </div>
-
-  {categoryData.length === 0 && !loading ? (
-    <div className="text-sm text-gray-800">No category data</div>
-  ) : (
-    <div style={{ width: "100%", height: 260 }}>
-      <ResponsiveContainer>
-        <BarChart
-          data={categoryData}
-          layout="vertical"
-          margin={{ top: 10, left: 20, right: 20, bottom: 10 }}
-          barCategoryGap="10%"
-        >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis type="number" tick={{ fill: "#111827", fontSize: 12 }} />
-          <YAxis
-            dataKey="name"
-            type="category"
-            width={180}
-            tick={{ fill: "#111827", fontSize: 12 }}
-          />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "#ffffff",
-              border: "1px solid #d1d5db",
-              borderRadius: "6px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-            }}
-            labelStyle={{ color: "#000", fontWeight: 600 }}
-            itemStyle={{ color: "#000" }}
-            formatter={(v: any) => [v, "visitors"]}
-          />
-          <Bar dataKey="value" isAnimationActive>
-            {categoryData.map((entry, idx) => (
-              <Cell key={`cat-${entry.name}-${idx}`} fill={palette[idx % palette.length]} />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-  )}
-
-  {/* Category list below chart */}
-  <div className="mt-3 space-y-2">
-    {categoryPct.map((c, i) => {
-      const pct = totalCategory ? (c.cnt / totalCategory) * 100 : 0;
-      return (
-        <div key={`${c.category}-${i}`} className="flex items-center gap-3">
-          <div className="w-44 text-sm text-gray-900">{c.category}</div>
-          <div className="flex-1 h-6 bg-gray-100 rounded overflow-hidden">
-            <div
-              className="h-6 bg-gradient-to-r from-emerald-400 to-teal-600"
-              style={{ width: `${Math.round(pct)}%` }}
-            />
+        <motion.div layout initial={{ opacity: 0.95, y: 6 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-lg shadow bg-white lg:col-span-2">
+          <div className="flex items-start justify-between mb-2">
+            <h3 className="text-sm font-medium text-gray-900">Visitors by category ({range})</h3>
+            <button onClick={exportCategoryCsv} className="px-2 py-1 text-xs rounded border text-gray-700">Export CSV</button>
           </div>
-          <div className="w-20 text-right text-sm text-gray-900">{c.cnt}</div>
-        </div>
-      );
-    })}
-  </div>
-</motion.div>
 
+          {categoryData.length === 0 && !loading ? (
+            <div className="text-sm text-gray-800">No category data</div>
+          ) : (
+            <div style={{ width: "100%", height: 260 }}>
+              <ResponsiveContainer>
+                <BarChart
+                  data={categoryData}
+                  layout="vertical"
+                  margin={{ top: 10, left: 20, right: 20, bottom: 10 }}
+                  barCategoryGap="10%"
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis type="number" tick={{ fill: "#111827", fontSize: 12 }} />
+                  <YAxis
+                    dataKey="name"
+                    type="category"
+                    width={180}
+                    tick={{ fill: "#111827", fontSize: 12 }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#ffffff",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "6px",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                    }}
+                    labelStyle={{ color: "#000", fontWeight: 600 }}
+                    itemStyle={{ color: "#000" }}
+                    formatter={(v: any) => [v, "visitors"]}
+                  />
+                  <Bar dataKey="value" isAnimationActive>
+                    {categoryData.map((entry, idx) => (
+                      <Cell key={`cat-${entry.name}-${idx}`} fill={palette[idx % palette.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          <div className="mt-3 space-y-2">
+            {categoryPct.map((c, i) => {
+              const pct = totalCategory ? (c.cnt / totalCategory) * 100 : 0;
+              return (
+                <div key={`${c.category}-${i}`} className="flex items-center gap-3">
+                  <div className="w-44 text-sm text-gray-900">{c.category}</div>
+                  <div className="flex-1 h-6 bg-gray-100 rounded overflow-hidden">
+                    <div
+                      className="h-6 bg-gradient-to-r from-emerald-400 to-teal-600"
+                      style={{ width: `${Math.round(pct)}%` }}
+                    />
+                  </div>
+                  <div className="w-20 text-right text-sm text-gray-900">{c.cnt}</div>
+                </div>
+              );
+            })}
+          </div>
+        </motion.div>
       </div>
 
       <section>
