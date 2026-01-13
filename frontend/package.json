@@ -27,7 +27,6 @@
     "seed": "npm run seed:categories"
   },
   "dependencies": {
-    "@prisma/client": "^6.18.0",
     "@vercel/analytics": "^1.5.0",
     "framer-motion": "^12.23.24",
     "geoip-lite": "^1.4.10",
@@ -41,6 +40,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@prisma/client": "^6.18.0",
     "@tailwindcss/postcss": "^4",
     "@types/geoip-lite": "^1.4.4",
     "@types/node": "^20",
@@ -49,7 +49,7 @@
     "@types/ua-parser-js": "^0.7.39",
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
-    "prisma": "^7.2.0",
+    "prisma": "^6.18.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
