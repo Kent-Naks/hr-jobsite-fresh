@@ -1,6 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
+
 async function main() {
   const cats = [
     ["business","Business Jobs"],["hr","HR & Recruitment"],["admin","Administrative Jobs"],
