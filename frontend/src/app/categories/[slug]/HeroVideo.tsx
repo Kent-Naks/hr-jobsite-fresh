@@ -63,6 +63,62 @@ export default function HeroVideo({ videos }: HeroVideoProps) {
     }
   };
 
+  // Ensure the element has enough buffered data before playing to avoid rebuffering
+  const ensureBuffered = (index: number, minRatio = 0.9, timeoutMs = 5000) => {
+    return new Promise<void>((resolve) => {
+      const el = videoRefs.current[index];
+      if (!el) return resolve();
+      const DEBUG = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("video_debug") === "1";
+
+      const checkBuffered = () => {
+        try {
+          const dur = el.duration;
+          if (isNaN(dur) || !isFinite(dur) || dur === 0) {
+            // unknown duration, rely on readyState
+            if (el.readyState >= 3) return true;
+            return false;
+          }
+          if (el.buffered.length === 0) return false;
+          const bufferedEnd = el.buffered.end(el.buffered.length - 1);
+          const ratio = bufferedEnd / dur;
+          if (DEBUG) console.debug(`[HeroVideo] buffered check idx=${index} end=${bufferedEnd.toFixed(2)} dur=${dur.toFixed(2)} ratio=${ratio.toFixed(2)}`);
+          return ratio >= minRatio || el.readyState >= 4;
+        } catch (e) {
+          return el.readyState >= 3;
+        }
+      };
+
+      if (checkBuffered()) return resolve();
+
+      const onProgress = () => {
+        if (checkBuffered()) {
+          cleanup();
+          resolve();
+        }
+      };
+
+      const onCan = () => {
+        if (DEBUG) console.debug(`[HeroVideo] canplaythrough triggered for ${index}`);
+        cleanup();
+        resolve();
+      };
+
+      const cleanup = () => {
+        el.removeEventListener("progress", onProgress);
+        el.removeEventListener("canplaythrough", onCan);
+        clearTimeout(timer);
+      };
+
+      el.addEventListener("progress", onProgress);
+      el.addEventListener("canplaythrough", onCan);
+      const timer = setTimeout(() => {
+        if (DEBUG) console.debug(`[HeroVideo] buffer timeout for ${index}, proceeding`);
+        cleanup();
+        resolve();
+      }, timeoutMs);
+    });
+  };
+
   // Play current video when visible and loaded; preload next while playing
   useEffect(() => {
     if (!visible || videos.length === 0) return;
@@ -81,12 +137,13 @@ export default function HeroVideo({ videos }: HeroVideoProps) {
         // pause others
         videoRefs.current.forEach((v, i) => {
           if (!v) return;
-          if (i === current) {
-            v.muted = true;
-            v.play().catch((err) => { if (DEBUG) console.debug('[HeroVideo] play error', err); });
-          } else {
-            v.pause();
-          }
+            if (i === current) {
+              v.muted = true;
+              // ensure enough buffer before playing to avoid mid-loop freezes
+              ensureBuffered(i).then(() => v.play().catch((err) => { if (DEBUG) console.debug('[HeroVideo] play error', err); }));
+            } else {
+              v.pause();
+            }
         });
         // Do NOT preload next here — defer loading of the next video until
         // the current video finishes its first full loop (on 'ended').
