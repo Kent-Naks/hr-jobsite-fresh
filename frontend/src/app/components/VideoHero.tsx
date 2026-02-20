@@ -8,6 +8,9 @@ type VideoHeroProps = {
   videos: string[];
 };
 
+// prefer a CDN/base URL for videos when provided, otherwise serve local `/videos/`
+const VIDEO_BASE = (process.env.NEXT_PUBLIC_VIDEO_BASE_URL || "").replace(/\/$/, "");
+
 export default function VideoHero({ videos }: VideoHeroProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [fade, setFade] = useState(true);
@@ -53,8 +56,10 @@ export default function VideoHero({ videos }: VideoHeroProps) {
   if (videos.length === 0) return null;
 
   const filename = videos[currentIndex];
-  const posterPath = `/videos/posters/${filename.replace(/\.mp4$/, ".jpg")}`;
-  const src = isVisible ? `/videos/${filename}` : undefined;
+  const posterPath = VIDEO_BASE
+    ? `${VIDEO_BASE}/videos/posters/${filename.replace(/\.mp4$/, ".jpg")}`
+    : `/videos/posters/${filename.replace(/\.mp4$/, ".jpg")}`;
+  const src = isVisible ? (VIDEO_BASE ? `${VIDEO_BASE}/videos/${filename}` : `/videos/${filename}`) : undefined;
 
   return (
     <div ref={elRef} className="relative w-full h-[350px] md:h-[500px] lg:h-[650px] overflow-hidden">
