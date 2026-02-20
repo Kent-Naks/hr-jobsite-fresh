@@ -77,11 +77,8 @@ export default function HeroVideo({ videos }: HeroVideoProps) {
             v.pause();
           }
         });
-        // preload next 2
-        for (let o = 1; o <= 2; o++) {
-          const next = (current + o) % videos.length;
-          loadVideo(next);
-        }
+        // Do NOT preload next here — defer loading of the next video until
+        // the current video finishes its first full loop (on 'ended').
       } else {
         // wait for canplaythrough
         const onCan = () => {
@@ -97,11 +94,8 @@ export default function HeroVideo({ videos }: HeroVideoProps) {
     // when current ends, advance only after ensuring next is loaded
     const onEnded = async () => {
       const next = (current + 1) % videos.length;
-      // ensure next and next+1 are preloaded
-      for (let o = 1; o <= 2; o++) {
-        const idx = (current + o) % videos.length;
-        loadVideo(idx);
-      }
+      // Start loading the next video only after the current video finished its first full play.
+      loadVideo(next);
       const nextEl = videoRefs.current[next];
       if (!nextEl) {
         setCurrent(next);
