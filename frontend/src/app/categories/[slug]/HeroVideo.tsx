@@ -32,16 +32,24 @@ export default function HeroVideo({ videos }: HeroVideoProps) {
   // track loaded indexes so we can show a spinner while buffering
   const [loadedIndexes, setLoadedIndexes] = useState<number[]>([]);
 
+  // track loaded indexes so we can show a spinner while buffering
+  const [loadedIndexes, setLoadedIndexes] = useState<number[]>([]);
+
   // helper to set src and start preloading
   const loadVideo = (index: number) => {
     const el = videoRefs.current[index];
     if (!el) return;
     if (loadedIndexes.includes(index)) return;
     if (!el.getAttribute("data-loaded")) {
+      // runtime debug flag via URL: ?video_debug=1
+      const DEBUG = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("video_debug") === "1";
+      const src = `/videos/${videos[index]}`;
+      if (DEBUG) console.debug(`[HeroVideo] loadVideo(${index}) -> ${src}`);
       el.preload = "auto";
-      el.src = `/videos/${videos[index]}`;
+      el.src = src;
       // mark as loading/loaded via event
       const onCan = () => {
+        if (DEBUG) console.debug(`[HeroVideo] canplaythrough ${index}`);
         setLoadedIndexes((prev) => (prev.includes(index) ? prev : [...prev, index]));
         el.setAttribute("data-loaded", "true");
         el.removeEventListener("canplaythrough", onCan);
@@ -49,6 +57,7 @@ export default function HeroVideo({ videos }: HeroVideoProps) {
       el.addEventListener("canplaythrough", onCan);
       // also attempt to call load() to start fetching
       try {
+        if (DEBUG) console.debug(`[HeroVideo] calling load() for ${index}`);
         el.load();
       } catch {}
     }
@@ -65,14 +74,16 @@ export default function HeroVideo({ videos }: HeroVideoProps) {
     if (!currentEl) return;
 
     const tryPlay = () => {
+      const DEBUG = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("video_debug") === "1";
       const isLoaded = loadedIndexes.includes(current) || currentEl.getAttribute("data-loaded") || currentEl.readyState >= 3;
+      if (DEBUG) console.debug(`[HeroVideo] tryPlay current=${current} isLoaded=${isLoaded}`);
       if (isLoaded) {
         // pause others
         videoRefs.current.forEach((v, i) => {
           if (!v) return;
           if (i === current) {
             v.muted = true;
-            v.play().catch(() => {});
+            v.play().catch((err) => { if (DEBUG) console.debug('[HeroVideo] play error', err); });
           } else {
             v.pause();
           }
@@ -92,26 +103,30 @@ export default function HeroVideo({ videos }: HeroVideoProps) {
     tryPlay();
 
     // when current ends, advance only after ensuring next is loaded
-    const onEnded = async () => {
-      const next = (current + 1) % videos.length;
-      // Start loading the next video only after the current video finished its first full play.
-      loadVideo(next);
-      const nextEl = videoRefs.current[next];
-      if (!nextEl) {
-        setCurrent(next);
-        return;
-      }
-      const isNextLoaded = loadedIndexes.includes(next) || nextEl.getAttribute("data-loaded") || nextEl.readyState >= 3;
-      if (isNextLoaded) {
-        setCurrent(next);
-      } else {
-        const onCanNext = () => {
-          nextEl.removeEventListener("canplaythrough", onCanNext);
+      const onEnded = async () => {
+        const DEBUG = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("video_debug") === "1";
+        const next = (current + 1) % videos.length;
+        if (DEBUG) console.debug(`[HeroVideo] ended current=${current} -> start loading next=${next}`);
+        // Start loading the next video only after the current video finished its first full play.
+        loadVideo(next);
+        const nextEl = videoRefs.current[next];
+        if (!nextEl) {
           setCurrent(next);
-        };
-        nextEl.addEventListener("canplaythrough", onCanNext);
-      }
-    };
+          return;
+        }
+        const isNextLoaded = loadedIndexes.includes(next) || nextEl.getAttribute("data-loaded") || nextEl.readyState >= 3;
+        if (isNextLoaded) {
+          if (DEBUG) console.debug(`[HeroVideo] next already loaded, advancing to ${next}`);
+          setCurrent(next);
+        } else {
+          const onCanNext = () => {
+            if (DEBUG) console.debug(`[HeroVideo] next canplaythrough ${next}, advancing`);
+            nextEl.removeEventListener("canplaythrough", onCanNext);
+            setCurrent(next);
+          };
+          nextEl.addEventListener("canplaythrough", onCanNext);
+        }
+      };
 
     currentEl.addEventListener("ended", onEnded);
 
