@@ -54,13 +54,16 @@ export default function VideoHero({ videos }: VideoHeroProps) {
   if (videos.length === 0) return null;
 
   const filename = videos[currentIndex];
+  const baseName = filename.replace(/\.mp4$/, "");
   const posterPath = VIDEO_BASE
-    ? `${VIDEO_BASE}/videos/posters/${filename.replace(/\.mp4$/, ".jpg")}`
-    : `/videos/posters/${filename.replace(/\.mp4$/, ".jpg")}`;
+    ? `${VIDEO_BASE}/videos/posters/${baseName}.jpg`
+    : `/videos/posters/${baseName}.jpg`;
 
-  // prefer webm if available on CDN; fallback to mp4
-  const webmSrc = VIDEO_BASE ? `${VIDEO_BASE}/videos/${filename.replace(/\.mp4$/, ".webm")}` : `/videos/${filename.replace(/\.mp4$/, ".webm")}`;
-  const mp4Src = VIDEO_BASE ? `${VIDEO_BASE}/videos/${filename}` : `/videos/${filename}`;
+  // Prefer the transcoded 720p variants first, then fall back to originals.
+  const webm720 = VIDEO_BASE ? `${VIDEO_BASE}/videos/${baseName}-720.webm` : `/videos/${baseName}-720.webm`;
+  const webmOrig = VIDEO_BASE ? `${VIDEO_BASE}/videos/${baseName}.webm` : `/videos/${baseName}.webm`;
+  const mp4720 = VIDEO_BASE ? `${VIDEO_BASE}/videos/${baseName}-720.mp4` : `/videos/${baseName}-720.mp4`;
+  const mp4Orig = VIDEO_BASE ? `${VIDEO_BASE}/videos/${filename}` : `/videos/${filename}`;
 
   return (
     <div ref={videoRef} className="relative w-full h-[350px] md:h-[500px] lg:h-[650px] overflow-hidden">
@@ -78,8 +81,10 @@ export default function VideoHero({ videos }: VideoHeroProps) {
       >
         {visible && (
           <>
-            <source src={webmSrc} type="video/webm" />
-            <source src={mp4Src} type="video/mp4" />
+            <source src={webm720} type="video/webm" />
+            <source src={webmOrig} type="video/webm" />
+            <source src={mp4720} type="video/mp4" />
+            <source src={mp4Orig} type="video/mp4" />
           </>
         )}
       </video>
