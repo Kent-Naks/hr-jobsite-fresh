@@ -14,42 +14,33 @@ export default function VideoHero({ videos }: VideoHeroProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [fade, setFade] = useState(true);
   const [visible, setVisible] = useState(false);
-  const videoRef = useRef<HTMLDivElement | null>(null);
-  const [loaded, setLoaded] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const videoElRef = useRef<HTMLVideoElement | null>(null);
 
-  // autoplay carousel
+  // IntersectionObserver — only load/play when scrolled into view
   useEffect(() => {
-    if (videos.length === 0) return;
-
-    const interval = setInterval(() => {
-      setFade(false);
-      setTimeout(() => {
-        setCurrentIndex((prev) => (prev + 1) % videos.length);
-        setFade(true);
-        setLoaded(false); // ensure next video will lazy load
-      }, 500);
-    }, 6000);
-
-    return () => clearInterval(interval);
-  }, [videos]);
-
-  // IntersectionObserver to lazy-load when in viewport
-  useEffect(() => {
-    if (!videoRef.current) return;
+    if (!containerRef.current) return;
     const obs = new IntersectionObserver(
       (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            setVisible(true);
-            obs.disconnect();
-          }
-        });
+        if (entries[0].isIntersecting) {
+          setVisible(true);
+          obs.disconnect();
+        }
       },
       { threshold: 0.2 }
     );
-    obs.observe(videoRef.current);
+    obs.observe(containerRef.current);
     return () => obs.disconnect();
-  }, [videoRef]);
+  }, []);
+
+  // Play the current video programmatically once visible (or when index advances).
+  // .load() is required to pick up the <source> elements added after visibility is set.
+  useEffect(() => {
+    if (!visible || !videoElRef.current) return;
+    const vid = videoElRef.current;
+    vid.load();
+    vid.play().catch(() => {});
+  }, [visible, currentIndex]);
 
   if (videos.length === 0) return null;
 
@@ -65,19 +56,30 @@ export default function VideoHero({ videos }: VideoHeroProps) {
   const mp4720 = VIDEO_BASE ? `${VIDEO_BASE}/videos/${baseName}-720.mp4` : `/videos/${baseName}-720.mp4`;
   const mp4Orig = VIDEO_BASE ? `${VIDEO_BASE}/videos/${filename}` : `/videos/${filename}`;
 
+  // Advance to the next video only after the current one finishes playing.
+  const handleEnded = () => {
+    if (videos.length <= 1) return;
+    setFade(false);
+    setTimeout(() => {
+      setCurrentIndex((prev) => (prev + 1) % videos.length);
+      setFade(true);
+    }, 500);
+  };
+
   return (
-    <div ref={videoRef} className="relative w-full h-[350px] md:h-[500px] lg:h-[650px] overflow-hidden">
+    <div ref={containerRef} className="relative w-full h-[350px] md:h-[500px] lg:h-[650px] overflow-hidden">
       <video
+        ref={videoElRef}
         key={filename}
         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
           fade ? "opacity-100" : "opacity-0"
         }`}
-        autoPlay={visible}
         muted
         playsInline
         loop={videos.length === 1}
-        preload="metadata"
+        preload={visible ? "auto" : "none"}
         poster={posterPath}
+        onEnded={handleEnded}
       >
         {visible && (
           <>
