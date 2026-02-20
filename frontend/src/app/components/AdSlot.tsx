@@ -71,7 +71,8 @@ export default function AdSlot({ slot }: { slot: string }) {
   // Render the real <ins> only if ad client looks like a real id. This avoids accidental policy issues.
   const isDev = process.env.NODE_ENV === "development";
   // Treat the default dummy value as invalid so the friendly placeholder shows
-  // locally and in production unless a real NEXT_PUBLIC_ADSENSE_ID is set.
+  // locally and in production unless a real NEXT_PUBLIC_ADSENSE_ID
+  //  is set.
   const isValidClient =
     typeof process.env.NEXT_PUBLIC_ADSENSE_ID === "string" &&
     process.env.NEXT_PUBLIC_ADSENSE_ID.startsWith("ca-pub-") &&
