@@ -1,8 +1,7 @@
 // src/components/VideoHero.tsx
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import Skeleton from "@/components/Skeleton";
+import { useEffect, useRef, useState } from "react";
 
 type VideoHeroProps = {
   videos: string[];
@@ -14,44 +13,43 @@ const VIDEO_BASE = (process.env.NEXT_PUBLIC_VIDEO_BASE_URL || "").replace(/\/$/,
 export default function VideoHero({ videos }: VideoHeroProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [fade, setFade] = useState(true);
-  const [isVisible, setIsVisible] = useState(false);
-  const [srcLoaded, setSrcLoaded] = useState(false);
-  const elRef = useRef<HTMLDivElement | null>(null);
+  const [visible, setVisible] = useState(false);
+  const videoRef = useRef<HTMLDivElement | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
+  // autoplay carousel
   useEffect(() => {
     if (videos.length === 0) return;
 
     const interval = setInterval(() => {
-      setFade(false); // start fade-out
-
+      setFade(false);
       setTimeout(() => {
-        // increment index and wrap around even for single video
         setCurrentIndex((prev) => (prev + 1) % videos.length);
-        setFade(true); // fade-in new video
-      }, 500); // match Tailwind duration-500
+        setFade(true);
+        setLoaded(false); // ensure next video will lazy load
+      }, 500);
     }, 6000);
 
     return () => clearInterval(interval);
   }, [videos]);
 
+  // IntersectionObserver to lazy-load when in viewport
   useEffect(() => {
-    // IntersectionObserver to lazy-load videos only when visible on page
-    const node = elRef.current;
-    if (!node) return;
+    if (!videoRef.current) return;
     const obs = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
           if (e.isIntersecting) {
-            setIsVisible(true);
+            setVisible(true);
             obs.disconnect();
           }
         });
       },
-      { root: null, threshold: 0.2 }
+      { threshold: 0.2 }
     );
-    obs.observe(node);
+    obs.observe(videoRef.current);
     return () => obs.disconnect();
-  }, [elRef]);
+  }, [videoRef]);
 
   if (videos.length === 0) return null;
 
@@ -59,31 +57,32 @@ export default function VideoHero({ videos }: VideoHeroProps) {
   const posterPath = VIDEO_BASE
     ? `${VIDEO_BASE}/videos/posters/${filename.replace(/\.mp4$/, ".jpg")}`
     : `/videos/posters/${filename.replace(/\.mp4$/, ".jpg")}`;
-  const src = isVisible ? (VIDEO_BASE ? `${VIDEO_BASE}/videos/${filename}` : `/videos/${filename}`) : undefined;
+
+  // prefer webm if available on CDN; fallback to mp4
+  const webmSrc = VIDEO_BASE ? `${VIDEO_BASE}/videos/${filename.replace(/\.mp4$/, ".webm")}` : `/videos/${filename.replace(/\.mp4$/, ".webm")}`;
+  const mp4Src = VIDEO_BASE ? `${VIDEO_BASE}/videos/${filename}` : `/videos/${filename}`;
 
   return (
-    <div ref={elRef} className="relative w-full h-[350px] md:h-[500px] lg:h-[650px] overflow-hidden">
-      {!srcLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <Skeleton className="w-full max-w-3xl" />
-        </div>
-      )}
-
+    <div ref={videoRef} className="relative w-full h-[350px] md:h-[500px] lg:h-[650px] overflow-hidden">
       <video
         key={filename}
         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
           fade ? "opacity-100" : "opacity-0"
         }`}
-        autoPlay
+        autoPlay={visible}
         muted
         playsInline
         loop={videos.length === 1}
-        preload={isVisible ? "metadata" : "none"}
+        preload="metadata"
         poster={posterPath}
-        src={src}
-        onLoadedMetadata={() => setSrcLoaded(true)}
-      />
-
+      >
+        {visible && (
+          <>
+            <source src={webmSrc} type="video/webm" />
+            <source src={mp4Src} type="video/mp4" />
+          </>
+        )}
+      </video>
       <div className="absolute inset-0 bg-black/40" />
     </div>
   );
