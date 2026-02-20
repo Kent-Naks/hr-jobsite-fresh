@@ -1,7 +1,8 @@
 // src/components/VideoHero.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import Skeleton from "@/components/Skeleton";
 
 type VideoHeroProps = {
   videos: string[];
@@ -10,6 +11,9 @@ type VideoHeroProps = {
 export default function VideoHero({ videos }: VideoHeroProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [fade, setFade] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
+  const [srcLoaded, setSrcLoaded] = useState(false);
+  const elRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (videos.length === 0) return;
@@ -27,21 +31,54 @@ export default function VideoHero({ videos }: VideoHeroProps) {
     return () => clearInterval(interval);
   }, [videos]);
 
+  useEffect(() => {
+    // IntersectionObserver to lazy-load videos only when visible on page
+    const node = elRef.current;
+    if (!node) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            setIsVisible(true);
+            obs.disconnect();
+          }
+        });
+      },
+      { root: null, threshold: 0.2 }
+    );
+    obs.observe(node);
+    return () => obs.disconnect();
+  }, [elRef]);
+
   if (videos.length === 0) return null;
 
+  const filename = videos[currentIndex];
+  const posterPath = `/videos/posters/${filename.replace(/\.mp4$/, ".jpg")}`;
+  const src = isVisible ? `/videos/${filename}` : undefined;
+
   return (
-    <div className="relative w-full h-[350px] md:h-[500px] lg:h-[650px] overflow-hidden">
+    <div ref={elRef} className="relative w-full h-[350px] md:h-[500px] lg:h-[650px] overflow-hidden">
+      {!srcLoaded && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Skeleton className="w-full max-w-3xl" />
+        </div>
+      )}
+
       <video
-        key={videos[currentIndex]}
+        key={filename}
         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
           fade ? "opacity-100" : "opacity-0"
         }`}
         autoPlay
         muted
         playsInline
-        loop={videos.length === 1} // explicit loop for single video
-        src={`/videos/${videos[currentIndex]}`}
+        loop={videos.length === 1}
+        preload={isVisible ? "metadata" : "none"}
+        poster={posterPath}
+        src={src}
+        onLoadedMetadata={() => setSrcLoaded(true)}
       />
+
       <div className="absolute inset-0 bg-black/40" />
     </div>
   );
