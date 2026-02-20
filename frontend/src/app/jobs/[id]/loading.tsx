@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { SkeletonCard } from "@/app/components/Skeleton";
+import { SkeletonCard } from "@/components/Skeleton";
 
 export default function JobLoading() {
   return (
