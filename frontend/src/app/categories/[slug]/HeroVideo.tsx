@@ -32,9 +32,6 @@ export default function HeroVideo({ videos }: HeroVideoProps) {
   // track loaded indexes so we can show a spinner while buffering
   const [loadedIndexes, setLoadedIndexes] = useState<number[]>([]);
 
-  // track loaded indexes so we can show a spinner while buffering
-  const [loadedIndexes, setLoadedIndexes] = useState<number[]>([]);
-
   // helper to set src and start preloading
   const loadVideo = (index: number) => {
     const el = videoRefs.current[index];
@@ -194,31 +191,36 @@ export default function HeroVideo({ videos }: HeroVideoProps) {
 
   return (
     <div ref={containerRef} className="relative w-full h-[60vh] sm:h-[80vh] mb-6 overflow-hidden rounded-lg">
-      {videos.map((video, index) => {
-        const isCurrent = index === current;
-        const isLoaded = loadedIndexes.includes(index);
-        return (
-          <div key={video} className={`absolute inset-0 transition-opacity duration-1000 ${isCurrent ? "opacity-100" : "opacity-0"}`}>
-            <video
-              ref={(el) => {
-                if (el) videoRefs.current[index] = el;
-              }}
-              // src is set via loadVideo to avoid eager fetching
-              data-src={`/videos/${video}`}
-              preload="none"
-              muted
-              playsInline
-              className="w-full h-full object-cover"
-            />
-            {/* buffering spinner */}
-            {isCurrent && !isLoaded && visible && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                <div className="w-12 h-12 border-4 border-t-transparent border-white rounded-full animate-spin" />
-              </div>
-            )}
-          </div>
-        );
-      })}
+      {(() => {
+        const next = (current + 1) % videos.length;
+        return videos.map((video, index) => {
+          // Render only the current and next videos to reduce DOM and mount cost
+          if (index !== current && index !== next) return null;
+          const isCurrent = index === current;
+          const isLoaded = loadedIndexes.includes(index);
+          return (
+            <div key={video} className={`absolute inset-0 transition-opacity duration-1000 ${isCurrent ? "opacity-100" : "opacity-0"}`}>
+              <video
+                ref={(el) => {
+                  if (el) videoRefs.current[index] = el;
+                }}
+                // src is set via loadVideo to avoid eager fetching
+                data-src={`/videos/${video}`}
+                preload="none"
+                muted
+                playsInline
+                className="w-full h-full object-cover"
+              />
+              {/* buffering spinner */}
+              {isCurrent && !isLoaded && visible && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                  <div className="w-12 h-12 border-4 border-t-transparent border-white rounded-full animate-spin" />
+                </div>
+              )}
+            </div>
+          );
+        });
+      })()}
     </div>
   );
 }
