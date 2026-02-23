@@ -11,7 +11,13 @@ export default async function AboutPage() {
   let latestJobs: { id: string; title: string; categoryLabel?: string }[] = [];
 
   try {
-    jobCount = await prisma.job.count({ where: { status: "published" } });
+    // Count only currently active published jobs (not expired)
+    jobCount = await prisma.job.count({
+      where: {
+        status: "published",
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+      },
+    });
   } catch (err) {
     console.error("AboutPage: job count failed:", err);
     jobCount = 0;
@@ -42,7 +48,7 @@ export default async function AboutPage() {
     latestJobs = [];
   }
 
-  const avgPerCategory = Math.max(0, Math.floor(jobCount / Math.max(1, categoryCount)));
+  // avg removed — we no longer surface average jobs per category on About
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -71,10 +77,9 @@ export default async function AboutPage() {
       </header>
 
       {/* Counters */}
-      <section className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <section className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
         <CountUp to={jobCount ?? 0} label="Published jobs" />
         <CountUp to={categoryCount ?? 0} label="Categories" />
-        <CountUp to={avgPerCategory} label="Avg jobs / category" />
       </section>
 
       {/* Latest jobs carousel / grid */}
