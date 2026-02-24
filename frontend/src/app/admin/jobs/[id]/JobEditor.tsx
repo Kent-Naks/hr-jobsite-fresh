@@ -124,6 +124,7 @@ const HEADING_MAP: { re: RegExp; key: SectionKey }[] = [
 const TITLE_RE = /^(job\s+)?(title|position|role)$/i;
 const LOCATION_RE = /^location(\s*[/\/]\s*region)?$/i;
 const SALARY_META_RE = /^salary(\s+range)?$/i;
+const OPENINGS_RE = /^(number\s+of\s+)?openings?(\s+available)?$|^(no\.?\s+of\s+)?vacancies?$/i;
 const QUESTIONS_RE = /^(application\s+)?questions?(\s+for\s+applicants)?$/i;
 
 // ─── Parser utilities ─────────────────────────────────────────────────────────
@@ -170,16 +171,20 @@ function parseQuestionLine(line: string): Question | null {
   // Strip leading numbering or bullet prefix
   const cleaned = t.replace(/^(?:\d+[.)]\s*|[Q#]\d+[.)]\s*|[•\-*]\s*)/i, "").trim();
   if (!cleaned || cleaned.length < 5) return null;
+  // Detect yes/no: handles (Yes/No), [Yes/No], Yes/No, (Y/N), [Y/N], "yes or no"
   const isYesNo =
-    /\(yes\s*\/\s*no\)/i.test(cleaned) ||
-    /\(y\s*\/\s*n\)/i.test(cleaned) ||
+    /[\[(]yes\s*\/\s*no[\])]/i.test(cleaned) ||
+    /[\[(]y\s*\/\s*n[\])]/i.test(cleaned) ||
+    /\byes\s*\/\s*no\b/i.test(cleaned) ||
     /\byes\s+or\s+no\b/i.test(cleaned);
+  const prompt = cleaned
+    .replace(/\s*[\[(]yes\s*\/\s*no[\])]\s*$/i, "")
+    .replace(/\s*[\[(]y\s*\/\s*n[\])]\s*$/i, "")
+    .replace(/\s*\byes\s*\/\s*no\s*$/i, "")
+    .trim();
   return {
     type: isYesNo ? "yes_no" : "text",
-    prompt: cleaned
-      .replace(/\s*\(yes\s*\/\s*no\)\s*$/i, "")
-      .replace(/\s*\(y\s*\/\s*n\)\s*$/i, "")
-      .trim(),
+    prompt,
     required: false,
   };
 }
@@ -258,7 +263,8 @@ function parseFullJD(rawText: string): ParsedJD {
 
     if ((bucket === "pre" || bucket === "skip") && hasInlineValue && kPart && !/^[\-•*\d]/.test(t)) {
       if (TITLE_RE.test(kPart) && vPart) {
-        if (!result.title) result.title = vPart;
+        // Explicit "Job Title: X" always wins over any implicit ALL-CAPS detection
+        result.title = vPart;
         prevBlank = false;
         continue;
       }
@@ -267,6 +273,14 @@ function parseFullJD(rawText: string): ParsedJD {
         result.sections.overview = result.sections.overview
           ? `${loc}\n\n${result.sections.overview}`
           : loc;
+        prevBlank = false;
+        continue;
+      }
+      if (OPENINGS_RE.test(kPart) && vPart) {
+        const op = `Openings: ${vPart}`;
+        result.sections.overview = result.sections.overview
+          ? `${op}\n${result.sections.overview}`
+          : op;
         prevBlank = false;
         continue;
       }
@@ -280,13 +294,15 @@ function parseFullJD(rawText: string): ParsedJD {
     }
 
     // ── First non-blank line as implicit title (ALL-CAPS header) ──────
-    if (bucket === "pre" && !result.title && nonBlankSeen === 1) {
+    // Fires only for the first 3 non-blank lines; explicit "Job Title:" above overrides this.
+    if (bucket === "pre" && !result.title && nonBlankSeen <= 3) {
       const wc = t.replace(/:$/, "").trim();
       if (
         wc === wc.toUpperCase() &&
         /[A-Z]/.test(wc) &&
         wc.length >= 3 && wc.length <= 70 &&
-        !wc.includes(",") && !/[.!?]/.test(wc)
+        !wc.includes(",") && !/[.!?]/.test(wc) &&
+        !wc.startsWith("-")
       ) {
         result.title = wc;
         prevBlank = false;
@@ -330,7 +346,9 @@ function parseFullJD(rawText: string): ParsedJD {
       t.endsWith(":") &&
       withoutColon.length >= 2 && withoutColon.length <= 50 &&
       !withoutColon.includes(",") &&
-      !/^\d/.test(withoutColon);
+      !/^\d/.test(withoutColon) &&
+      // Must not be a bullet point — "- Health insurance:" is content, not a heading
+      !/^[\-•*]/.test(withoutColon);
 
     if (prevBlank && (isAllCaps || isColonEnd)) {
       commit(); bucket = "skip"; prevBlank = false; continue;
@@ -349,6 +367,18 @@ function parseFullJD(rawText: string): ParsedJD {
     const { min, max } = extractSalaryRange(firstContentLine);
     if (min !== null) { result.salaryMin = min; result.salaryMax = max; }
   }
+
+  // ── Debug trace (visible in browser devtools console) ────────────────
+  console.group("[parseFullJD] parsed result");
+  console.log("title      →", result.title);
+  console.log("salaryMin  →", result.salaryMin);
+  console.log("salaryMax  →", result.salaryMax);
+  console.log("questions  →", result.questions.length, result.questions);
+  console.log("sections   →");
+  Object.entries(result.sections).forEach(([k, v]) =>
+    console.log(`  ${k.padEnd(18)} →`, v ? `"${v.slice(0, 80).replace(/\n/g, "↵")}${v.length > 80 ? "…" : ""}"` : "(empty)")
+  );
+  console.groupEnd();
 
   return result;
 }
