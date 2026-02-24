@@ -16,21 +16,26 @@ export default function LoginForm() {
     setLoading(true);
     setErr(null);
 
-    const res = await fetch("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password }),
-    });
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
 
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setErr(data?.error || "Login failed");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setErr(data?.error || "Login failed");
+        setLoading(false);
+        return;
+      }
+
+      // Go to intended page
+      router.push(next);
+    } catch {
+      setErr("Network error. Please try again.");
       setLoading(false);
-      return;
     }
-
-    // Go to intended page
-    router.push(next);
   }
 
   return (

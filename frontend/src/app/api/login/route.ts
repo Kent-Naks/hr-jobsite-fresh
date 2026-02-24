@@ -6,7 +6,7 @@ export async function POST(req: Request) {
       return Response.json({ error: "Password required" }, { status: 400 });
     }
   
-    if (password !== process.env.ADMIN_PASSWORD) {
+    if (password.trim() !== (process.env.ADMIN_PASSWORD ?? "").trim()) {
       return Response.json({ error: "Invalid password" }, { status: 401 });
     }
   
