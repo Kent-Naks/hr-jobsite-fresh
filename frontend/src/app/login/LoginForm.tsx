@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const router = useRouter();
   const sp = useSearchParams();
   const next = sp.get("next") || "/admin";
 
@@ -30,8 +29,8 @@ export default function LoginForm() {
         return;
       }
 
-      // Go to intended page
-      router.push(next);
+      // Hard redirect so the browser sends the new cookie on a fresh request
+      window.location.href = next;
     } catch {
       setErr("Network error. Please try again.");
       setLoading(false);
