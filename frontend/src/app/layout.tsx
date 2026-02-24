@@ -58,7 +58,7 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
       >
         <header className="fixed inset-x-0 top-0 z-50 bg-gray-700/75 backdrop-blur-sm text-white p-4 shadow-lg">
-          <div className="max-w-6xl mx-auto flex justify-between items-center">
+          <div className="max-w-7xl mx-auto flex justify-between items-center">
             <h1 className="text-xl font-bold">Talent Africa</h1>
             <nav className="flex items-center gap-4">
               <Link href="/" className="hover:underline">

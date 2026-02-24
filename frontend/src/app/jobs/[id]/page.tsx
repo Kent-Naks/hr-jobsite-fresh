@@ -36,7 +36,7 @@ export default async function JobDetail({
     : [];
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="p-6 max-w-5xl mx-auto">
       <div className="mb-4">
         <AdSlot slot="4455667788" />
       </div>

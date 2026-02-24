@@ -96,7 +96,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
     slug.split("-").map((p) => p[0].toUpperCase() + p.slice(1)).join(" ");
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-6 max-w-7xl mx-auto">
 
       {/* FINAL HERO (Client Component) */}
       <VideoHero videos={videos} />

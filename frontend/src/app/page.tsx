@@ -32,7 +32,7 @@ export default async function HomePage() {
         </div>
       </div>
 
-      <div className="p-6 max-w-4xl mx-auto">
+      <div className="p-6 max-w-7xl mx-auto">
         <FlashBanner />
 
         <div className="mb-4">
