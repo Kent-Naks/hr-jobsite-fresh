@@ -29,7 +29,8 @@ const SECTIONS: {
   label: string;
   hint: string;
   rows: number;
-  accent: string;
+  accent: string;        // left-border colour class
+  accentText: string;    // heading text colour class
 }[] = [
   {
     key: "overview",
@@ -37,6 +38,7 @@ const SECTIONS: {
     hint: "Brief intro — role purpose, company context, what makes this position unique.",
     rows: 4,
     accent: "border-l-blue-400",
+    accentText: "text-blue-300",
   },
   {
     key: "responsibilities",
@@ -44,6 +46,7 @@ const SECTIONS: {
     hint: "Use - bullet lines for each duty (e.g. - Manage team of 5 engineers).",
     rows: 7,
     accent: "border-l-amber-400",
+    accentText: "text-amber-300",
   },
   {
     key: "education",
@@ -51,6 +54,7 @@ const SECTIONS: {
     hint: "Required degrees, certifications, years of experience.",
     rows: 4,
     accent: "border-l-purple-400",
+    accentText: "text-purple-300",
   },
   {
     key: "skills",
@@ -58,6 +62,7 @@ const SECTIONS: {
     hint: "Comma-separated (e.g. React, TypeScript, Node.js) or - bullet lines.",
     rows: 3,
     accent: "border-l-cyan-400",
+    accentText: "text-cyan-300",
   },
   {
     key: "kpis",
@@ -65,6 +70,7 @@ const SECTIONS: {
     hint: "Key performance indicators the hire will be measured against.",
     rows: 4,
     accent: "border-l-rose-400",
+    accentText: "text-rose-300",
   },
   {
     key: "compensation",
@@ -72,6 +78,7 @@ const SECTIONS: {
     hint: "Salary range, bonuses, commission structure, etc.",
     rows: 3,
     accent: "border-l-emerald-400",
+    accentText: "text-emerald-300",
   },
   {
     key: "benefits",
@@ -79,6 +86,7 @@ const SECTIONS: {
     hint: "Health cover, leave days, remote work policy, equipment, perks.",
     rows: 4,
     accent: "border-l-pink-400",
+    accentText: "text-pink-300",
   },
   {
     key: "growth",
@@ -86,25 +94,39 @@ const SECTIONS: {
     hint: "Career progression, training, promotion timeline.",
     rows: 3,
     accent: "border-l-teal-400",
+    accentText: "text-teal-300",
   },
 ];
 
-// ─── Section ↔ description converters ────────────────────────────────────────
+// ─── Heading maps ─────────────────────────────────────────────────────────────
 
 type Sections = Record<SectionKey, string>;
 
 const HEADING_MAP: { re: RegExp; key: SectionKey }[] = [
   { re: /^overview$/i, key: "overview" },
-  { re: /^(key\s+)?responsibilities$/i, key: "responsibilities" },
+  { re: /^about(\s+(the\s+)?(role|position|company|us))?$/i, key: "overview" },
+  { re: /^(key\s+)?responsibilities?$/i, key: "responsibilities" },
+  { re: /^duties$/i, key: "responsibilities" },
   { re: /^education(\s*(&|and)\s*experience)?$/i, key: "education" },
   { re: /^education\s*,?\s*(qualifications?)?$/i, key: "education" },
   { re: /^experience$/i, key: "education" },
+  { re: /^requirements?$/i, key: "education" },
+  { re: /^qualifications?$/i, key: "education" },
   { re: /^(required\s+)?skills?$/i, key: "skills" },
+  { re: /^what\s+you.*(bring|offer)$/i, key: "skills" },
   { re: /^(key\s+)?performance\s*(indicators?)?$|^kpis?$/i, key: "kpis" },
   { re: /^(compensation|salary|remuneration)(\s+package)?$/i, key: "compensation" },
   { re: /^benefits?(\s+package)?$/i, key: "benefits" },
   { re: /^(career\s+)?growth(\s+path)?$/i, key: "growth" },
 ];
+
+// Metadata headings handled separately — never become section content
+const TITLE_RE = /^(job\s+)?(title|position|role)$/i;
+const LOCATION_RE = /^location(\s*[/\/]\s*region)?$/i;
+const SALARY_META_RE = /^salary(\s+range)?$/i;
+const QUESTIONS_RE = /^(application\s+)?questions?(\s+for\s+applicants)?$/i;
+
+// ─── Parser utilities ─────────────────────────────────────────────────────────
 
 function emptySections(): Sections {
   return {
@@ -119,11 +141,226 @@ function emptySections(): Sections {
   };
 }
 
+/** Normalize non-standard bullet characters to "- " while preserving indentation */
+function normalizeBullet(line: string): string {
+  return line.replace(/^(\s*)[•·◦▸▪►✓✗→]\s+/, "$1- ");
+}
+
+/** Extract salary min/max numbers from a string like "KES 150,000 – 200,000" */
+function extractSalaryRange(text: string): { min: number | null; max: number | null } {
+  const s = text.replace(/KES|KShs?|Ksh|USD|\$|£|€/gi, " ").trim();
+  const rangeM = s.match(/([\d,]+)\s*([kK])?\s*(?:[-–—]|to)\s*([\d,]+)\s*([kK])?/);
+  if (rangeM) {
+    const parse = (n: string, k?: string) =>
+      Math.round(parseFloat(n.replace(/,/g, "")) * (k ? 1000 : 1));
+    return { min: parse(rangeM[1], rangeM[2]), max: parse(rangeM[3], rangeM[4]) };
+  }
+  const singleM = s.match(/([\d,]+)\s*([kK])?/);
+  if (singleM) {
+    const val = Math.round(parseFloat(singleM[1].replace(/,/g, "")) * (singleM[2] ? 1000 : 1));
+    return { min: val, max: null };
+  }
+  return { min: null, max: null };
+}
+
+/** Parse a single question line into a Question object */
+function parseQuestionLine(line: string): Question | null {
+  const t = line.trim();
+  if (!t || t.length < 5) return null;
+  // Strip leading numbering or bullet prefix
+  const cleaned = t.replace(/^(?:\d+[.)]\s*|[Q#]\d+[.)]\s*|[•\-*]\s*)/i, "").trim();
+  if (!cleaned || cleaned.length < 5) return null;
+  const isYesNo =
+    /\(yes\s*\/\s*no\)/i.test(cleaned) ||
+    /\(y\s*\/\s*n\)/i.test(cleaned) ||
+    /\byes\s+or\s+no\b/i.test(cleaned);
+  return {
+    type: isYesNo ? "yes_no" : "text",
+    prompt: cleaned
+      .replace(/\s*\(yes\s*\/\s*no\)\s*$/i, "")
+      .replace(/\s*\(y\s*\/\s*n\)\s*$/i, "")
+      .trim(),
+    required: false,
+  };
+}
+
+// ─── Full JD paste parser ─────────────────────────────────────────────────────
+
+type ParsedJD = {
+  sections: Sections;
+  title: string | null;
+  salaryMin: number | null;
+  salaryMax: number | null;
+  questions: Question[];
+};
+
+/**
+ * Parses a raw pasted job description document into structured fields.
+ * Handles: title, location, salary extraction; section detection; bullet
+ * normalisation; application questions parsing.
+ */
+function parseFullJD(rawText: string): ParsedJD {
+  const result: ParsedJD = {
+    sections: emptySections(),
+    title: null,
+    salaryMin: null,
+    salaryMax: null,
+    questions: [],
+  };
+  if (!rawText?.trim()) return result;
+
+  // Normalise line endings
+  const lines = rawText.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+
+  type Bucket = SectionKey | "questions" | "skip" | "pre";
+  let bucket: Bucket = "pre";
+  let accumulated: string[] = [];
+  let prevBlank = true;
+  let nonBlankSeen = 0;
+
+  function commit() {
+    const trimmed = accumulated.map(normalizeBullet).join("\n").trim();
+    if (!trimmed) { accumulated = []; return; }
+
+    if (bucket === "pre") {
+      if (!result.sections.overview) result.sections.overview = trimmed;
+    } else if (bucket === "questions") {
+      for (const l of accumulated) {
+        const q = parseQuestionLine(l);
+        if (q) result.questions.push({ ...q, order: result.questions.length });
+      }
+    } else if (bucket !== "skip") {
+      result.sections[bucket] = result.sections[bucket]
+        ? result.sections[bucket] + "\n\n" + trimmed
+        : trimmed;
+    }
+    accumulated = [];
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i];
+    const t = raw.trim();
+
+    // Blank line
+    if (!t) {
+      prevBlank = true;
+      if (bucket !== "skip" && bucket !== "pre") accumulated.push(raw);
+      continue;
+    }
+
+    nonBlankSeen++;
+
+    // ── "Key: value" metadata lines ────────────────────────────────────
+    const colonIdx = t.indexOf(":");
+    const hasInlineValue = colonIdx > 0 && colonIdx < t.length - 1;
+    const kPart = hasInlineValue ? t.slice(0, colonIdx).trim() : "";
+    const vPart = hasInlineValue ? t.slice(colonIdx + 1).trim() : "";
+
+    if ((bucket === "pre" || bucket === "skip") && hasInlineValue && kPart && !/^[\-•*\d]/.test(t)) {
+      if (TITLE_RE.test(kPart) && vPart) {
+        if (!result.title) result.title = vPart;
+        prevBlank = false;
+        continue;
+      }
+      if (LOCATION_RE.test(kPart) && vPart) {
+        const loc = `Location: ${vPart}`;
+        result.sections.overview = result.sections.overview
+          ? `${loc}\n\n${result.sections.overview}`
+          : loc;
+        prevBlank = false;
+        continue;
+      }
+      if (SALARY_META_RE.test(kPart) && vPart) {
+        const { min, max } = extractSalaryRange(vPart);
+        if (min !== null && result.salaryMin === null) result.salaryMin = min;
+        if (max !== null && result.salaryMax === null) result.salaryMax = max;
+        prevBlank = false;
+        continue;
+      }
+    }
+
+    // ── First non-blank line as implicit title (ALL-CAPS header) ──────
+    if (bucket === "pre" && !result.title && nonBlankSeen === 1) {
+      const wc = t.replace(/:$/, "").trim();
+      if (
+        wc === wc.toUpperCase() &&
+        /[A-Z]/.test(wc) &&
+        wc.length >= 3 && wc.length <= 70 &&
+        !wc.includes(",") && !/[.!?]/.test(wc)
+      ) {
+        result.title = wc;
+        prevBlank = false;
+        continue;
+      }
+    }
+
+    // ── Section heading detection ──────────────────────────────────────
+    const withoutColon = t.replace(/:$/, "").trim();
+
+    // Questions section
+    if (QUESTIONS_RE.test(withoutColon)) {
+      commit(); bucket = "questions"; prevBlank = false; continue;
+    }
+
+    // Metadata-only standalone headings
+    if (TITLE_RE.test(withoutColon) || LOCATION_RE.test(withoutColon) || SALARY_META_RE.test(withoutColon)) {
+      commit(); bucket = "skip"; prevBlank = false; continue;
+    }
+
+    // Known JD sections
+    let matched: SectionKey | null = null;
+    for (const { re, key } of HEADING_MAP) {
+      if (re.test(withoutColon)) { matched = key; break; }
+    }
+    if (matched) {
+      commit(); bucket = matched; prevBlank = false; continue;
+    }
+
+    // Generic heading (ALL-CAPS or colon-terminated) — only after a blank line
+    const isAllCaps =
+      withoutColon === withoutColon.toUpperCase() &&
+      /[A-Z]/.test(withoutColon) &&
+      withoutColon.length >= 3 && withoutColon.length <= 55 &&
+      !/[.!?]/.test(withoutColon) &&
+      !withoutColon.startsWith("-") &&
+      !/^\d/.test(withoutColon) &&
+      !withoutColon.includes(",");
+
+    const isColonEnd =
+      t.endsWith(":") &&
+      withoutColon.length >= 2 && withoutColon.length <= 50 &&
+      !withoutColon.includes(",") &&
+      !/^\d/.test(withoutColon);
+
+    if (prevBlank && (isAllCaps || isColonEnd)) {
+      commit(); bucket = "skip"; prevBlank = false; continue;
+    }
+
+    // ── Regular content line ───────────────────────────────────────────
+    accumulated.push(raw);
+    prevBlank = false;
+  }
+
+  commit();
+
+  // Fallback: try to extract salary from compensation section text
+  if (result.salaryMin === null && result.sections.compensation) {
+    const firstContentLine = result.sections.compensation.split("\n").find((l) => l.trim()) ?? "";
+    const { min, max } = extractSalaryRange(firstContentLine);
+    if (min !== null) { result.salaryMin = min; result.salaryMax = max; }
+  }
+
+  return result;
+}
+
+// ─── Round-trip converters (saved description ↔ section fields) ───────────────
+
+/** Parse an already-structured saved description back into section fields */
 function descriptionToSections(description: string): Sections {
   const result = emptySections();
   if (!description?.trim()) return result;
 
-  const lines = description.split("\n");
+  const lines = description.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
   let currentKey: SectionKey | null = null;
   let currentLines: string[] = [];
 
@@ -149,22 +386,21 @@ function descriptionToSections(description: string): Sections {
   }
   flush();
 
-  // If the description had no parseable headings, put everything in overview
   const hasAny = Object.values(result).some((v) => v.trim());
   if (!hasAny && description.trim()) {
     result.overview = description.trim();
   }
-
   return result;
 }
 
+/** Reassemble section fields into a structured plain-text description */
 function sectionsToDescription(sections: Sections): string {
   return SECTIONS.filter(({ key }) => sections[key]?.trim())
     .map(({ key, label }) => `${label}:\n${sections[key].trim()}`)
     .join("\n\n");
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Date helpers ─────────────────────────────────────────────────────────────
 
 function formatForInputDateTime(v: any): string {
   if (!v) return "";
@@ -174,9 +410,7 @@ function formatForInputDateTime(v: any): string {
     if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 16);
     return "";
   }
-  if (v instanceof Date && !Number.isNaN(v.getTime())) {
-    return v.toISOString().slice(0, 16);
-  }
+  if (v instanceof Date && !Number.isNaN(v.getTime())) return v.toISOString().slice(0, 16);
   return "";
 }
 
@@ -186,9 +420,7 @@ function normalizeDateTimeForWire(input: any): string | null {
     const s = input.trim();
     if (s === "") return null;
     if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(s)) return s;
-    const m2 = s
-      .replace(",", "")
-      .match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})[ T](\d{1,2}):(\d{2})$/);
+    const m2 = s.replace(",", "").match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})[ T](\d{1,2}):(\d{2})$/);
     if (m2) {
       const [, dd, mm, yyyy, HH, MM] = m2;
       const pad = (n: string | number) => String(n).padStart(2, "0");
@@ -198,19 +430,14 @@ function normalizeDateTimeForWire(input: any): string | null {
     if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 16);
     return s;
   }
-  if (input instanceof Date && !Number.isNaN(input.getTime())) {
-    return input.toISOString().slice(0, 16);
-  }
+  if (input instanceof Date && !Number.isNaN(input.getTime())) return input.toISOString().slice(0, 16);
   return null;
 }
 
 async function readError(res: Response) {
   const text = await res.text();
-  try {
-    return JSON.parse(text);
-  } catch {
-    return { status: res.status, statusText: res.statusText, body: text?.slice(0, 800) };
-  }
+  try { return JSON.parse(text); }
+  catch { return { status: res.status, statusText: res.statusText, body: text?.slice(0, 800) }; }
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -253,9 +480,21 @@ export default function JobEditor({
 
   function parseAndFill() {
     if (!pasteText.trim()) return;
-    const hasContent = Object.values(sections).some((v) => v.trim());
-    if (hasContent && !confirm("This will overwrite the current section content. Continue?")) return;
-    setSections(descriptionToSections(pasteText));
+    const hasContent =
+      Object.values(sections).some((v) => v.trim()) ||
+      (job.questions ?? []).length > 0;
+    if (hasContent && !confirm("This will overwrite current section content and questions. Continue?"))
+      return;
+
+    const parsed = parseFullJD(pasteText);
+    setSections(parsed.sections);
+    setJob((prev: any) => ({
+      ...prev,
+      ...(parsed.title ? { title: parsed.title } : {}),
+      ...(parsed.salaryMin !== null ? { salaryMin: String(parsed.salaryMin) } : {}),
+      ...(parsed.salaryMax !== null ? { salaryMax: String(parsed.salaryMax) } : {}),
+      ...(parsed.questions.length > 0 ? { questions: parsed.questions } : {}),
+    }));
     setPasteText("");
     setShowPaste(false);
   }
@@ -272,7 +511,6 @@ export default function JobEditor({
   async function save(publish = false) {
     const endpoint = isEdit ? `/api/admin/jobs/${job.id}` : `/api/admin/jobs`;
     const method = isEdit ? "PUT" : "POST";
-
     const body = {
       ...job,
       description: sectionsToDescription(sections),
@@ -282,13 +520,11 @@ export default function JobEditor({
       publish,
       expiresAt: normalizeDateTimeForWire(job.expiresAt),
     };
-
     const res = await fetch(endpoint, {
       method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-
     if (!res.ok) {
       const err = await readError(res);
       alert("Error saving job: " + JSON.stringify(err));
@@ -309,32 +545,37 @@ export default function JobEditor({
     router.push("/admin");
   }
 
+  // Dark input shared class
   const inputCls =
-    "w-full border border-gray-300 p-2 rounded text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400";
+    "w-full border border-gray-600 p-2 rounded text-sm text-gray-100 bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
 
   return (
     <main className="p-6 max-w-5xl mx-auto space-y-5">
       <h1 className="text-2xl font-bold">{isEdit ? "Edit Job" : "New Job"}</h1>
 
       {/* ── Paste Full JD ─────────────────────────────────────────────── */}
-      <div className="border border-amber-200 rounded-lg overflow-hidden bg-amber-50">
+      <div className="border border-amber-500/40 rounded-lg overflow-hidden bg-amber-950/30">
         <button
           type="button"
           onClick={() => setShowPaste((v) => !v)}
-          className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-amber-100 transition-colors"
+          className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-amber-900/20 transition-colors"
         >
           <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              className="w-4 h-4 text-amber-400"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+            >
               <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" />
               <rect x="8" y="2" width="8" height="4" rx="1" />
             </svg>
-            <span className="text-sm font-semibold text-amber-800">Paste Full JD</span>
-            <span className="text-xs text-amber-600 hidden sm:inline">
-              — auto-fills all sections below
+            <span className="text-sm font-semibold text-amber-300">Paste Full JD</span>
+            <span className="text-xs text-amber-500 hidden sm:inline">
+              — auto-fills title, salary, sections &amp; questions
             </span>
           </div>
           <svg
-            className={`w-4 h-4 text-amber-600 transition-transform ${showPaste ? "rotate-180" : ""}`}
+            className={`w-4 h-4 text-amber-500 transition-transform ${showPaste ? "rotate-180" : ""}`}
             viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
           >
             <polyline points="6 9 12 15 18 9" />
@@ -342,13 +583,16 @@ export default function JobEditor({
         </button>
 
         {showPaste && (
-          <div className="px-4 pb-4 space-y-3 border-t border-amber-200">
-            <p className="text-xs text-amber-700 pt-3">
-              Paste a complete job description document. Click <strong>Parse &amp; Fill</strong> to
-              automatically split it into the section fields below.
+          <div className="px-4 pb-4 space-y-3 border-t border-amber-500/30">
+            <p className="text-xs text-amber-400/80 pt-3">
+              Paste a complete job description. The parser extracts{" "}
+              <strong className="text-amber-300">title, location, salary</strong>, splits content into{" "}
+              <strong className="text-amber-300">section fields</strong>, and converts{" "}
+              <strong className="text-amber-300">application questions</strong> into the questions list.
+              Bullet points are preserved.
             </p>
             <textarea
-              className="w-full border border-amber-300 rounded p-3 text-sm text-gray-900 bg-white resize-y focus:outline-none focus:ring-2 focus:ring-amber-400 placeholder-gray-400"
+              className="w-full border border-amber-500/40 rounded p-3 text-sm text-gray-100 bg-gray-900 resize-y focus:outline-none focus:ring-2 focus:ring-amber-500 placeholder-gray-600"
               rows={12}
               placeholder="Paste the full job description here…"
               value={pasteText}
@@ -359,14 +603,14 @@ export default function JobEditor({
                 type="button"
                 onClick={parseAndFill}
                 disabled={!pasteText.trim()}
-                className="px-4 py-2 rounded text-sm font-medium bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 rounded text-sm font-medium bg-amber-500 text-black hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Parse &amp; Fill
               </button>
               <button
                 type="button"
                 onClick={() => setPasteText("")}
-                className="px-3 py-2 rounded text-sm border border-amber-300 text-amber-700 hover:bg-amber-100 transition-colors"
+                className="px-3 py-2 rounded text-sm border border-amber-500/40 text-amber-400 hover:bg-amber-900/30 transition-colors"
               >
                 Clear
               </button>
@@ -377,7 +621,7 @@ export default function JobEditor({
 
       {/* ── Title ─────────────────────────────────────────────────────── */}
       <label className="block">
-        <div className="text-sm font-semibold mb-1">Title</div>
+        <div className="text-sm font-semibold mb-1 text-gray-300">Title</div>
         <input
           className={inputCls}
           value={job.title}
@@ -387,14 +631,14 @@ export default function JobEditor({
 
       {/* ── Category ──────────────────────────────────────────────────── */}
       <label className="block">
-        <div className="text-sm font-semibold mb-1">Category</div>
+        <div className="text-sm font-semibold mb-1 text-gray-300">Category</div>
         <select
           className={inputCls}
           value={job.categoryId}
           onChange={(e) => up("categoryId", e.target.value)}
         >
           {categories.map((c) => (
-            <option key={c.id} value={c.id}>
+            <option key={c.id} value={c.id} className="bg-gray-800">
               {c.label}
             </option>
           ))}
@@ -404,25 +648,23 @@ export default function JobEditor({
       {/* ── JD Sections ───────────────────────────────────────────────── */}
       <div>
         <div className="flex items-baseline justify-between mb-3">
-          <div className="text-sm font-semibold">Job Description</div>
-          <div className="text-xs text-gray-400">
-            Each section renders as a card on the public listing
-          </div>
+          <div className="text-sm font-semibold text-gray-300">Job Description</div>
+          <div className="text-xs text-gray-500">Each section renders as a card on the public listing</div>
         </div>
 
         <div className="space-y-3">
-          {SECTIONS.map(({ key, label, hint, rows, accent }) => (
+          {SECTIONS.map(({ key, label, hint, rows, accent, accentText }) => (
             <div
               key={key}
-              className={`border border-gray-200 border-l-4 ${accent} rounded-lg overflow-hidden`}
+              className={`border border-gray-700 border-l-4 ${accent} rounded-lg overflow-hidden`}
             >
-              <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between gap-4">
-                <span className="text-sm font-semibold text-gray-800">{label}</span>
-                <span className="text-xs text-gray-400 text-right hidden sm:block">{hint}</span>
+              <div className="px-3 py-2 bg-gray-800 border-b border-gray-700 flex items-center justify-between gap-4">
+                <span className={`text-sm font-semibold ${accentText}`}>{label}</span>
+                <span className="text-xs text-gray-500 text-right hidden sm:block">{hint}</span>
               </div>
-              <p className="text-xs text-gray-400 px-3 pt-2 sm:hidden">{hint}</p>
+              <p className="text-xs text-gray-500 px-3 pt-2 sm:hidden">{hint}</p>
               <textarea
-                className="w-full px-3 py-2 text-sm text-gray-900 resize-y bg-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-300 placeholder-gray-300"
+                className="w-full px-3 py-2 text-sm text-gray-100 bg-gray-900 resize-y focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 placeholder-gray-600"
                 rows={rows}
                 placeholder={hint}
                 value={sections[key]}
@@ -435,7 +677,7 @@ export default function JobEditor({
 
       {/* ── Salary ────────────────────────────────────────────────────── */}
       <div>
-        <div className="text-sm font-semibold mb-1">Salary</div>
+        <div className="text-sm font-semibold mb-1 text-gray-300">Salary</div>
         <div className="grid grid-cols-3 gap-3">
           <label className="block">
             <div className="text-xs text-gray-500 mb-1">Min</div>
@@ -468,35 +710,35 @@ export default function JobEditor({
 
       {/* ── Documents ─────────────────────────────────────────────────── */}
       <div>
-        <div className="text-sm font-semibold mb-2">Required Documents</div>
+        <div className="text-sm font-semibold mb-2 text-gray-300">Required Documents</div>
         <div className="flex gap-6">
           <label className="inline-flex items-center gap-2">
             <input
               type="checkbox"
-              className="accent-blue-600"
+              className="accent-blue-500"
               checked={job.requireCV}
               onChange={(e) => up("requireCV", e.target.checked)}
             />
-            <span className="text-sm">Require CV</span>
+            <span className="text-sm text-gray-300">Require CV</span>
           </label>
           <label className="inline-flex items-center gap-2">
             <input
               type="checkbox"
-              className="accent-blue-600"
+              className="accent-blue-500"
               checked={job.requireCoverLetter}
               onChange={(e) => up("requireCoverLetter", e.target.checked)}
             />
-            <span className="text-sm">Require Cover Letter</span>
+            <span className="text-sm text-gray-300">Require Cover Letter</span>
           </label>
         </div>
       </div>
 
       {/* ── Expires At ────────────────────────────────────────────────── */}
       <label className="block">
-        <div className="text-sm font-semibold mb-1">Expires At</div>
+        <div className="text-sm font-semibold mb-1 text-gray-300">Expires At</div>
         <input
           type="datetime-local"
-          className="border border-gray-300 p-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="border border-gray-600 p-2 rounded text-sm text-gray-100 bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
           value={formatForInputDateTime(job.expiresAt)}
           onChange={(e) => up("expiresAt", e.target.value)}
         />
@@ -505,18 +747,18 @@ export default function JobEditor({
       {/* ── Custom Questions ──────────────────────────────────────────── */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <div className="text-sm font-semibold">Custom Questions</div>
+          <div className="text-sm font-semibold text-gray-300">Application Questions</div>
           <div className="flex gap-2">
             <button
               type="button"
-              className="border border-gray-300 px-2 py-1 rounded text-sm hover:bg-gray-50"
+              className="border border-gray-600 px-2 py-1 rounded text-sm text-gray-300 hover:bg-gray-700 transition-colors"
               onClick={() => addQuestion("yes_no")}
             >
               + Yes/No
             </button>
             <button
               type="button"
-              className="border border-gray-300 px-2 py-1 rounded text-sm hover:bg-gray-50"
+              className="border border-gray-600 px-2 py-1 rounded text-sm text-gray-300 hover:bg-gray-700 transition-colors"
               onClick={() => addQuestion("text")}
             >
               + Input
@@ -525,7 +767,7 @@ export default function JobEditor({
         </div>
 
         {(job.questions ?? []).map((q: Question, i: number) => (
-          <div key={i} className="border border-gray-200 rounded p-2 flex items-start gap-2">
+          <div key={i} className="border border-gray-700 bg-gray-800 rounded p-2 flex items-start gap-2">
             <select
               value={q.type}
               onChange={(e) => {
@@ -533,14 +775,14 @@ export default function JobEditor({
                 arr[i] = { ...q, type: e.target.value as any };
                 up("questions", arr);
               }}
-              className="border border-gray-300 p-1 rounded text-sm"
+              className="border border-gray-600 p-1 rounded text-sm text-gray-200 bg-gray-700 focus:outline-none"
             >
               <option value="yes_no">Yes/No</option>
               <option value="text">Input</option>
             </select>
 
             <input
-              className="flex-1 border border-gray-300 p-2 rounded text-sm"
+              className="flex-1 border border-gray-600 p-2 rounded text-sm text-gray-100 bg-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
               placeholder="Question prompt"
               value={q.prompt}
               onChange={(e) => {
@@ -550,10 +792,10 @@ export default function JobEditor({
               }}
             />
 
-            <label className="inline-flex items-center gap-1 text-sm">
+            <label className="inline-flex items-center gap-1 text-sm text-gray-300 whitespace-nowrap">
               <input
                 type="checkbox"
-                className="accent-blue-600"
+                className="accent-blue-500"
                 checked={!!q.required}
                 onChange={(e) => {
                   const arr = [...job.questions];
@@ -566,7 +808,7 @@ export default function JobEditor({
 
             <button
               type="button"
-              className="text-red-500 text-sm hover:text-red-700"
+              className="text-red-400 text-sm hover:text-red-300 whitespace-nowrap"
               onClick={() => {
                 const arr = [...job.questions];
                 arr.splice(i, 1);
@@ -580,17 +822,17 @@ export default function JobEditor({
       </div>
 
       {/* ── Actions ───────────────────────────────────────────────────── */}
-      <div className="flex gap-3 pt-2 border-t border-gray-200">
+      <div className="flex gap-3 pt-2 border-t border-gray-700">
         <button
           type="button"
-          className="border border-gray-300 px-4 py-2 rounded text-sm hover:bg-gray-50"
+          className="border border-gray-600 px-4 py-2 rounded text-sm text-gray-300 hover:bg-gray-700 transition-colors"
           onClick={() => save(false)}
         >
           Save Draft
         </button>
         <button
           type="button"
-          className="px-4 py-2 rounded text-sm bg-black text-white hover:bg-gray-800"
+          className="px-4 py-2 rounded text-sm bg-white text-black hover:bg-gray-200 font-medium transition-colors"
           onClick={() => save(true)}
         >
           Publish
@@ -598,7 +840,7 @@ export default function JobEditor({
         {isEdit && (
           <button
             type="button"
-            className="border border-red-300 px-4 py-2 rounded text-sm text-red-600 hover:bg-red-50 ml-auto"
+            className="border border-red-800 px-4 py-2 rounded text-sm text-red-400 hover:bg-red-900/30 ml-auto transition-colors"
             onClick={del}
           >
             Delete
