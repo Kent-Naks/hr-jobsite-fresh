@@ -243,10 +243,22 @@ export default function JobEditor({
     descriptionToSections(initialJob?.description ?? "")
   );
 
+  const [pasteText, setPasteText] = useState("");
+  const [showPaste, setShowPaste] = useState(!initialJob);
+
   const isEdit = !!initialJob;
   const up = (k: string, v: any) => setJob((s: any) => ({ ...s, [k]: v }));
   const upSection = (key: SectionKey, value: string) =>
     setSections((s) => ({ ...s, [key]: value }));
+
+  function parseAndFill() {
+    if (!pasteText.trim()) return;
+    const hasContent = Object.values(sections).some((v) => v.trim());
+    if (hasContent && !confirm("This will overwrite the current section content. Continue?")) return;
+    setSections(descriptionToSections(pasteText));
+    setPasteText("");
+    setShowPaste(false);
+  }
 
   const addQuestion = (type: "yes_no" | "text") =>
     setJob((s: any) => ({
@@ -297,11 +309,71 @@ export default function JobEditor({
     router.push("/admin");
   }
 
-  const inputCls = "w-full border border-gray-300 p-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-400";
+  const inputCls =
+    "w-full border border-gray-300 p-2 rounded text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400";
 
   return (
-    <main className="p-6 max-w-3xl mx-auto space-y-5">
+    <main className="p-6 max-w-5xl mx-auto space-y-5">
       <h1 className="text-2xl font-bold">{isEdit ? "Edit Job" : "New Job"}</h1>
+
+      {/* ── Paste Full JD ─────────────────────────────────────────────── */}
+      <div className="border border-amber-200 rounded-lg overflow-hidden bg-amber-50">
+        <button
+          type="button"
+          onClick={() => setShowPaste((v) => !v)}
+          className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-amber-100 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" />
+              <rect x="8" y="2" width="8" height="4" rx="1" />
+            </svg>
+            <span className="text-sm font-semibold text-amber-800">Paste Full JD</span>
+            <span className="text-xs text-amber-600 hidden sm:inline">
+              — auto-fills all sections below
+            </span>
+          </div>
+          <svg
+            className={`w-4 h-4 text-amber-600 transition-transform ${showPaste ? "rotate-180" : ""}`}
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+
+        {showPaste && (
+          <div className="px-4 pb-4 space-y-3 border-t border-amber-200">
+            <p className="text-xs text-amber-700 pt-3">
+              Paste a complete job description document. Click <strong>Parse &amp; Fill</strong> to
+              automatically split it into the section fields below.
+            </p>
+            <textarea
+              className="w-full border border-amber-300 rounded p-3 text-sm text-gray-900 bg-white resize-y focus:outline-none focus:ring-2 focus:ring-amber-400 placeholder-gray-400"
+              rows={12}
+              placeholder="Paste the full job description here…"
+              value={pasteText}
+              onChange={(e) => setPasteText(e.target.value)}
+            />
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={parseAndFill}
+                disabled={!pasteText.trim()}
+                className="px-4 py-2 rounded text-sm font-medium bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Parse &amp; Fill
+              </button>
+              <button
+                type="button"
+                onClick={() => setPasteText("")}
+                className="px-3 py-2 rounded text-sm border border-amber-300 text-amber-700 hover:bg-amber-100 transition-colors"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* ── Title ─────────────────────────────────────────────────────── */}
       <label className="block">
@@ -350,7 +422,7 @@ export default function JobEditor({
               </div>
               <p className="text-xs text-gray-400 px-3 pt-2 sm:hidden">{hint}</p>
               <textarea
-                className="w-full px-3 py-2 text-sm resize-y bg-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-300 placeholder-gray-300"
+                className="w-full px-3 py-2 text-sm text-gray-900 resize-y bg-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-300 placeholder-gray-300"
                 rows={rows}
                 placeholder={hint}
                 value={sections[key]}
