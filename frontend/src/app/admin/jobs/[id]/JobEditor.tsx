@@ -187,10 +187,16 @@ function extractSalaryRange(text: string): { min: number | null; max: number | n
   return { min: null, max: null };
 }
 
+// Lines inside a "questions" bucket that are sub-headers, not actual questions
+const QUESTION_HEADER_RE =
+  /^(short\s+input|yes\s*\/\s*no|y\s*\/\s*n|application)\s*(questions?)?$/i;
+
 /** Parse a single question line into a Question object */
 function parseQuestionLine(line: string): Question | null {
   const t = line.trim();
   if (!t || t.length < 5) return null;
+  // Skip sub-headers inside the questions section ("Yes / No", "Short Input Questions", etc.)
+  if (QUESTION_HEADER_RE.test(t.replace(/:$/, "").trim())) return null;
   // Strip leading numbering or bullet prefix
   const cleaned = t.replace(/^(?:\d+[.)]\s*|[Q#]\d+[.)]\s*|[•\-*]\s*)/i, "").trim();
   if (!cleaned || cleaned.length < 5) return null;
@@ -331,7 +337,12 @@ function parseFullJD(rawText: string): ParsedJD {
         OPENINGS_RE.test(candidate) ||
         QUESTIONS_RE.test(candidate);
       if (!isKnownHeading && candidate.length >= 2 && candidate.length <= 120) {
-        result.title = candidate;
+        // Strip any trailing "[Openings: X]" / "(Openings: X)" annotation that
+        // some JD templates append to the title line
+        result.title = candidate
+          .replace(/\s*[\[(](number\s+of\s+)?openings?[^\])]*[\])]\s*$/i, "")
+          .replace(/\s*[\[(]vacancies?[^\])]*[\])]\s*$/i, "")
+          .trim();
         prevBlank = false;
         continue;
       }
