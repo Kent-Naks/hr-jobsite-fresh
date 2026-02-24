@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import AdSlot from "@/components/AdSlot";
 import JobForm from "./JobForm";
+import JobDescription from "./JobDescription";
 import { prisma } from "@/lib/prisma";
 
 export default async function JobDetail({
@@ -42,27 +43,33 @@ export default async function JobDetail({
 
       <h1 className="text-2xl font-bold mb-1">{dbJob.title}</h1>
       {dbJob.category?.label && (
-        <p className="text-sm text-gray-500 mb-1">{dbJob.category.label}</p>
+        <p className="text-sm text-gray-500 mb-2">{dbJob.category.label}</p>
       )}
       {salaryKES && (
-        <p className="mb-4 font-medium text-emerald-400">{salaryKES}</p>
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 mb-5">
+          <svg className="w-4 h-4 text-emerald-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 6v2m0 8v2M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3m.08 4h.01" />
+          </svg>
+          <span className="font-semibold text-emerald-400 text-sm">{salaryKES}</span>
+        </div>
       )}
 
-      <p className="mb-6 whitespace-pre-line leading-relaxed">
-        {dbJob.description}
-      </p>
+      <JobDescription description={dbJob.description ?? ""} />
 
       <div className="mb-4">
         <AdSlot slot="5566778899" />
       </div>
 
-      <JobForm
-        recommendations={[]}
-        jobId={dbJob.id}
-        questions={questions}
-        requireCV={!!dbJob.requireCV}
-        requireCoverLetter={!!dbJob.requireCoverLetter}
-      />
+      <div id="apply-form">
+        <JobForm
+          recommendations={[]}
+          jobId={dbJob.id}
+          questions={questions}
+          requireCV={!!dbJob.requireCV}
+          requireCoverLetter={!!dbJob.requireCoverLetter}
+        />
+      </div>
     </div>
   );
 }
