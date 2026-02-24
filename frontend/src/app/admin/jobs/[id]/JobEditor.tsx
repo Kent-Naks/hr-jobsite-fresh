@@ -144,7 +144,30 @@ function emptySections(): Sections {
 
 /** Normalize non-standard bullet characters to "- " while preserving indentation */
 function normalizeBullet(line: string): string {
-  return line.replace(/^(\s*)[•·◦▸▪►✓✗→]\s+/, "$1- ");
+  // Match common bullet chars (including en-dash/em-dash used as bullets) with optional trailing space
+  return line.replace(/^(\s*)[•·◦▸▪►✓✗→–—○●■□▶]\s*/, "$1- ");
+}
+
+/**
+ * For sections that typically have bulleted lists, if no bullet prefixes exist yet
+ * (e.g. they were stripped on copy-paste from a rich-text source), add "- " to each
+ * non-blank line so the content renders correctly in the public JD view.
+ */
+const BULLET_SECTION_KEYS: SectionKey[] = [
+  "responsibilities", "education", "skills", "kpis", "benefits",
+];
+
+function maybeAddBullets(content: string, key: SectionKey): string {
+  if (!BULLET_SECTION_KEYS.includes(key)) return content;
+  // Leave untouched if bullets/numbering already exist
+  if (/(?:^|\n)\s*[-•*]|(?:^|\n)\s*\d+[.)]\s/.test(content)) return content;
+  // Add "- " to every non-blank line, collapse multi-blank gaps to single blank
+  return content
+    .split("\n")
+    .map((l) => (l.trim() ? `- ${l.trim()}` : ""))
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 /** Extract salary min/max numbers from a string like "KES 150,000 – 200,000" */
@@ -235,9 +258,10 @@ function parseFullJD(rawText: string): ParsedJD {
         if (q) result.questions.push({ ...q, order: result.questions.length });
       }
     } else if (bucket !== "skip") {
+      const bulletted = maybeAddBullets(trimmed, bucket as SectionKey);
       result.sections[bucket] = result.sections[bucket]
-        ? result.sections[bucket] + "\n\n" + trimmed
-        : trimmed;
+        ? result.sections[bucket] + "\n\n" + bulletted
+        : bulletted;
     }
     accumulated = [];
   }
@@ -293,18 +317,21 @@ function parseFullJD(rawText: string): ParsedJD {
       }
     }
 
-    // ── First non-blank line as implicit title (ALL-CAPS header) ──────
-    // Fires only for the first 3 non-blank lines; explicit "Job Title:" above overrides this.
-    if (bucket === "pre" && !result.title && nonBlankSeen <= 3) {
-      const wc = t.replace(/:$/, "").trim();
-      if (
-        wc === wc.toUpperCase() &&
-        /[A-Z]/.test(wc) &&
-        wc.length >= 3 && wc.length <= 70 &&
-        !wc.includes(",") && !/[.!?]/.test(wc) &&
-        !wc.startsWith("-")
-      ) {
-        result.title = wc;
+    // ── First non-blank line becomes the title unconditionally ────────
+    // Explicit "Job Title: X" metadata above already continues, so if we
+    // reach here on the very first non-blank line the title is still unset.
+    if (bucket === "pre" && !result.title && nonBlankSeen === 1) {
+      const candidate = t.replace(/:$/, "").trim();
+      // Don't treat a known section heading as the title
+      const isKnownHeading =
+        HEADING_MAP.some(({ re }) => re.test(candidate)) ||
+        TITLE_RE.test(candidate) ||
+        LOCATION_RE.test(candidate) ||
+        SALARY_META_RE.test(candidate) ||
+        OPENINGS_RE.test(candidate) ||
+        QUESTIONS_RE.test(candidate);
+      if (!isKnownHeading && candidate.length >= 2 && candidate.length <= 120) {
+        result.title = candidate;
         prevBlank = false;
         continue;
       }
@@ -502,6 +529,7 @@ export default function JobEditor({
 
   const [pasteText, setPasteText] = useState("");
   const [showPaste, setShowPaste] = useState(!initialJob);
+  const [highlightTitle, setHighlightTitle] = useState(false);
 
   const isEdit = !!initialJob;
   const up = (k: string, v: any) => setJob((s: any) => ({ ...s, [k]: v }));
@@ -527,6 +555,10 @@ export default function JobEditor({
     }));
     setPasteText("");
     setShowPaste(false);
+    if (parsed.title) {
+      setHighlightTitle(true);
+      setTimeout(() => setHighlightTitle(false), 2000);
+    }
   }
 
   const addQuestion = (type: "yes_no" | "text") =>
@@ -653,7 +685,7 @@ export default function JobEditor({
       <label className="block">
         <div className="text-sm font-semibold mb-1 text-gray-300">Title</div>
         <input
-          className={inputCls}
+          className={`${inputCls} ${highlightTitle ? "ring-2 ring-amber-400 border-amber-400" : ""}`}
           value={job.title}
           onChange={(e) => up("title", e.target.value)}
         />
