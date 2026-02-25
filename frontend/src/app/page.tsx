@@ -3,6 +3,7 @@ import Link from "next/link";
 import AdSlot from "./components/AdSlot";
 import FlashBanner from "./components/FlashBanner";
 import ScrollReveal from "./components/ScrollReveal";
+import ScrambleText from "./components/ScrambleText";
 import { headers } from "next/headers";
 
 type Category = { slug: string; label: string; count: number };
@@ -165,7 +166,7 @@ export default async function HomePage() {
 
         {/* Heading with glow entrance */}
         <ScrollReveal className="mb-6">
-          <h2 className="heading-glow-text text-2xl font-bold mb-1">Job Categories</h2>
+          <h2 className="heading-glow-text text-2xl font-bold mb-1"><ScrambleText text="Job Categories" /></h2>
           <p className="heading-glow-sub text-sm text-gray-400">Browse opportunities by field</p>
         </ScrollReveal>
 
