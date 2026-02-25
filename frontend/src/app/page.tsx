@@ -205,12 +205,7 @@ export default async function HomePage() {
                           →
                         </span>
                       </div>
-                      <span className="font-semibold text-white block mb-1">{cat.label}</span>
-                      {cat.count > 0 && (
-                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.38)" }}>
-                          {cat.count} {cat.count === 1 ? "role" : "roles"} available
-                        </p>
-                      )}
+                      <span className="font-semibold text-white block">{cat.label}</span>
                     </Link>
                   </ScrollReveal>
                 </li>
