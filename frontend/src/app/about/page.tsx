@@ -2,16 +2,14 @@
 import React from "react";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import CountUp from "./CountUp"; // client component in same folder
+import CountUp from "./CountUp";
 
 export default async function AboutPage() {
-  // Live counts & latest jobs (guarded)
   let jobCount = 0;
   let categoryCount = 0;
   let latestJobs: { id: string; title: string; categoryLabel?: string }[] = [];
 
   try {
-    // Count only currently active published jobs (not expired)
     jobCount = await prisma.job.count({
       where: {
         status: "published",
@@ -20,14 +18,12 @@ export default async function AboutPage() {
     });
   } catch (err) {
     console.error("AboutPage: job count failed:", err);
-    jobCount = 0;
   }
 
   try {
     categoryCount = await prisma.category.count();
   } catch (err) {
     console.error("AboutPage: category count failed:", err);
-    categoryCount = 0;
   }
 
   try {
@@ -37,7 +33,6 @@ export default async function AboutPage() {
       include: { category: true },
       take: 6,
     });
-
     latestJobs = jobs.map((j) => ({
       id: j.id,
       title: j.title,
@@ -45,67 +40,112 @@ export default async function AboutPage() {
     }));
   } catch (err) {
     console.error("AboutPage: latest jobs fetch failed:", err);
-    latestJobs = [];
   }
-
-  // avg removed — we no longer surface average jobs per category on About
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">About Talent Africa</h1>
-        <p>
-          <strong>Talent Africa</strong> is not your typical career website. Our
-          mission is to make sure job seekers are never undercut, whether by
-          undervaluing their worth or being disqualified for going slightly above
-          a company’s internal budget. We aim to move away from the outdated idea
-          that salary ranges should be used to filter candidates. From our
-          research, we’ve found that many employers miss out on exceptional hires
-          simply because of salary disqualifications.
-        </p>
 
-        
-
-        <p>
-          We exist to promote <strong>transparency</strong> and ensure both
-          employers and applicants get value for their time and experience. In our
-          contracts with employers, we require that a <strong>rough job
-          location</strong> be provided so that applicants can consider relevant
-          factors such as commute, cost of living, and accessibility when
-          determining their salary expectations.
+      {/* ── HEADER ──────────────────────────────────────────────────── */}
+      <header className="mb-10 animate-fade-slide-up" style={{ animationDelay: "0.05s" }}>
+        <p
+          className="text-xs font-semibold tracking-widest uppercase mb-3"
+          style={{ color: "rgba(255,255,255,0.45)" }}
+        >
+          Our Story
         </p>
+        <h1 className="text-4xl sm:text-5xl font-black text-white mb-5 leading-tight">
+          About{" "}
+          <span
+            style={{
+              background: "linear-gradient(90deg, #ffffff 0%, #9ca3af 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
+            The Talent Africa
+          </span>
+        </h1>
+
+        <div
+          className="glass-card p-6 space-y-4 text-gray-300 leading-relaxed text-sm sm:text-base animate-fade-slide-up"
+          style={{ animationDelay: "0.15s" }}
+        >
+          <p>
+            <strong className="text-white">The Talent Africa</strong> is not your typical career
+            website. Our mission is to make sure job seekers are never undercut — whether by
+            undervaluing their worth or being disqualified for going slightly above a company&apos;s
+            internal budget.
+          </p>
+          <p>
+            We exist to promote <strong className="text-white">transparency</strong> and ensure both
+            employers and applicants get value for their time and experience. In our contracts with
+            employers, we require that a <strong className="text-white">rough job location</strong> be
+            provided so applicants can factor in commute, cost of living, and accessibility when
+            determining salary expectations.
+          </p>
+        </div>
       </header>
 
-      {/* Counters */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-        <CountUp to={jobCount ?? 0} label="Published jobs" />
-        <CountUp to={categoryCount ?? 0} label="Categories" />
+      {/* ── STAT COUNTERS ───────────────────────────────────────────── */}
+      <section
+        className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10 animate-fade-slide-up"
+        style={{ animationDelay: "0.2s" }}
+      >
+        <div className="glass-card p-6 text-center">
+          <CountUp to={jobCount ?? 0} label="Published jobs" />
+        </div>
+        <div className="glass-card p-6 text-center">
+          <CountUp to={categoryCount ?? 0} label="Categories" />
+        </div>
       </section>
 
-      {/* Latest jobs carousel / grid */}
-      <section className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-semibold">Latest roles</h2>
-          <Link href="/jobs" className="text-sm underline">
-            View all jobs
+      {/* ── LATEST ROLES ────────────────────────────────────────────── */}
+      <section className="mb-10 animate-fade-slide-up" style={{ animationDelay: "0.25s" }}>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-2xl font-bold text-white">Latest roles</h2>
+          <Link
+            href="/jobs"
+            className="text-sm nav-link"
+            style={{ color: "rgba(255,255,255,0.55)" }}
+          >
+            View all →
           </Link>
         </div>
 
         {latestJobs.length === 0 ? (
-          <div className="p-6 bg-white/5 border border-white/10 rounded-md text-gray-300">
+          <div className="glass-card p-6 text-center" style={{ color: "rgba(255,255,255,0.4)" }}>
             No recent jobs to show right now.
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {latestJobs.map((j) => (
-              <article key={j.id} className="bg-white/5 border border-white/10 rounded-lg p-4 hover:shadow-lg">
-                <h3 className="font-semibold text-lg mb-1">{j.title}</h3>
-                <div className="text-sm text-gray-300 mb-3">{j.categoryLabel ?? "General"}</div>
+            {latestJobs.map((j, i) => (
+              <article
+                key={j.id}
+                className="glass-card glass-card-hover p-5 animate-fade-slide-up"
+                style={{ animationDelay: `${0.25 + i * 0.06}s` }}
+              >
+                <h3 className="font-semibold text-white text-base mb-1">{j.title}</h3>
+                <div className="text-xs mb-4" style={{ color: "rgba(255,255,255,0.45)" }}>
+                  {j.categoryLabel ?? "General"}
+                </div>
                 <div className="flex items-center justify-between">
-                  <Link href={`/jobs/${j.id}`} className="text-sm underline">
+                  <Link
+                    href={`/jobs/${j.id}`}
+                    className="text-sm nav-link"
+                    style={{ color: "rgba(255,255,255,0.6)" }}
+                  >
                     View
                   </Link>
-                  <Link href={`/jobs/${j.id}`} className="text-xs px-2 py-1 border rounded text-gray-200">
+                  <Link
+                    href={`/jobs/${j.id}`}
+                    className="text-xs px-3 py-1 rounded-full transition-all duration-200"
+                    style={{
+                      border: "1px solid rgba(255,255,255,0.18)",
+                      color: "rgba(255,255,255,0.7)",
+                      background: "rgba(255,255,255,0.05)",
+                    }}
+                  >
                     Apply now
                   </Link>
                 </div>
@@ -115,54 +155,64 @@ export default async function AboutPage() {
         )}
       </section>
 
-      {/* Team / Mission / CTA */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white/5 border border-white/10 rounded-lg p-5">
-          <h3 className="font-semibold mb-2">Our mission</h3>
-          <p className="text-sm text-gray-300">
-          Our mission is to bring <strong>transparency</strong> and fairness into
-          recruitment, changing a system that has often been
-          <em> predatory against job seekers</em> into one built on
-          <strong> honesty, respect, and equal value exchange</strong>. We’re here
-          to transform recruitment culture across Africa by promoting openness,
-          accountability, and human-centered hiring.
+      {/* ── MISSION / HOW / PARTNER ─────────────────────────────────── */}
+      <section
+        className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10 animate-fade-slide-up"
+        style={{ animationDelay: "0.3s" }}
+      >
+        <div className="glass-card p-6">
+          <div className="text-2xl mb-3">🎯</div>
+          <h3 className="font-bold text-white mb-2">Our mission</h3>
+          <p className="text-sm text-gray-400 leading-relaxed">
+            Bring <strong className="text-gray-200">transparency</strong> and fairness into
+            recruitment — changing a system that has often been{" "}
+            <em>predatory against job seekers</em> into one built on{" "}
+            <strong className="text-gray-200">honesty, respect, and equal value exchange</strong>.
           </p>
         </div>
 
-        <div className="bg-white/5 border border-white/10 rounded-lg p-5">
-          <h3 className="font-semibold mb-2">How it works</h3>
-          <ol className="list-decimal ml-5 text-sm text-gray-300 space-y-2">
-            
-            <li>Apply with a CV & cover letter</li>
+        <div className="glass-card p-6">
+          <div className="text-2xl mb-3">⚡</div>
+          <h3 className="font-bold text-white mb-2">How it works</h3>
+          <ol className="list-decimal ml-5 text-sm text-gray-400 space-y-2 leading-relaxed">
+            <li>Apply with a CV &amp; cover letter</li>
             <li>Employers review and reach out</li>
           </ol>
         </div>
 
-        <div className="bg-white/5 border border-white/10 rounded-lg p-5">
-          <h3 className="font-semibold mb-2">Want to partner?</h3>
-          <p className="text-sm text-gray-300 mb-3">
-            If you'd like to partner (hiring drives, NGOs or enterprise),{" "}
-            <Link href="/contact" className="underline">
+        <div className="glass-card p-6">
+          <div className="text-2xl mb-3">🤝</div>
+          <h3 className="font-bold text-white mb-2">Want to partner?</h3>
+          <p className="text-sm text-gray-400 leading-relaxed">
+            Hiring drives, NGOs, or enterprise partnerships —{" "}
+            <Link href="/contact" className="text-white underline">
               get in touch
             </Link>
             .
           </p>
-          
         </div>
       </section>
 
-      {/* Social proof / testimonials */}
-      <section className="mt-8">
-        <h2 className="text-2xl font-semibold mb-4">What people say</h2>
+      {/* ── TESTIMONIALS ────────────────────────────────────────────── */}
+      <section className="animate-fade-slide-up" style={{ animationDelay: "0.35s" }}>
+        <h2 className="text-2xl font-bold text-white mb-5">What people say</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <blockquote className="bg-white/5 border border-white/10 p-4 rounded">
-            <p className="italic text-gray-200">"Talent Africa helped us hire across multiple markets quickly."</p>
-            <footer className="mt-3 text-sm text-gray-400">— Hiring Manager, Tech Startup</footer>
+          <blockquote className="glass-card p-6">
+            <p className="italic text-gray-300 leading-relaxed">
+              &ldquo;The Talent Africa helped us hire across multiple markets quickly.&rdquo;
+            </p>
+            <footer className="mt-4 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+              — Hiring Manager, Tech Startup
+            </footer>
           </blockquote>
 
-          <blockquote className="bg-white/5 border border-white/10 p-4 rounded">
-            <p className="italic text-gray-200">"Easy application flow plus its the transparency for me."</p>
-            <footer className="mt-3 text-sm text-gray-400">— Candidate, Nairobi</footer>
+          <blockquote className="glass-card p-6">
+            <p className="italic text-gray-300 leading-relaxed">
+              &ldquo;Easy application flow — and it&apos;s the transparency for me.&rdquo;
+            </p>
+            <footer className="mt-4 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+              — Candidate, Nairobi
+            </footer>
           </blockquote>
         </div>
       </section>

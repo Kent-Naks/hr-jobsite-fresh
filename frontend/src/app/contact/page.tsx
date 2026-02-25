@@ -5,6 +5,27 @@ import React, { useState } from "react";
 
 type SentState = { ok: boolean; msg: string } | null;
 
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "0.625rem 0.875rem",
+  background: "rgba(255,255,255,0.06)",
+  border: "1px solid rgba(255,255,255,0.12)",
+  borderRadius: "0.5rem",
+  color: "#fff",
+  fontSize: "0.875rem",
+  outline: "none",
+  transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+};
+
+const inputFocusHandler = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  e.currentTarget.style.borderColor = "rgba(255,255,255,0.30)";
+  e.currentTarget.style.boxShadow = "0 0 0 3px rgba(255,255,255,0.05)";
+};
+const inputBlurHandler = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
+  e.currentTarget.style.boxShadow = "none";
+};
+
 export default function ContactPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -46,134 +67,191 @@ export default function ContactPage() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold">Contact Talent Africa</h1>
-        <p className="text-gray-300">Questions, partnerships, or support. We’ll get back to you within 1-2 business days.</p>
+      {/* ── HEADER ──────────────────────────────────────────────────── */}
+      <header className="mb-8 animate-fade-slide-up" style={{ animationDelay: "0.05s" }}>
+        <p
+          className="text-xs font-semibold tracking-widest uppercase mb-2"
+          style={{ color: "rgba(255,255,255,0.45)" }}
+        >
+          Get in touch
+        </p>
+        <h1 className="text-3xl sm:text-4xl font-black text-white mb-2">
+          Contact{" "}
+          <span
+            style={{
+              background: "linear-gradient(90deg, #ffffff 0%, #9ca3af 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
+            The Talent Africa
+          </span>
+        </h1>
+        <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.9rem" }}>
+          Questions, partnerships, or support. We&apos;ll get back to you within 1–2 business days.
+        </p>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid sm:grid-cols-2 gap-3">
-            <input
-              className="w-full p-2 border rounded bg-transparent"
-              placeholder="Your name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-            <input
-              className="w-full p-2 border rounded bg-transparent"
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-
-          <input
-            className="w-full p-2 border rounded bg-transparent"
-            placeholder="Subject (optional)"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-          />
-
-          <textarea
-            rows={6}
-            className="w-full p-2 border rounded bg-transparent"
-            placeholder="How can we help?"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            required
-          />
-
-          <div className="flex items-center gap-3">
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
-            >
-              {loading ? "Sending…" : "Send message"}
-            </button>
-
-            {sent && (
-              <div className={`text-sm ${sent.ok ? "text-emerald-400" : "text-red-400"}`}>
-                {sent.msg}
-              </div>
-            )}
-          </div>
-        </form>
-
-        {/* Sidebar: contact details, map, FAQ */}
-        <aside className="space-y-4">
-          <div className="bg-white/5 border border-white/10 rounded-lg p-4">
-            <h3 className="font-semibold">Contact details</h3> 
-            <p className="text-sm text-gray-300 mt-2">Email: <a href="mailto:thetalentafrica@zohomail.com" className="underline">thetalentafrica@zohomail.com</a></p>
-            <p className="text-sm text-gray-300">Support hours: Mon–Fri, 9:00–17:00 (EAT)</p>
-          </div>
-
-          <div className="bg-white/5 border border-white/10 rounded-lg overflow-hidden">
-            <div className="p-3">
-              <h4 className="font-semibold mb-2">Our location</h4>
-              <p className="text-sm text-gray-300 mb-2">Nairobi, Kenya approximate location shown below</p>
-            </div>
-            {/* OpenStreetMap iframe (no API key required) */}
-            <div style={{ height: 220 }} className="w-full">
-              <iframe
-                title="Talent Africa location"
-                src="https://www.openstreetmap.org/export/embed.html?bbox=36.75%2C-1.35%2C36.95%2C-1.15&layer=mapnik"
-                style={{ border: 0, width: "100%", height: "100%" }}
+        {/* ── FORM ────────────────────────────────────────────────── */}
+        <div
+          className="glass-card p-6 animate-fade-slide-up"
+          style={{ animationDelay: "0.15s" }}
+        >
+          <h2 className="font-bold text-white mb-5 text-lg">Send a message</h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid sm:grid-cols-2 gap-3">
+              <input
+                style={inputStyle}
+                placeholder="Your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onFocus={inputFocusHandler}
+                onBlur={inputBlurHandler}
+                required
+              />
+              <input
+                style={inputStyle}
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onFocus={inputFocusHandler}
+                onBlur={inputBlurHandler}
+                required
               />
             </div>
-            <div className="p-3 text-sm text-gray-400">Map: OpenStreetMap</div>
+
+            <input
+              style={inputStyle}
+              placeholder="Subject (optional)"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              onFocus={inputFocusHandler}
+              onBlur={inputBlurHandler}
+            />
+
+            <textarea
+              rows={6}
+              style={{ ...inputStyle, resize: "vertical" }}
+              placeholder="How can we help?"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onFocus={inputFocusHandler}
+              onBlur={inputBlurHandler}
+              required
+            />
+
+            <div className="flex items-center gap-3 pt-1">
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-6 py-2.5 rounded-full font-semibold text-sm transition-all duration-200 disabled:opacity-50"
+                style={{
+                  background: loading ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.9)",
+                  color: loading ? "#fff" : "#000",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                }}
+              >
+                {loading ? "Sending…" : "Send message"}
+              </button>
+
+              {sent && (
+                <div
+                  className={`text-sm ${sent.ok ? "text-emerald-400" : "text-red-400"}`}
+                >
+                  {sent.msg}
+                </div>
+              )}
+            </div>
+          </form>
+        </div>
+
+        {/* ── SIDEBAR ─────────────────────────────────────────────── */}
+        <aside className="space-y-4 animate-fade-slide-up" style={{ animationDelay: "0.22s" }}>
+          {/* Contact details */}
+          <div className="glass-card p-5">
+            <h3 className="font-bold text-white mb-3">Contact details</h3>
+            <div className="space-y-2 text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>
+              <p className="flex items-center gap-2">
+                <span style={{ color: "rgba(255,255,255,0.4)" }}>✉</span>
+                <a
+                  href="mailto:thetalentafrica@zohomail.com"
+                  className="hover:text-white transition-colors"
+                >
+                  thetalentafrica@zohomail.com
+                </a>
+              </p>
+              <p className="flex items-center gap-2">
+                <span style={{ color: "rgba(255,255,255,0.4)" }}>🕐</span>
+                Mon–Fri, 9:00–17:00 EAT
+              </p>
+            </div>
           </div>
 
-          <div className="bg-white/5 border border-white/10 rounded-lg p-3">
-            <h4 className="font-semibold mb-2">FAQ</h4>
+          {/* Map */}
+          <div className="glass-card overflow-hidden">
+            <div className="p-4">
+              <h4 className="font-bold text-white mb-1">Our location</h4>
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.45)" }}>
+                Nairobi, Kenya
+              </p>
+            </div>
+            <div style={{ height: 200 }} className="w-full">
+              <iframe
+                title="The Talent Africa location"
+                src="https://www.openstreetmap.org/export/embed.html?bbox=36.75%2C-1.35%2C36.95%2C-1.15&layer=mapnik"
+                style={{ border: 0, width: "100%", height: "100%", filter: "invert(0.9) hue-rotate(180deg)" }}
+              />
+            </div>
+            <div className="px-4 py-2 text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
+              Map data © OpenStreetMap contributors
+            </div>
+          </div>
 
-            <div className="space-y-2">
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setOpenFaq(openFaq === 0 ? null : 0)}
-                  className="w-full text-left text-sm"
-                >
-                  <div className="flex justify-between items-center">
-                    <span>How long until I hear back?</span>
-                    <span className="text-xs text-gray-400">{openFaq === 0 ? "—" : "+"}</span>
-                  </div>
-                </button>
-                {openFaq === 0 && <div className="mt-2 text-sm text-gray-300">Typically 1–2 business days for shortlisted candidates; may vary by employer.</div>}
-              </div>
-
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setOpenFaq(openFaq === 1 ? null : 1)}
-                  className="w-full text-left text-sm"
-                >
-                  <div className="flex justify-between items-center">
-                    <span>Can I apply without a CV?</span>
-                    <span className="text-xs text-gray-400">{openFaq === 1 ? "—" : "+"}</span>
-                  </div>
-                </button>
-                {openFaq === 1 && <div className="mt-2 text-sm text-gray-300">Most employers require a CV — required fields are marked on job pages.</div>}
-              </div>
-
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setOpenFaq(openFaq === 2 ? null : 2)}
-                  className="w-full text-left text-sm"
-                >
-                  <div className="flex justify-between items-center">
-                    <span>Partnership inquiries</span>
-                    <span className="text-xs text-gray-400">{openFaq === 2 ? "—" : "+"}</span>
-                  </div>
-                </button>
-                {openFaq === 2 && <div className="mt-2 text-sm text-gray-300">Fill the form with details and we’ll get back to discuss partnerships.</div>}
-              </div>
+          {/* FAQ */}
+          <div className="glass-card p-5">
+            <h4 className="font-bold text-white mb-3">FAQ</h4>
+            <div className="space-y-1 divide-y" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
+              {[
+                {
+                  q: "How long until I hear back?",
+                  a: "Typically 1–2 business days for shortlisted candidates; may vary by employer.",
+                },
+                {
+                  q: "Can I apply without a CV?",
+                  a: "Most employers require a CV — required fields are marked on job pages.",
+                },
+                {
+                  q: "Partnership inquiries",
+                  a: "Fill the form with details and we'll get back to discuss partnerships.",
+                },
+              ].map((item, idx) => (
+                <div key={idx} className="pt-2 first:pt-0">
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                    className="w-full text-left text-sm py-1.5 transition-colors"
+                    style={{ color: openFaq === idx ? "#fff" : "rgba(255,255,255,0.65)" }}
+                  >
+                    <div className="flex justify-between items-center gap-2">
+                      <span>{item.q}</span>
+                      <span style={{ color: "rgba(255,255,255,0.35)", flexShrink: 0 }}>
+                        {openFaq === idx ? "−" : "+"}
+                      </span>
+                    </div>
+                  </button>
+                  {openFaq === idx && (
+                    <div
+                      className="text-xs leading-relaxed pb-2"
+                      style={{ color: "rgba(255,255,255,0.5)" }}
+                    >
+                      {item.a}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </aside>

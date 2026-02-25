@@ -103,36 +103,67 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
 
       <AdSlot slot="2233445566" />
 
-      <h1 className="text-2xl font-bold mb-4">{title} Jobs</h1>
+      <div className="mb-6">
+        <h1 className="text-3xl font-black text-white mb-1">{title} Jobs</h1>
+        {jobs.length > 0 && (
+          <p className="text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
+            {jobs.length} {jobs.length === 1 ? "position" : "positions"} available
+          </p>
+        )}
+      </div>
 
       {jobs.length === 0 ? (
-        <p>No jobs found.</p>
+        <div
+          className="glass-card p-8 text-center"
+          style={{ color: "rgba(255,255,255,0.5)" }}
+        >
+          No jobs found in this category yet.
+        </div>
       ) : (
-        <ul className="space-y-4">
-          {jobs.map((job) => (
-            <li key={job.id}>
+        <ul className="space-y-3">
+          {jobs.map((job, i) => (
+            <li
+              key={job.id}
+              className="animate-fade-slide-up"
+              style={{ animationDelay: `${i * 0.05}s` }}
+            >
               <Link
                 href={`/jobs/${job.id}`}
-                className="block p-4 border rounded hover:shadow transition"
+                className="glass-card glass-card-hover block p-5 group"
               >
-                <h2 className="text-lg font-semibold">{job.title}</h2>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-lg font-semibold text-white mb-1 group-hover:text-white transition-colors">
+                      {job.title}
+                    </h2>
 
-                {job.description && (
-                  <p className="text-sm text-gray-500 line-clamp-2">
-                    {job.description}
-                  </p>
-                )}
+                    {job.description && (
+                      <p className="text-sm line-clamp-2" style={{ color: "rgba(255,255,255,0.5)" }}>
+                        {job.description}
+                      </p>
+                    )}
 
-                {job.salaryKES && (
-                  <p className="text-sm text-emerald-500">{job.salaryKES}</p>
-                )}
+                    {job.salaryKES && (
+                      <p className="text-sm font-medium text-emerald-400 mt-2">{job.salaryKES}</p>
+                    )}
+                  </div>
+
+                  <span
+                    className="shrink-0 text-base mt-1 transition-transform duration-300 group-hover:translate-x-1"
+                    style={{ color: "rgba(255,255,255,0.25)" }}
+                  >
+                    →
+                  </span>
+                </div>
               </Link>
             </li>
           ))}
         </ul>
       )}
 
-      <AdSlot slot="3344556677" />
+      <div className="mt-8">
+        <AdSlot slot="3344556677" />
+      </div>
     </div>
   );
 }
