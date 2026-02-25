@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import AdSlot from "@/components/AdSlot";
 import JobForm from "./JobForm";
 import JobDescription from "./JobDescription";
+import ShareButton from "./ShareButton";
 import { prisma } from "@/lib/prisma";
 
 export default async function JobDetail({
@@ -36,40 +37,97 @@ export default async function JobDetail({
     : [];
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <div className="mb-4">
-        <AdSlot slot="4455667788" />
-      </div>
-
-      <h1 className="text-2xl font-bold mb-1">{dbJob.title}</h1>
-      {dbJob.category?.label && (
-        <p className="text-sm text-gray-500 mb-2">{dbJob.category.label}</p>
-      )}
-      {salaryKES && (
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 mb-5">
-          <svg className="w-4 h-4 text-emerald-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 6v2m0 8v2M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3m.08 4h.01" />
-          </svg>
-          <span className="font-semibold text-emerald-400 text-sm">{salaryKES}</span>
+    <div className="max-w-5xl mx-auto">
+      {/* ── PREMIUM HERO ──────────────────────────────────────────────── */}
+      <div
+        className="px-6 pt-8 pb-7 mb-2"
+        style={{
+          background: "linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)",
+          borderBottom: "1px solid rgba(255,255,255,0.07)",
+        }}
+      >
+        <div className="mb-4">
+          <AdSlot slot="4455667788" />
         </div>
-      )}
 
-      <JobDescription description={dbJob.description ?? ""} />
+        {/* Category pill */}
+        {dbJob.category?.label && (
+          <span
+            className="inline-block text-xs font-semibold tracking-wide px-3 py-1 rounded-full mb-4"
+            style={{
+              background: "rgba(255,255,255,0.08)",
+              border: "1px solid rgba(255,255,255,0.14)",
+              color: "rgba(255,255,255,0.6)",
+            }}
+          >
+            {dbJob.category.label}
+          </span>
+        )}
 
-      <div className="mb-4">
-        <AdSlot slot="5566778899" />
+        <h1
+          className="text-3xl sm:text-4xl font-black text-white leading-tight mb-4"
+          style={{ letterSpacing: "-0.02em" }}
+        >
+          {dbJob.title}
+        </h1>
+
+        {/* Badges row */}
+        <div className="flex flex-wrap gap-2 items-center">
+          {salaryKES && (
+            <div
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold"
+              style={{
+                background: "rgba(52,211,153,0.12)",
+                border: "1px solid rgba(52,211,153,0.28)",
+                color: "#34d399",
+              }}
+            >
+              <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v2m0 8v2M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3m.08 4h.01" />
+              </svg>
+              {salaryKES}
+            </div>
+          )}
+
+          <div
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium"
+            style={{
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              color: "rgba(255,255,255,0.55)",
+            }}
+          >
+            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            Nairobi, Kenya
+          </div>
+        </div>
       </div>
 
-      <div id="apply-form">
-        <JobForm
-          recommendations={[]}
-          jobId={dbJob.id}
-          questions={questions}
-          requireCV={!!dbJob.requireCV}
-          requireCoverLetter={!!dbJob.requireCoverLetter}
-        />
+      {/* ── JD + FORM ─────────────────────────────────────────────────── */}
+      <div className="px-6 py-6">
+        <JobDescription description={dbJob.description ?? ""} />
+
+        <div className="mb-4">
+          <AdSlot slot="5566778899" />
+        </div>
+
+        <div id="apply-form">
+          <JobForm
+            recommendations={[]}
+            jobId={dbJob.id}
+            questions={questions}
+            requireCV={!!dbJob.requireCV}
+            requireCoverLetter={!!dbJob.requireCoverLetter}
+          />
+        </div>
       </div>
+
+      {/* Floating share button */}
+      <ShareButton />
     </div>
   );
 }

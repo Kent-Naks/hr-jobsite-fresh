@@ -8,6 +8,7 @@ import LogoutButton from "./components/LogoutButton";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import SiteAnalytics from "../components/Analytics";
 import Script from "next/script";
+import GradientMesh from "./components/GradientMesh";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -114,6 +115,7 @@ export default async function RootLayout({
           </div>
         </header>
 
+        <GradientMesh />
         <div className="h-16" />
         <main className="flex-grow">{children}</main>
 

@@ -1,7 +1,7 @@
 // src/app/jobs/[id]/JobDescription.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -330,13 +330,34 @@ function renderContent(lines: string[], iconKey: string | null): React.ReactNode
 
 // ─── Section card ─────────────────────────────────────────────────────────────
 
-function SectionCard({ section }: { section: ParsedSection }) {
+function SectionCard({ section, delay = 0 }: { section: ParsedSection; delay?: number }) {
   const ik = section.iconKey ?? "default";
   const iconColor = ICON_TEXT_COLORS[ik] ?? ICON_TEXT_COLORS.default;
   const cardBg = CARD_COLORS[ik] ?? CARD_COLORS.default;
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => setVisible(true), delay);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.08, rootMargin: "0px 0px -30px 0px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [delay]);
 
   return (
-    <div className={`rounded-xl border p-4 sm:p-5 ${cardBg}`}>
+    <div
+      ref={ref}
+      className={`rounded-xl border p-4 sm:p-5 ${cardBg} reveal-hidden ${visible ? "reveal-visible" : ""}`}
+    >
       {section.heading && (
         <div className={`flex items-center gap-2.5 mb-3 ${iconColor}`}>
           <Icon k={ik} />
@@ -374,7 +395,7 @@ export default function JobDescription({ description }: { description: string })
     <>
       <div className="space-y-3 mb-6">
         {sections.map((section, i) => (
-          <SectionCard key={i} section={section} />
+          <SectionCard key={i} section={section} delay={i * 60} />
         ))}
       </div>
 

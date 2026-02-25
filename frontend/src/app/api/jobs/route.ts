@@ -61,6 +61,8 @@ function mapJob(j: any) {
     title: j.title,
     description: j.description ?? "",
     salaryKES,
+    publishedAt: j.publishedAt?.toISOString() ?? null,
+    createdAt: j.createdAt?.toISOString() ?? null,
     _source: "db" as const,
     _category: j.category?.slug ?? j.category?.label,
   };
