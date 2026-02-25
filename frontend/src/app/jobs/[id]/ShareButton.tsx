@@ -128,17 +128,16 @@ const SHARE_ITEMS: ShareItem[] = [
   },
 ];
 
-// Button is fixed bottom-right → arc fans upward and LEFT so icons stay on-screen.
-// translate(x, -y): negative x = left, positive y = up.
-// All x ≤ 0 (never right). y ≥ 60 so labels clear the 48px trigger + 12px gap.
-// WhatsApp–Instagram arc sweeps from straight-up to upper-left.
-// Copy sits in a second tier directly above WhatsApp.
+// Button is fixed bottom-LEFT → arc fans upward and to the RIGHT so icons stay on-screen.
+// translate(x, -y): positive x = right, positive y = up.
+// All x ≥ 0 (never left). All y ≥ 60 so labels clear the 48px trigger + gap.
+// Arc: R=224px, angles 90°→18° in 18° steps → exactly 70px center-to-center spacing.
 const ARC: { x: number; y: number }[] = [
-  { x:   -4, y: 100 }, // WhatsApp  – straight up
-  { x:  -68, y:  90 }, // Gmail     – up-left
-  { x: -110, y:  68 }, // X         – diagonal
-  { x: -122, y:  60 }, // Instagram – mostly left (y=60 just clears trigger+gap)
-  { x:   -4, y: 164 }, // Copy      – second tier, above WhatsApp
+  { x:   0, y: 224 }, // WhatsApp  – straight up        (90°)
+  { x:  69, y: 213 }, // Gmail     – up-right           (72°)
+  { x: 132, y: 181 }, // X         – diagonal           (54°)
+  { x: 181, y: 132 }, // Instagram – right-up           (36°)
+  { x: 213, y:  69 }, // Copy      – mostly right       (18°)
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -211,7 +210,7 @@ export default function ShareButton({ title }: Props) {
       style={{
         position: "fixed",
         bottom: 24,
-        right: 24,
+        left: 24,
         zIndex: 40,
         width: 48,
         height: 48,
@@ -228,7 +227,7 @@ export default function ShareButton({ title }: Props) {
             style={{
               position: "absolute",
               bottom: 0,
-              right: 0,
+              left: 0,
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
@@ -320,7 +319,7 @@ export default function ShareButton({ title }: Props) {
         style={{
           position: "absolute",
           bottom: 0,
-          right: 0,
+          left: 0,
           width: 48,
           height: 48,
           borderRadius: "50%",
