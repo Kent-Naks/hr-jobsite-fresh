@@ -125,9 +125,6 @@ export default async function HomePage() {
               </span>
             </h1>
 
-            <p className="text-base sm:text-lg text-gray-300 max-w-md mx-auto mb-10 drop-shadow leading-relaxed">
-              Transparent hiring. Real opportunities across East Africa.
-            </p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a
