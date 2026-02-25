@@ -99,7 +99,7 @@ export default async function AboutPage() {
           >
             <p>
               <strong className="text-white">The Talent Africa</strong> is not your typical career
-              website. Our mission is to make sure job seekers are never undercut — whether by
+              website. Our mission is to make sure job seekers are never undercut, whether by
               undervaluing their worth or being disqualified for going slightly above a company&apos;s
               internal budget.
             </p>
@@ -199,7 +199,7 @@ export default async function AboutPage() {
               content: (
                 <p className="text-sm text-gray-400 leading-relaxed">
                   Bring <strong className="text-gray-200">transparency</strong> and fairness into
-                  recruitment — changing a system that has often been{" "}
+                  recruitment, changing a system that has often been{" "}
                   <em>predatory against job seekers</em> into one built on{" "}
                   <strong className="text-gray-200">honesty, respect, and equal value exchange</strong>.
                 </p>
@@ -220,9 +220,9 @@ export default async function AboutPage() {
               title: "Want to partner?",
               content: (
                 <p className="text-sm text-gray-400 leading-relaxed">
-                  Hiring drives, NGOs, or enterprise partnerships —{" "}
+                  Hiring drives, NGOs, or enterprise partnerships?{" "}
                   <Link href="/contact" className="text-white underline">
-                    get in touch
+                    Get in touch
                   </Link>
                   .
                 </p>
@@ -249,15 +249,15 @@ export default async function AboutPage() {
                   &ldquo;The Talent Africa helped us hire across multiple markets quickly.&rdquo;
                 </p>
                 <footer className="mt-4 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
-                  — Hiring Manager, Tech Startup
+                  Hiring Manager, Tech Startup
                 </footer>
               </blockquote>
               <blockquote className="glass-card p-6">
                 <p className="italic text-gray-300 leading-relaxed">
-                  &ldquo;Easy application flow — and it&apos;s the transparency for me.&rdquo;
+                  &ldquo;Easy application flow, and it&apos;s the transparency for me.&rdquo;
                 </p>
                 <footer className="mt-4 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
-                  — Candidate, Nairobi
+                  Candidate, Nairobi
                 </footer>
               </blockquote>
             </div>

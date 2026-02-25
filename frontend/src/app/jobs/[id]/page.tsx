@@ -126,8 +126,8 @@ export default async function JobDetail({
         </div>
       </div>
 
-      {/* Floating share button */}
-      <ShareButton />
+      {/* Radial share menu */}
+      <ShareButton title={dbJob.title} />
     </div>
   );
 }

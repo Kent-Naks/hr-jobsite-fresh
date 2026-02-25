@@ -293,7 +293,7 @@ export default function ContactPage() {
             <div className="space-y-1 divide-y" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
               {[
                 { q: "How long until I hear back?", a: "Typically 1–2 business days for shortlisted candidates; may vary by employer." },
-                { q: "Can I apply without a CV?", a: "Most employers require a CV — required fields are marked on job pages." },
+                { q: "Can I apply without a CV?", a: "Most employers require a CV. Required fields are marked on each job page." },
                 { q: "Partnership inquiries", a: "Fill the form with details and we'll get back to discuss partnerships." },
               ].map((item, idx) => (
                 <div key={idx} className="pt-2 first:pt-0">

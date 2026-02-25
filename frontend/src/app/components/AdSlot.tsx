@@ -80,11 +80,17 @@ export default function AdSlot({ slot }: { slot: string }) {
 
 
   if (!isValidClient) {
-    // helpful placeholder so you can see slots in dev and not accidentally send traffic to Google
+    // Dark-themed placeholder — matches the dark site design
     return (
-      <div className="bg-gray-100 text-gray-500 text-sm py-6 text-center border border-dashed border-gray-300">
-        Google Ad Placeholder – Slot: {slot} 
-        
+      <div
+        className="text-xs py-4 text-center rounded-lg"
+        style={{
+          background: "rgba(255,255,255,0.03)",
+          border: "1px dashed rgba(255,255,255,0.10)",
+          color: "rgba(255,255,255,0.20)",
+        }}
+      >
+        Ad – {slot}
       </div>
     );
   }

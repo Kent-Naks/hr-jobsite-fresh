@@ -7,6 +7,58 @@ import { headers } from "next/headers";
 
 type Category = { slug: string; label: string; count: number };
 
+// ─── Category accent color + emoji palette ────────────────────────────────────
+
+type CatAccent = {
+  emoji: string;
+  borderColor: string;
+  hoverBorder: string;
+  glow: string;
+};
+
+const KEYWORD_ACCENTS: { re: RegExp; a: CatAccent }[] = [
+  { re: /admin/i,                      a: { emoji: "💼", borderColor: "rgba(99,102,241,0.20)",  hoverBorder: "rgba(99,102,241,0.55)",  glow: "rgba(99,102,241,0.14)" } },
+  { re: /agri|farm|fish|forest/i,      a: { emoji: "🌾", borderColor: "rgba(52,211,153,0.20)",  hoverBorder: "rgba(52,211,153,0.55)",  glow: "rgba(52,211,153,0.14)" } },
+  { re: /edu/i,                        a: { emoji: "📚", borderColor: "rgba(167,139,250,0.20)", hoverBorder: "rgba(167,139,250,0.55)", glow: "rgba(167,139,250,0.14)" } },
+  { re: /engineer/i,                   a: { emoji: "⚙️", borderColor: "rgba(251,146,60,0.20)",  hoverBorder: "rgba(251,146,60,0.55)",  glow: "rgba(251,146,60,0.14)" } },
+  { re: /finance|account/i,            a: { emoji: "💰", borderColor: "rgba(52,211,153,0.22)",  hoverBorder: "rgba(52,211,153,0.55)",  glow: "rgba(52,211,153,0.14)" } },
+  { re: /hr\b|recruit|human\s+res/i,   a: { emoji: "👥", borderColor: "rgba(34,211,238,0.20)",  hoverBorder: "rgba(34,211,238,0.55)",  glow: "rgba(34,211,238,0.14)" } },
+  { re: /hospit/i,                     a: { emoji: "🍽️", borderColor: "rgba(251,191,36,0.20)",  hoverBorder: "rgba(251,191,36,0.55)",  glow: "rgba(251,191,36,0.14)" } },
+  { re: /legal|compliance|law/i,       a: { emoji: "⚖️", borderColor: "rgba(167,139,250,0.20)", hoverBorder: "rgba(167,139,250,0.55)", glow: "rgba(167,139,250,0.14)" } },
+  { re: /logist|supply.chain/i,        a: { emoji: "🚚", borderColor: "rgba(251,146,60,0.20)",  hoverBorder: "rgba(251,146,60,0.55)",  glow: "rgba(251,146,60,0.14)" } },
+  { re: /market|brand/i,               a: { emoji: "📣", borderColor: "rgba(251,113,133,0.20)", hoverBorder: "rgba(251,113,133,0.55)", glow: "rgba(251,113,133,0.14)" } },
+  { re: /media|entertain|event/i,      a: { emoji: "🎭", borderColor: "rgba(99,102,241,0.20)",  hoverBorder: "rgba(99,102,241,0.55)",  glow: "rgba(99,102,241,0.14)" } },
+  { re: /operat/i,                     a: { emoji: "🏭", borderColor: "rgba(45,212,191,0.20)",  hoverBorder: "rgba(45,212,191,0.55)",  glow: "rgba(45,212,191,0.14)" } },
+  { re: /protect|secur/i,              a: { emoji: "🛡️", borderColor: "rgba(251,191,36,0.20)",  hoverBorder: "rgba(251,191,36,0.55)",  glow: "rgba(251,191,36,0.14)" } },
+  { re: /sales|biz.dev/i,              a: { emoji: "📈", borderColor: "rgba(52,211,153,0.20)",  hoverBorder: "rgba(52,211,153,0.55)",  glow: "rgba(52,211,153,0.14)" } },
+  { re: /sport/i,                      a: { emoji: "🏃", borderColor: "rgba(251,146,60,0.20)",  hoverBorder: "rgba(251,146,60,0.55)",  glow: "rgba(251,146,60,0.14)" } },
+  { re: /strateg|policy/i,             a: { emoji: "🌿", borderColor: "rgba(45,212,191,0.20)",  hoverBorder: "rgba(45,212,191,0.55)",  glow: "rgba(45,212,191,0.14)" } },
+  { re: /\bit\b|tech\b|software/i,     a: { emoji: "💻", borderColor: "rgba(34,211,238,0.20)",  hoverBorder: "rgba(34,211,238,0.55)",  glow: "rgba(34,211,238,0.14)" } },
+  { re: /home|domestic/i,              a: { emoji: "🏠", borderColor: "rgba(251,191,36,0.20)",  hoverBorder: "rgba(251,191,36,0.55)",  glow: "rgba(251,191,36,0.14)" } },
+  { re: /human|ngo/i,                  a: { emoji: "🤝", borderColor: "rgba(167,139,250,0.20)", hoverBorder: "rgba(167,139,250,0.55)", glow: "rgba(167,139,250,0.14)" } },
+  { re: /project/i,                    a: { emoji: "📋", borderColor: "rgba(99,102,241,0.20)",  hoverBorder: "rgba(99,102,241,0.55)",  glow: "rgba(99,102,241,0.14)" } },
+  { re: /client\s+manag/i,             a: { emoji: "🤝", borderColor: "rgba(34,211,238,0.20)",  hoverBorder: "rgba(34,211,238,0.55)",  glow: "rgba(34,211,238,0.14)" } },
+  { re: /business/i,                   a: { emoji: "📊", borderColor: "rgba(99,102,241,0.20)",  hoverBorder: "rgba(99,102,241,0.55)",  glow: "rgba(99,102,241,0.14)" } },
+];
+
+const FALLBACK: CatAccent[] = [
+  { emoji: "💡", borderColor: "rgba(99,102,241,0.20)",  hoverBorder: "rgba(99,102,241,0.55)",  glow: "rgba(99,102,241,0.14)" },
+  { emoji: "🌱", borderColor: "rgba(52,211,153,0.20)",  hoverBorder: "rgba(52,211,153,0.55)",  glow: "rgba(52,211,153,0.14)" },
+  { emoji: "⚡", borderColor: "rgba(251,191,36,0.20)",  hoverBorder: "rgba(251,191,36,0.55)",  glow: "rgba(251,191,36,0.14)" },
+  { emoji: "🔥", borderColor: "rgba(251,113,133,0.20)", hoverBorder: "rgba(251,113,133,0.55)", glow: "rgba(251,113,133,0.14)" },
+  { emoji: "🔮", borderColor: "rgba(167,139,250,0.20)", hoverBorder: "rgba(167,139,250,0.55)", glow: "rgba(167,139,250,0.14)" },
+];
+
+function getCatAccent(slug: string, label: string, idx: number): CatAccent {
+  const text = `${slug} ${label}`.toLowerCase();
+  for (const entry of KEYWORD_ACCENTS) {
+    if (entry.re.test(text)) return entry.a;
+  }
+  return FALLBACK[idx % FALLBACK.length];
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default async function HomePage() {
   const h = await headers();
   const proto = h.get("x-forwarded-proto") ?? "http";
@@ -16,11 +68,9 @@ export default async function HomePage() {
   const res = await fetch(`${base}/api/categories`, { cache: "no-store" });
   const categories: Category[] = res.ok ? await res.json() : [];
 
-  const totalJobs = categories.reduce((acc, c) => acc + (c.count ?? 0), 0);
-
   return (
     <>
-      {/* ── APPLE-STYLE HERO ──────────────────────────────────────────── */}
+      {/* ── HERO ──────────────────────────────────────────────────────── */}
       <div className="relative w-full overflow-hidden" style={{ minHeight: "520px" }}>
         <div
           className="absolute inset-0 bg-cover bg-center scale-105"
@@ -34,8 +84,7 @@ export default async function HomePage() {
         <div
           className="absolute inset-0"
           style={{
-            background:
-              "linear-gradient(90deg, rgba(0,0,0,0.45) 0%, transparent 50%, rgba(0,0,0,0.45) 100%)",
+            background: "linear-gradient(90deg, rgba(0,0,0,0.45) 0%, transparent 50%, rgba(0,0,0,0.45) 100%)",
           }}
         />
         <div
@@ -77,7 +126,7 @@ export default async function HomePage() {
             </h1>
 
             <p className="text-base sm:text-lg text-gray-300 max-w-md mx-auto mb-10 drop-shadow leading-relaxed">
-              Transparent hiring. No games. Real opportunities across East Africa.
+              Transparent hiring. Real opportunities across East Africa.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -103,42 +152,11 @@ export default async function HomePage() {
           </div>
         </div>
 
-        {/* Bottom fade */}
         <div
           className="absolute bottom-0 inset-x-0 h-20 pointer-events-none"
           style={{ background: "linear-gradient(to bottom, transparent, var(--background))" }}
         />
       </div>
-
-      {/* ── STATS PILL ────────────────────────────────────────────────── */}
-      {totalJobs > 0 && (
-        <div className="flex justify-center -mt-5 relative z-10 px-6">
-          <div
-            className="inline-flex items-center gap-5 px-6 py-3 rounded-full text-sm animate-fade-slide-up"
-            style={{
-              background: "rgba(255,255,255,0.07)",
-              backdropFilter: "blur(16px)",
-              WebkitBackdropFilter: "blur(16px)",
-              border: "1px solid rgba(255,255,255,0.12)",
-              animationDelay: "0.3s",
-            }}
-          >
-            <span className="flex items-center gap-2">
-              <span
-                className="w-2 h-2 rounded-full"
-                style={{ background: "#34d399" }}
-              />
-              <span className="text-white font-semibold">{totalJobs}</span>
-              <span style={{ color: "rgba(255,255,255,0.5)" }}>open roles</span>
-            </span>
-            <span style={{ color: "rgba(255,255,255,0.2)" }}>·</span>
-            <span className="flex items-center gap-2">
-              <span className="text-white font-semibold">{categories.length}</span>
-              <span style={{ color: "rgba(255,255,255,0.5)" }}>categories</span>
-            </span>
-          </div>
-        </div>
-      )}
 
       {/* ── CATEGORIES GRID ───────────────────────────────────────────── */}
       <div id="categories" className="p-6 max-w-7xl mx-auto mt-8">
@@ -148,48 +166,60 @@ export default async function HomePage() {
           <AdSlot slot="1234567890" />
         </div>
 
-        <ScrollReveal>
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold mb-1">Job Categories</h2>
-            <p className="text-sm text-gray-400">Browse opportunities by field</p>
-          </div>
-
-          {categories.length === 0 ? (
-            <p className="text-sm text-gray-500 mb-8">No categories yet.</p>
-          ) : (
-            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-              {categories.map((cat, i) => (
-                <li
-                  key={cat.slug}
-                  className="animate-fade-slide-up"
-                  style={{ animationDelay: `${0.05 + i * 0.055}s` }}
-                >
-                  <Link
-                    href={`/categories/${cat.slug}`}
-                    className="glass-card glass-card-hover block p-5 group"
-                  >
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold text-white transition-colors">{cat.label}</span>
-                      <span
-                        className="text-lg transition-transform duration-300 group-hover:translate-x-1"
-                        style={{ color: "rgba(255,255,255,0.28)" }}
-                      >
-                        →
-                      </span>
-                    </div>
-                    {cat.count > 0 && (
-                      <p className="text-xs mt-2" style={{ color: "rgba(255,255,255,0.38)" }}>
-                        {cat.count} {cat.count === 1 ? "role" : "roles"} available
-                      </p>
-                    )}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
+        {/* Heading with glow entrance */}
+        <ScrollReveal className="mb-6">
+          <h2 className="heading-glow-text text-2xl font-bold mb-1">Job Categories</h2>
+          <p className="heading-glow-sub text-sm text-gray-400">Browse opportunities by field</p>
         </ScrollReveal>
 
-        {/* ── HOW IT WORKS ──────────────────────────────────────────────── */}
+        {categories.length === 0 ? (
+          <p className="text-sm text-gray-500 mb-8">No categories yet.</p>
+        ) : (
+          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            {categories.map((cat, i) => {
+              const accent = getCatAccent(cat.slug, cat.label, i);
+              return (
+                <li key={cat.slug}>
+                  <ScrollReveal delay={i * 65}>
+                    <Link
+                      href={`/categories/${cat.slug}`}
+                      className="glass-card cat-card block p-5 group"
+                      style={{
+                        "--cat-hover-border": accent.hoverBorder,
+                        "--cat-glow": accent.glow,
+                        borderColor: accent.borderColor,
+                      } as React.CSSProperties}
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <span
+                          className="text-xl leading-none"
+                          role="img"
+                          aria-hidden="true"
+                        >
+                          {accent.emoji}
+                        </span>
+                        <span
+                          className="text-base transition-transform duration-300 group-hover:translate-x-1"
+                          style={{ color: "rgba(255,255,255,0.28)" }}
+                        >
+                          →
+                        </span>
+                      </div>
+                      <span className="font-semibold text-white block mb-1">{cat.label}</span>
+                      {cat.count > 0 && (
+                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.38)" }}>
+                          {cat.count} {cat.count === 1 ? "role" : "roles"} available
+                        </p>
+                      )}
+                    </Link>
+                  </ScrollReveal>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        {/* ── HOW IT WORKS ────────────────────────────────────────────── */}
         <ScrollReveal delay={100}>
           <div className="my-12">
             <h2 className="text-2xl font-bold text-center mb-2">How it works</h2>
@@ -200,7 +230,7 @@ export default async function HomePage() {
                 {
                   step: "01",
                   title: "Browse",
-                  desc: "Explore jobs across all categories — salaries are always shown upfront.",
+                  desc: "Explore jobs across all categories. Salaries are always shown upfront.",
                 },
                 {
                   step: "02",
