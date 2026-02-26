@@ -54,14 +54,16 @@ function buildConfirmationHtml(name: string, jobTitle: string): string {
                 We are pleased to confirm that your application has been successfully received.
               </p>
               <p style="margin:0 0 20px;font-size:16px;color:#e5e7eb;line-height:1.6;">
-                Our team will carefully review all applications. If your qualifications and experience align with
-                what we are looking for, we will be in touch within <strong style="color:#10b981;">2&ndash;4 weeks</strong>.
-                If you do not hear from us within this period, please note that we receive a high volume of applications
-                and are only able to respond to shortlisted candidates.
+                Please note that The Talent Africa is a platform that connects job seekers with employers. We do not
+                have access to the hiring process, nor do we determine who is selected. Your application has been
+                forwarded directly to the employer, who will carefully review all submissions and reach out directly
+                to shortlisted candidates whose profiles align with their requirements. You can expect to hear from
+                them within <strong style="color:#10b981;">2&ndash;4 weeks</strong>, or in accordance with their
+                own hiring timelines.
               </p>
               <p style="margin:0 0 32px;font-size:16px;color:#e5e7eb;line-height:1.6;">
-                We sincerely appreciate your interest in joining our network and wish you the very best in your
-                job search.
+                We truly appreciate you choosing The Talent Africa as your platform to pursue this opportunity.
+                We wish you all the very best with this application.
               </p>
 
               <!-- Divider -->
@@ -111,7 +113,9 @@ export async function POST(
 
     // Resolve job title for the email subject and body
     const job = await prisma.job.findUnique({ where: { id }, select: { title: true } });
-    const jobTitle = job?.title ?? "the position";
+    const rawTitle = job?.title ?? "the position";
+    // Strip "[Openings: X]" tags from the title (e.g. "Call Centre Trainee [Openings: 5]" → "Call Centre Trainee")
+    const jobTitle = rawTitle.replace(/\s*\[Openings:[^\]]*\]/gi, "").trim();
 
     // Send confirmation email — failure must NOT block the response
     try {
