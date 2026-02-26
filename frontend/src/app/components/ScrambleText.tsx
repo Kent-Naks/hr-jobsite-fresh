@@ -6,9 +6,9 @@ import React, { useEffect, useRef, useState } from "react";
 
 const CHARS = "!@#$%^&*<>?/|ABCDEFabcdef0123456789";
 const N_STYLES = 7;
-const STAGGER = 40;     // ms delay between consecutive letters (styles 1, 3)
-const LETTER_DUR = 350; // CSS transition duration per letter (ms)
-const SCRAMBLE_MS = 60; // ms per locked-in char (style 4)
+const STAGGER = 80;      // ms delay between consecutive letters (styles 1, 3)
+const LETTER_DUR = 700;  // CSS transition duration per letter (ms)
+const SCRAMBLE_MS = 120; // ms per locked-in char (style 4)
 
 function randChar() {
   return CHARS[Math.floor(Math.random() * CHARS.length)];
@@ -60,9 +60,9 @@ export default function ScrambleText({ text }: Props) {
 
   // Total time for each phase per style (ms)
   const letterTotal = n * STAGGER + LETTER_DUR + 60;
-  const inMs  = [600, letterTotal, 600, letterTotal, n * SCRAMBLE_MS + 80, 800, 800];
-  const holdMs = [3000, 2500, 2500, 2500, 3000, 3000, 2500];
-  const outMs  = [600, letterTotal, 600, letterTotal, 400, 800, 800];
+  const inMs  = [1200, letterTotal, 1200, letterTotal, n * SCRAMBLE_MS + 160, 1600, 1600];
+  const holdMs = [5000, 4000, 4000, 4000, 5000, 5000, 4000];
+  const outMs  = [1200, letterTotal, 1200, letterTotal, 400, 1600, 1600];
 
   // ── scramble helpers ───────────────────────────────────────────────────────
 
@@ -73,7 +73,7 @@ export default function ScrambleText({ text }: Props) {
       locked++;
       setScDisplay(scrambleStr(text, locked));
       if (locked < n) addT(tick, SCRAMBLE_MS);
-      else addT(() => setPhase("hold"), 80);
+      else addT(() => setPhase("hold"), 160);
     }
     addT(tick, SCRAMBLE_MS);
   }
@@ -82,10 +82,10 @@ export default function ScrambleText({ text }: Props) {
     let steps = 0;
     function tick() {
       setScDisplay(scrambleStr(text, 0));
-      if (++steps < 6) addT(tick, 60);
+      if (++steps < 6) addT(tick, 120);
       else advance();
     }
-    addT(tick, 60);
+    addT(tick, 120);
   }
 
   // ── phase state machine ────────────────────────────────────────────────────
@@ -95,7 +95,7 @@ export default function ScrambleText({ text }: Props) {
     if (phase === "pre-in") {
       // For scramble: pre-scramble immediately so there's no flash of correct text
       if (styleIdx === 4) setScDisplay(scrambleStr(text, 0));
-      addT(() => setPhase("in"), 50);
+      addT(() => setPhase("in"), 150);
     } else if (phase === "in") {
       if (styleIdx === 4) runScrambleIn();
       else addT(() => setPhase("hold"), inMs[styleIdx]);
@@ -122,8 +122,8 @@ export default function ScrambleText({ text }: Props) {
       transition: isPre
         ? "none"
         : phase === "out"
-        ? `transform ${LETTER_DUR}ms ease-in, opacity 200ms ease`
-        : `transform ${LETTER_DUR}ms cubic-bezier(0.22,1,0.36,1), opacity 200ms ease`,
+        ? `transform ${LETTER_DUR}ms ease-in, opacity 400ms ease`
+        : `transform ${LETTER_DUR}ms cubic-bezier(0.22,1,0.36,1), opacity 400ms ease`,
       transitionDelay: isPre
         ? "0ms"
         : phase === "in"
@@ -151,8 +151,8 @@ export default function ScrambleText({ text }: Props) {
       transition: isPre
         ? "none"
         : phase === "out"
-        ? `transform ${LETTER_DUR}ms ease-in, opacity 200ms ease`
-        : `transform ${LETTER_DUR}ms cubic-bezier(0.34,1.56,0.64,1), opacity 200ms ease`,
+        ? `transform ${LETTER_DUR}ms ease-in, opacity 400ms ease`
+        : `transform ${LETTER_DUR}ms cubic-bezier(0.34,1.56,0.64,1), opacity 400ms ease`,
       transitionDelay: isPre
         ? "0ms"
         : phase === "in"
@@ -185,7 +185,7 @@ export default function ScrambleText({ text }: Props) {
           transform: `translateX(${tx})`,
           transition: phase === "pre-in"
             ? "none"
-            : `transform 0.6s ${phase === "out" ? "ease-in" : "cubic-bezier(0.22,1,0.36,1)"}`,
+            : `transform 1.2s ${phase === "out" ? "ease-in" : "cubic-bezier(0.22,1,0.36,1)"}`,
         }}>
           {text}
         </span>
@@ -223,7 +223,7 @@ export default function ScrambleText({ text }: Props) {
     const sep = phase === "pre-in" || phase === "out";
     const trans = phase === "pre-in"
       ? "none"
-      : "transform 0.6s cubic-bezier(0.22,1,0.36,1)";
+      : "transform 1.2s cubic-bezier(0.22,1,0.36,1)";
     return (
       <span style={{ ...base, overflow: "hidden" }} aria-label={text}>
         {/* invisible spacer keeps dimensions stable */}
@@ -296,7 +296,7 @@ export default function ScrambleText({ text }: Props) {
           opacity,
           transition: phase === "pre-in"
             ? "none"
-            : "transform 0.8s cubic-bezier(0.22,1,0.36,1), opacity 0.8s ease",
+            : "transform 1.6s cubic-bezier(0.22,1,0.36,1), opacity 1.6s ease",
         }}
         aria-label={text}
       >
@@ -311,7 +311,7 @@ export default function ScrambleText({ text }: Props) {
     const converged = phase === "in" || phase === "hold";
     const layerTrans = phase === "pre-in"
       ? "none"
-      : "transform 0.8s cubic-bezier(0.22,1,0.36,1), opacity 0.8s ease";
+      : "transform 1.6s cubic-bezier(0.22,1,0.36,1), opacity 1.6s ease";
     return (
       <span style={{ ...base, overflow: "visible" }} aria-label={text}>
         {/* spacer keeps layout width stable */}
