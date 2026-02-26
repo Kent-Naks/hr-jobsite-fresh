@@ -1,7 +1,9 @@
 // src/app/admin/page.tsx
 import Link from "next/link";
+import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
+import AdminSearch from "./AdminSearch";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +18,13 @@ function formatDate(d: string | null | undefined) {
   }
 }
 
-export default async function AdminHome() {
+export default async function AdminHome({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; status?: string; category?: string }>;
+}) {
+  const { q, status, category } = await searchParams;
+
   // server-side check: only show the Analytics link when the admin_session cookie matches
   const cookieStore = await cookies();
   const session = cookieStore.get("admin_session")?.value;
@@ -27,8 +35,14 @@ export default async function AdminHome() {
   let dbError = false;
 
   try {
-    // Order ascending so oldest updated job is at the top and newest at the bottom
     jobs = await prisma.job.findMany({
+      where: {
+        ...(q ? { title: { contains: q, mode: "insensitive" } } : {}),
+        ...(status ? { status } : {}),
+        ...(category
+          ? { category: { label: { contains: category, mode: "insensitive" } } }
+          : {}),
+      },
       include: { category: true },
       orderBy: { updatedAt: "asc" },
     });
@@ -61,6 +75,10 @@ export default async function AdminHome() {
           )}
         </div>
       </div>
+
+      <Suspense fallback={null}>
+        <AdminSearch />
+      </Suspense>
 
       {dbError && (
         <div className="mb-4 rounded border border-yellow-400 bg-yellow-50 p-3 text-sm text-yellow-800">
