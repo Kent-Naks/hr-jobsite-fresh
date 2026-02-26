@@ -16,76 +16,41 @@ export default function AdminLoading() {
 
       <main className="p-6 max-w-5xl mx-auto">
 
-        {/* Page title */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="sk h-8 w-40" />
+        {/* Header: title + button group */}
+        <div className="flex justify-between items-center mb-6 gap-3">
+          <div className="sk h-8 w-36" />
           <div className="flex gap-2">
-            <div className="sk h-9 w-36 rounded" />
+            <div className="sk h-9 w-40 rounded" />
+            <div className="sk h-9 w-24 rounded" />
             <div className="sk h-9 w-24 rounded" />
           </div>
         </div>
 
-        {/* Stats row: 3 stat card skeletons */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className="p-4"
-              style={{
-                background: "#1f2937",
-                border: "1px solid #374151",
-                borderRadius: "8px",
-              }}
-            >
-              <div className="sk h-3.5 w-24 mb-3" />
-              <div className="sk h-8 w-16" />
-            </div>
-          ))}
-        </div>
-
-        {/* Table skeleton */}
-        <div
-          style={{
-            border: "1px solid #374151",
-            borderRadius: "4px",
-            overflow: "hidden",
-          }}
-        >
-          {/* Header row */}
-          <div
-            className="grid gap-2 p-2"
-            style={{
-              gridTemplateColumns: "2fr 1.5fr 1fr 1.5fr 1.5fr 1.5fr 60px",
-              background: "#1f2937",
-              borderBottom: "1px solid #374151",
-            }}
-          >
-            {["Title", "Category", "Status", "Posted", "Updated", "Expiring", ""].map((_, i) => (
-              <div key={i} className="sk h-4" style={{ opacity: i === 6 ? 0 : 1 }} />
+        {/* Table: header + 8 rows, 7 columns matching real page */}
+        <table className="w-full text-sm border border-gray-800">
+          <thead>
+            <tr className="bg-gray-800">
+              {["Title", "Category", "Status", "Posted", "Updated", "Expiring", ""].map((col, i) => (
+                <th key={i} className="p-2 text-left">
+                  {col && <div className="sk h-4" style={{ width: col === "Title" ? 48 : col === "" ? 0 : 56 }} />}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {Array.from({ length: 8 }).map((_, row) => (
+              <tr key={row} className="border-t border-gray-800">
+                <td className="p-2"><div className="sk h-4" style={{ width: `${55 + (row * 11) % 30}%` }} /></td>
+                <td className="p-2"><div className="sk h-4 w-24" /></td>
+                <td className="p-2"><div className="sk h-4 w-16" /></td>
+                <td className="p-2"><div className="sk h-4 w-32" /></td>
+                <td className="p-2"><div className="sk h-4 w-32" /></td>
+                <td className="p-2"><div className="sk h-4 w-20" /></td>
+                <td className="p-2 text-right"><div className="sk h-4 w-8 ml-auto" /></td>
+              </tr>
             ))}
-          </div>
-
-          {/* 8 data rows */}
-          {Array.from({ length: 8 }).map((_, row) => (
-            <div
-              key={row}
-              className="grid gap-2 p-2"
-              style={{
-                gridTemplateColumns: "2fr 1.5fr 1fr 1.5fr 1.5fr 1.5fr 60px",
-                borderBottom: "1px solid #1f2937",
-                background: row % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)",
-              }}
-            >
-              <div className="sk h-4" style={{ width: `${60 + (row * 7) % 30}%` }} />
-              <div className="sk h-4" style={{ width: "70%" }} />
-              <div className="sk h-4" style={{ width: "55%" }} />
-              <div className="sk h-4" style={{ width: "80%" }} />
-              <div className="sk h-4" style={{ width: "80%" }} />
-              <div className="sk h-4" style={{ width: "65%" }} />
-              <div className="sk h-4" style={{ width: "40%" }} />
-            </div>
-          ))}
-        </div>
+          </tbody>
+        </table>
 
       </main>
     </>
