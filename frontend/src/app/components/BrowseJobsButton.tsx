@@ -11,10 +11,12 @@ export default function BrowseJobsButton() {
     const duration = 1800;
     const startTime = performance.now();
 
+    const ease = (t: number) => -(Math.cos(Math.PI * t) - 1) / 2;
+
     const step = (now: number) => {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      window.scrollTo(0, startY + distance * progress);
+      window.scrollTo(0, startY + distance * ease(progress));
       if (progress < 1) requestAnimationFrame(step);
     };
 
