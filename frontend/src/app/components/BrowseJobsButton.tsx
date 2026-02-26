@@ -3,24 +3,7 @@
 export default function BrowseJobsButton() {
   const handleClick = () => {
     const el = document.getElementById("categories");
-    if (!el) return;
-
-    const startY = window.scrollY;
-    const targetY = el.getBoundingClientRect().top + window.scrollY;
-    const distance = targetY - startY;
-    const duration = 1800;
-    const startTime = performance.now();
-
-    const ease = (t: number) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-
-    const step = (now: number) => {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      window.scrollTo(0, startY + distance * ease(progress));
-      if (progress < 1) requestAnimationFrame(step);
-    };
-
-    requestAnimationFrame(step);
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   return (
