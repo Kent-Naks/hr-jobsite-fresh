@@ -72,6 +72,21 @@ export default function JobForm({
     e.preventDefault();
     setSubmitting(true);
 
+    // Extract applicant details for the confirmation email
+    const form = e.currentTarget as HTMLFormElement;
+    const formData = new FormData(form);
+    const applicantName = (formData.get("fullName") as string) || "";
+    const applicantEmail = (formData.get("email") as string) || "";
+
+    // Fire confirmation email — non-blocking, result does not affect submission flow
+    if (jobId && applicantEmail) {
+      fetch(`/api/jobs/${jobId}/apply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: applicantName, email: applicantEmail }),
+      }).catch(() => {});
+    }
+
     // simulate upload / POST
     await new Promise((r) => setTimeout(r, 700));
 
