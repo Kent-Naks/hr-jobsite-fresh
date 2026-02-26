@@ -20,19 +20,25 @@ export default function ScrollReveal({ children, delay = 0, className = "" }: Pr
     const el = ref.current;
     if (!el) return;
 
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
+        if (timeoutId) clearTimeout(timeoutId);
         if (entry.isIntersecting) {
-          // Small extra delay if requested
-          setTimeout(() => setVisible(true), delay);
-          observer.disconnect();
+          timeoutId = setTimeout(() => setVisible(true), delay);
+        } else {
+          setVisible(false);
         }
       },
       { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
     );
 
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [delay]);
 
   return (

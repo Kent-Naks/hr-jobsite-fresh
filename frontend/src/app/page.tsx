@@ -4,6 +4,7 @@ import AdSlot from "./components/AdSlot";
 import FlashBanner from "./components/FlashBanner";
 import ScrollReveal from "./components/ScrollReveal";
 import ScrambleText from "./components/ScrambleText";
+import BrowseJobsButton from "./components/BrowseJobsButton";
 import { headers } from "next/headers";
 
 type Category = { slug: string; label: string; count: number };
@@ -128,13 +129,7 @@ export default async function HomePage() {
 
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <a
-                href="#categories"
-                className="inline-block px-8 py-3 rounded-full font-semibold text-black transition-all duration-300 hover:scale-105 shadow-2xl"
-                style={{ background: "linear-gradient(135deg, #ffffff 0%, #e5e7eb 100%)" }}
-              >
-                Browse Jobs
-              </a>
+              <BrowseJobsButton />
               <Link
                 href="/about"
                 className="inline-block px-8 py-3 rounded-full font-semibold text-white transition-all duration-300 hover:scale-105"
