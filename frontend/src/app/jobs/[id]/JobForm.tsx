@@ -37,6 +37,8 @@ export default function JobForm({
   const [cv, setCv] = useState<File | null>(null);
   const [cover, setCover] = useState<File | null>(null);
   const [answers, setAnswers] = useState<Record<string, any>>({});
+  const [coverLetterText, setCoverLetterText] = useState("");
+  const [extrasErrors, setExtrasErrors] = useState({ salary: false, date: false });
 
   // success banner (on the job page)
   const [showSuccess, setShowSuccess] = useState(false);
@@ -86,6 +88,17 @@ export default function JobForm({
         body: JSON.stringify({ name: applicantName, email: applicantEmail }),
       }).catch(() => {});
     }
+
+    // Validate mandatory extras
+    const salaryVal = (formData.get("expectedSalary") as string) || "";
+    const dateVal = (formData.get("availableFrom") as string) || "";
+    const newErrors = { salary: !salaryVal.trim(), date: !dateVal.trim() };
+    if (newErrors.salary || newErrors.date) {
+      setExtrasErrors(newErrors);
+      setSubmitting(false);
+      return;
+    }
+    setExtrasErrors({ salary: false, date: false });
 
     // simulate upload / POST
     await new Promise((r) => setTimeout(r, 700));
@@ -159,10 +172,10 @@ export default function JobForm({
         </section>
 
         {/* Documents */}
-        {(requireCV || requireCoverLetter) && (
-          <section className={sectionClass}>
-            <div className="flex items-start justify-between">
-              <h2 className="text-lg font-bold text-white">Documents</h2>
+        <section className={sectionClass}>
+          <div className="flex items-start justify-between">
+            <h2 className="text-lg font-bold text-white">Documents</h2>
+            {(requireCV || requireCoverLetter) && (
               <div className="text-sm text-gray-200">
                 <div className="font-medium">Required documents</div>
                 <div className="text-sm">
@@ -170,8 +183,10 @@ export default function JobForm({
                   {requireCoverLetter ? <span className="font-semibold">Cover letter required</span> : <span>Cover letter optional</span>}
                 </div>
               </div>
-            </div>
+            )}
+          </div>
 
+          {(requireCV || requireCoverLetter) && (
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               {requireCV && (
                 <div className="relative">
@@ -295,8 +310,26 @@ export default function JobForm({
                 </div>
               )}
             </div>
-          </section>
-        )}
+          )}
+
+          {/* Cover letter textarea — always shown */}
+          <div className="mt-4">
+            <div className="text-sm font-semibold mb-1 text-white">
+              Cover Letter{requireCoverLetter && <span className="text-red-400 ml-1">*</span>}
+            </div>
+            <textarea
+              name="coverLetterText"
+              rows={6}
+              placeholder="Write your cover letter here..."
+              required={requireCoverLetter}
+              value={coverLetterText}
+              onChange={(e) => setCoverLetterText(e.target.value)}
+              maxLength={2000}
+              className={`${inputClass} resize-y`}
+            />
+            <div className="mt-1 text-xs text-gray-400 text-right">{coverLetterText.length} / 2000</div>
+          </div>
+        </section>
 
         {/* Application Questions */}
         {sortedQs.length > 0 && (
@@ -357,16 +390,36 @@ export default function JobForm({
           <div className="grid gap-3 sm:grid-cols-2">
             <input type="url" name="linkedin" placeholder="LinkedIn Profile URL" className={`${inputClass} text-white`} />
             <input type="url" name="portfolio" placeholder="Portfolio / GitHub URL" className={`${inputClass} text-white`} />
-            <input type="number" name="expectedSalary" placeholder="Expected Salary (KES)" className={`${inputClass} text-white`} />
+
+            <label className="block">
+              <div className="text-sm font-semibold mb-1 text-white">
+                Expected Salary (KES) <span className="text-red-400">*</span>
+              </div>
+              <input
+                type="number"
+                name="expectedSalary"
+                placeholder="e.g. 80000"
+                required
+                onChange={() => setExtrasErrors((s) => ({ ...s, salary: false }))}
+                className={`${inputClass} text-white${extrasErrors.salary ? " border-red-400" : ""}`}
+              />
+              {extrasErrors.salary && (
+                <p className="mt-1 text-xs text-red-400">Please enter your expected salary.</p>
+              )}
+            </label>
 
             <label className="block relative">
-              <div className="text-sm font-semibold mb-1 text-white">Available From</div>
+              <div className="text-sm font-semibold mb-1 text-white">
+                Available From <span className="text-red-400">*</span>
+              </div>
               <div className="flex items-center gap-2">
                 <input
                   ref={dateRef}
                   type="date"
                   name="availableFrom"
-                  className={`${inputClass} text-white`}
+                  required
+                  onChange={() => setExtrasErrors((s) => ({ ...s, date: false }))}
+                  className={`${inputClass} text-white${extrasErrors.date ? " border-red-400" : ""}`}
                 />
                 <button
                   type="button"
@@ -379,7 +432,11 @@ export default function JobForm({
                   </svg>
                 </button>
               </div>
-              <div className="mt-2 text-xs text-gray-300">Click the calendar icon to pick a date.</div>
+              {extrasErrors.date ? (
+                <p className="mt-1 text-xs text-red-400">Please select your available from date.</p>
+              ) : (
+                <div className="mt-2 text-xs text-gray-300">Click the calendar icon to pick a date.</div>
+              )}
             </label>
           </div>
         </section>
