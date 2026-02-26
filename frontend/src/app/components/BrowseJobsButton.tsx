@@ -8,7 +8,7 @@ export default function BrowseJobsButton() {
     const startY = window.scrollY;
     const targetY = el.getBoundingClientRect().top + window.scrollY;
     const distance = targetY - startY;
-    const duration = 2500;
+    const duration = 1200;
     const startTime = performance.now();
 
     const step = (now: number) => {
