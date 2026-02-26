@@ -81,11 +81,6 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
 
       <div className="mb-6">
         <h1 className="text-3xl font-black text-white mb-1">{title} Jobs</h1>
-        {jobs.length > 0 && (
-          <p className="text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
-            {jobs.length} {jobs.length === 1 ? "position" : "positions"} available
-          </p>
-        )}
       </div>
 
       {/* Client island: sticky search + filtered glass cards + New badge */}
