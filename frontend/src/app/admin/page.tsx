@@ -68,6 +68,10 @@ export default async function AdminHome({
             + New Job
           </Link>
 
+          <Link href="/admin/applications" className="px-3 py-2 border rounded">
+            Applications
+          </Link>
+
           {authed && (
             <Link href="/admin/analytics" className="px-3 py-2 border rounded">
               Analytics
