@@ -1,221 +1,124 @@
-// src/app/api/stats/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
-function parseDateParam(s: string | null) {
-  if (!s) return null;
-  const d = new Date(s);
-  if (isNaN(d.getTime())) return null;
-  return d;
-}
-
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const range = (url.searchParams.get("range") || "day").toLowerCase();
-    // support date=YYYY-MM-DD for day/week, and year & month for month
-    const dateParam = url.searchParams.get("date"); // YYYY-MM-DD
-    const yearParam = url.searchParams.get("year");
-    const monthParam = url.searchParams.get("month"); // 1-12
+    const dateParam = url.searchParams.get("date");
 
     const now = new Date();
 
-    // determine target date context
-    let ctxDate = parseDateParam(dateParam) ?? now;
-
-    // If month param provided use its first day
-    if (yearParam && monthParam) {
-      const y = Number(yearParam);
-      const m = Number(monthParam);
-      if (!Number.isNaN(y) && !Number.isNaN(m) && m >= 1 && m <= 12) {
-        ctxDate = new Date(y, m - 1, 1);
-      }
+    // Parse date param (YYYY-MM-DD)
+    let ctxDate = now;
+    if (dateParam) {
+      const d = new Date(dateParam + "T00:00:00");
+      if (!isNaN(d.getTime())) ctxDate = d;
     }
 
-    // compute start / end based on range (and ctxDate)
+    // Compute start/end
     let start: Date;
     let end: Date;
 
     if (range === "day") {
       start = new Date(ctxDate);
       start.setHours(0, 0, 0, 0);
-      end = new Date(start);
+      end = new Date(ctxDate);
       end.setHours(23, 59, 59, 999);
     } else if (range === "week") {
-      // week containing ctxDate; week starts Sunday (0)
+      // Week starts Monday
       const d = new Date(ctxDate);
-      const day = d.getDay();
+      const day = d.getDay(); // 0=Sun
+      const diffToMon = day === 0 ? -6 : 1 - day;
       start = new Date(d);
-      start.setDate(d.getDate() - day);
+      start.setDate(d.getDate() + diffToMon);
       start.setHours(0, 0, 0, 0);
       end = new Date(start);
       end.setDate(start.getDate() + 6);
       end.setHours(23, 59, 59, 999);
     } else {
       // month
-      const y = ctxDate.getFullYear();
-      const m = ctxDate.getMonth();
-      start = new Date(y, m, 1, 0, 0, 0, 0);
-      // last day of month:
-      end = new Date(y, m + 1, 0, 23, 59, 59, 999);
+      start = new Date(ctxDate.getFullYear(), ctxDate.getMonth(), 1, 0, 0, 0, 0);
+      end = new Date(ctxDate.getFullYear(), ctxDate.getMonth() + 1, 0, 23, 59, 59, 999);
     }
 
-    // --- Fetch events in the range (pageviews) ---
-    const events = await prisma.analyticsEvent.findMany({
+    // 1. totalVisits
+    const totalVisits = await prisma.analyticsEvent.count({
+      where: { createdAt: { gte: start, lte: end }, type: "pageview" },
+    });
+
+    // 2. uniqueSessions
+    const uniqueSessionsRaw: { cnt: bigint }[] = await prisma.$queryRaw`
+      SELECT COUNT(DISTINCT "sessionId") AS cnt
+      FROM "AnalyticsEvent"
+      WHERE "createdAt" >= ${start} AND "createdAt" <= ${end}
+    `;
+    const uniqueSessions = Number(uniqueSessionsRaw[0]?.cnt ?? 0);
+
+    // 3. liveVisitors (last 60 minutes)
+    const sixtyMinsAgo = new Date(now.getTime() - 60 * 60 * 1000);
+    const liveVisitors = await prisma.analyticsEvent.count({
+      where: { createdAt: { gte: sixtyMinsAgo }, type: "pageview" },
+    });
+
+    // 4. avgSessionSeconds
+    const avgRaw: { avg: number | null }[] = await prisma.$queryRaw`
+      SELECT AVG(duration)::float AS avg
+      FROM "AnalyticsEvent"
+      WHERE type = 'unload' AND duration > 0
+      AND "createdAt" >= ${start} AND "createdAt" <= ${end}
+    `;
+    const avgSessionSeconds =
+      avgRaw[0]?.avg != null ? Math.round(Number(avgRaw[0].avg)) : null;
+
+    // 5. timeSeries — fetch all pageviews in range and bucket client-side
+    const tsEvents = await prisma.analyticsEvent.findMany({
       where: { createdAt: { gte: start, lte: end }, type: "pageview" },
       select: { createdAt: true },
     });
 
-    type EventType = { createdAt: Date };
-    let timeSeries: { ts: string; count: number }[] = [];
+    let timeSeries: { label: string; count: number }[];
 
     if (range === "day") {
-      // hourly buckets 0..23
-      const buckets: number[] = Array.from({ length: 24 }).map(() => 0);
-      (events as EventType[]).forEach((e) => {
-        const h = new Date(e.createdAt).getHours();
-        if (h >= 0 && h < 24) buckets[h]++;
+      const buckets = new Array(24).fill(0);
+      tsEvents.forEach((e) => {
+        buckets[new Date(e.createdAt).getHours()]++;
       });
-      timeSeries = buckets.map((count, h) => {
-        const d = new Date(start);
-        d.setHours(h, 0, 0, 0);
-        return { ts: d.toISOString(), count };
-      });
+      timeSeries = buckets.map((count, h) => ({ label: `${pad2(h)}:00`, count }));
     } else if (range === "week") {
-      // day buckets Sun..Sat
-      const buckets: number[] = Array.from({ length: 7 }).map(() => 0);
-      (events as EventType[]).forEach((e) => {
-        const day = new Date(e.createdAt).getDay();
-        buckets[day]++;
+      // Mon(0)..Sun(6) buckets
+      const buckets = new Array(7).fill(0);
+      tsEvents.forEach((e) => {
+        const day = new Date(e.createdAt).getDay(); // 0=Sun
+        const idx = day === 0 ? 6 : day - 1;
+        buckets[idx]++;
       });
-      timeSeries = buckets.map((count, day) => {
-        const dt = new Date(start);
-        dt.setDate(start.getDate() + day);
-        dt.setHours(0, 0, 0, 0);
-        return { ts: dt.toISOString(), count };
-      });
+      timeSeries = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d, i) => ({
+        label: d,
+        count: buckets[i],
+      }));
     } else {
-      // month: dynamic weeks
+      // month: weekly buckets
       const year = start.getFullYear();
-      const month = start.getMonth(); // 0-indexed
-      const firstOfMonth = new Date(year, month, 1);
-      const firstWeekday = firstOfMonth.getDay(); // 0..6 (Sun..Sat)
-      const lastOfMonth = new Date(year, month + 1, 0);
-      const daysInMonth = lastOfMonth.getDate();
-
-      // number of weeks in calendar view for this month
+      const month = start.getMonth();
+      const firstWeekday = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
       const numWeeks = Math.ceil((firstWeekday + daysInMonth) / 7);
-
-      // week index: 1..numWeeks
-      const weeks: number[] = Array.from({ length: numWeeks }).map(() => 0);
-
-      const getWeekIndex = (d: Date) => {
-        // dayOfMonth 1..daysInMonth
-        const dayOfMonth = d.getDate();
-        // zero-based index: Math.floor((firstWeekday + dayOfMonth - 1) / 7)
-        const zeroIndex = Math.floor((firstWeekday + (dayOfMonth - 1)) / 7);
-        return zeroIndex; // 0..numWeeks-1
-      };
-
-      (events as EventType[]).forEach((e) => {
+      const buckets = new Array(numWeeks).fill(0);
+      tsEvents.forEach((e) => {
         const d = new Date(e.createdAt);
         if (d.getMonth() !== month || d.getFullYear() !== year) return;
-        const idx = getWeekIndex(d);
-        if (idx >= 0 && idx < weeks.length) weeks[idx] += 1;
+        const idx = Math.floor((firstWeekday + d.getDate() - 1) / 7);
+        if (idx >= 0 && idx < numWeeks) buckets[idx]++;
       });
-
-      // produce timeSeries entries with ts being the week-start date (calendar)
-      timeSeries = weeks.map((count, idx) => {
-        // compute week start date: first cell of calendar + idx*7 days then clamp to month start
-        const weekStart = new Date(year, month, 1 - firstWeekday + idx * 7);
-        weekStart.setHours(0, 0, 0, 0);
-        return { ts: weekStart.toISOString(), count };
-      });
+      timeSeries = buckets.map((count, i) => ({ label: `Week ${i + 1}`, count }));
     }
 
-    // --- Category breakdown ---
-    const categoryRaw: { category: string; cnt: number }[] = await prisma.$queryRaw`
-      SELECT COALESCE(sub.category, 'unknown') AS category, COUNT(*) AS cnt
-      FROM (
-        SELECT substring(path from '/categories/([^/]+)') AS category
-        FROM "AnalyticsEvent"
-        WHERE "createdAt" >= ${start} AND "createdAt" <= ${end} AND path LIKE '/categories/%'
-      ) sub
-      GROUP BY sub.category;
-    `;
-    const categoryPct = categoryRaw.map((c) => ({ category: c.category, cnt: Number(c.cnt) }));
-
-    // --- Device breakdown ---
-    const deviceRaw = await prisma.analyticsEvent.groupBy({
-      by: ["deviceType"],
-      where: { createdAt: { gte: start, lte: end }, type: "pageview" },
-      _count: { deviceType: true },
-    });
-
-    type DeviceRawType = { deviceType: string | null; _count: { deviceType: number } };
-    const deviceGroups = (deviceRaw as DeviceRawType[]).map((d) => ({
-      deviceType: d.deviceType || "unknown",
-      cnt: d._count.deviceType,
-    }));
-
-    // --- Real average session seconds ---
-    const durationResult: { avg: number | null }[] = await prisma.$queryRaw`
-      SELECT AVG(duration)::float as avg
-      FROM "AnalyticsEvent"
-      WHERE type = 'unload' AND duration IS NOT NULL
-      AND "createdAt" >= ${start} AND "createdAt" <= ${end}
-    `;
-    const averageSessionSeconds =
-      durationResult[0]?.avg != null ? Math.round(Number(durationResult[0].avg)) : null;
-
-    // --- Live users last hour ---
-    const lastHour = new Date();
-    lastHour.setHours(now.getHours() - 1);
-    const liveCount = await prisma.analyticsEvent.count({
-      where: { createdAt: { gte: lastHour, lte: now }, type: "pageview" },
-    });
-
-    // --- Applications by category ---
-    const appsByCatRaw: { category: string; cnt: bigint }[] = await prisma.$queryRaw`
-      SELECT c.label as category, COUNT(*) as cnt
-      FROM "JobApplication" ja
-      JOIN "Category" c ON ja."categoryId" = c.id
-      WHERE ja."createdAt" >= ${start} AND ja."createdAt" <= ${end}
-      GROUP BY c.label
-      ORDER BY cnt DESC
-    `;
-    const applicationsByCategory = appsByCatRaw.map((r) => ({
-      category: r.category,
-      cnt: Number(r.cnt),
-    }));
-
-    // --- Applications by job ---
-    const appsByJobRaw: { job: string; category: string; cnt: bigint }[] = await prisma.$queryRaw`
-      SELECT j.title as job, c.label as category, COUNT(*) as cnt
-      FROM "JobApplication" ja
-      JOIN "Job" j ON ja."jobId" = j.id
-      JOIN "Category" c ON ja."categoryId" = c.id
-      WHERE ja."createdAt" >= ${start} AND ja."createdAt" <= ${end}
-      GROUP BY j.title, c.label
-      ORDER BY cnt DESC
-      LIMIT 20
-    `;
-    const applicationsByJob = appsByJobRaw.map((r) => ({
-      job: r.job,
-      category: r.category,
-      cnt: Number(r.cnt),
-    }));
-
-    // --- Total applications in range ---
-    const totalApplications = await prisma.jobApplication.count({
-      where: { createdAt: { gte: start, lte: end } },
-    });
-
-    // --- Hourly visitors (always 24 buckets, by hour of day across full range) ---
+    // 6. hourlyDistribution — always 24 buckets
     const hourlyRaw: { hour: number; cnt: bigint }[] = await prisma.$queryRaw`
-      SELECT EXTRACT(HOUR FROM "createdAt")::int as hour, COUNT(*) as cnt
+      SELECT EXTRACT(HOUR FROM "createdAt")::int AS hour, COUNT(*) AS cnt
       FROM "AnalyticsEvent"
       WHERE type = 'pageview'
       AND "createdAt" >= ${start} AND "createdAt" <= ${end}
@@ -227,35 +130,96 @@ export async function GET(req: Request) {
       const h = Number(r.hour);
       if (h >= 0 && h < 24) hourlyBuckets[h] = Number(r.cnt);
     });
-    const hourlyVisitors = hourlyBuckets.map((count, h) => ({
+    const hourlyDistribution = hourlyBuckets.map((count, h) => ({
       hour: `${pad2(h)}:00`,
       count,
     }));
 
-    // --- Daily visitors (distinct calendar days with pageviews in range) ---
-    const dailyResult: { cnt: bigint }[] = await prisma.$queryRaw`
-      SELECT COUNT(DISTINCT DATE("createdAt")) as cnt
-      FROM "AnalyticsEvent"
-      WHERE type = 'pageview'
-      AND "createdAt" >= ${start} AND "createdAt" <= ${end}
-    `;
-    const dailyVisitors = Number(dailyResult[0]?.cnt ?? 0);
+    // 7. deviceBreakdown
+    const deviceRaw = await prisma.analyticsEvent.groupBy({
+      by: ["deviceType"],
+      where: { createdAt: { gte: start, lte: end }, type: "pageview" },
+      _count: { deviceType: true },
+    });
+    const deviceBreakdown = deviceRaw.map((d) => ({
+      deviceType: d.deviceType || "unknown",
+      count: d._count.deviceType,
+    }));
 
-    return NextResponse.json({
+    // 8. categoryVisits
+    const catRaw: { slug: string; cnt: bigint }[] = await prisma.$queryRaw`
+      SELECT COALESCE(substring(path FROM '/categories/([^/]+)'), 'unknown') AS slug, COUNT(*) AS cnt
+      FROM "AnalyticsEvent"
+      WHERE "createdAt" >= ${start} AND "createdAt" <= ${end}
+      AND path LIKE '/categories/%'
+      GROUP BY slug
+      ORDER BY cnt DESC
+    `;
+    const categoryVisits = catRaw.map((r) => ({
+      slug: r.slug,
+      count: Number(r.cnt),
+    }));
+
+    // 9. totalApplications
+    const totalApplications = await prisma.jobApplication.count({
+      where: { createdAt: { gte: start, lte: end } },
+    });
+
+    // 10. applicationsByCategory
+    const appsByCatRaw: { category: string; cnt: bigint }[] = await prisma.$queryRaw`
+      SELECT c.label AS category, COUNT(*) AS cnt
+      FROM "JobApplication" ja
+      JOIN "Category" c ON ja."categoryId" = c.id
+      WHERE ja."createdAt" >= ${start} AND ja."createdAt" <= ${end}
+      GROUP BY c.label
+      ORDER BY cnt DESC
+    `;
+    const applicationsByCategory = appsByCatRaw.map((r) => ({
+      category: r.category,
+      count: Number(r.cnt),
+    }));
+
+    // 11. applicationsByJob
+    const appsByJobRaw: { job: string; category: string; cnt: bigint }[] = await prisma.$queryRaw`
+      SELECT j.title AS job, c.label AS category, COUNT(*) AS cnt
+      FROM "JobApplication" ja
+      JOIN "Job" j ON ja."jobId" = j.id
+      JOIN "Category" c ON ja."categoryId" = c.id
+      WHERE ja."createdAt" >= ${start} AND ja."createdAt" <= ${end}
+      GROUP BY j.title, c.label
+      ORDER BY cnt DESC
+      LIMIT 10
+    `;
+    const applicationsByJob = appsByJobRaw.map((r) => ({
+      job: r.job,
+      category: r.category,
+      count: Number(r.cnt),
+    }));
+
+    const response = {
       ok: true,
+      totalVisits,
+      uniqueSessions,
+      liveVisitors,
+      avgSessionSeconds,
       timeSeries,
-      categoryPct,
-      deviceGroups,
-      averageSessionSeconds,
-      liveCount,
+      hourlyDistribution,
+      deviceBreakdown,
+      categoryVisits,
+      totalApplications,
       applicationsByCategory,
       applicationsByJob,
-      totalApplications,
-      hourlyVisitors,
-      dailyVisitors,
-    });
+    };
+
+    // Safety: throws if any BigInt leaked through
+    JSON.stringify(response);
+
+    return NextResponse.json(response);
   } catch (err) {
     console.error("stats GET error", err);
-    return NextResponse.json({ ok: false, error: (err as Error).message ?? "Unknown error" }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: (err as Error).message ?? "Unknown error" },
+      { status: 500 }
+    );
   }
 }

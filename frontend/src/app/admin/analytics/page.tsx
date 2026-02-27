@@ -1,926 +1,374 @@
-// src/app/admin/analytics/page.tsx
 "use client";
 
-
-
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  LineChart,
-  ResponsiveContainer,
   AreaChart,
-  Area,
-  Line,
+  BarChart,
+  PieChart,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
   Legend,
+  ResponsiveContainer,
+  Area,
+  Bar,
+  Pie,
 } from "recharts";
-import { motion } from "framer-motion";
 
-/* --- types & helpers (kept your originals) --- */
-type DeviceGroup = { deviceType: string; cnt: number };
-type TimePoint = { ts: string; count: number };
-type CategoryPct = { category: string; cnt: number };
+type TimePoint = { label: string; count: number };
+type HourlyPoint = { hour: string; count: number };
+type DevicePoint = { deviceType: string; count: number };
+type CategoryVisit = { slug: string; count: number };
+type AppByCategory = { category: string; count: number };
+type AppByJob = { job: string; category: string; count: number };
 
-const SAFE_EMPTY_SERIES: TimePoint[] = [];
-const SAFE_EMPTY_DEVICES: DeviceGroup[] = [];
-const SAFE_EMPTY_CATS: CategoryPct[] = [];
+const DEVICE_COLORS = ["#60A5FA", "#818CF8", "#FB923C", "#F472B6", "#94A3B8"];
+const CAT_COLORS = [
+  "#38BDF8", "#818CF8", "#34D399", "#FB923C",
+  "#F472B6", "#A78BFA", "#4ADE80", "#FBBF24",
+];
+const APP_COLORS = ["#4ADE80", "#22D3EE", "#34D399", "#A3E635", "#86EFAC"];
 
-const pad2 = (n: number) => String(n).padStart(2, "0");
-function downloadCsv(filename: string, rows: Array<Record<string, any>>) {
-  if (!rows || rows.length === 0) {
-    const emptyBlob = new Blob([""], { type: "text/csv;charset=utf-8;" });
-    const emptyUrl = URL.createObjectURL(emptyBlob);
-    const a = document.createElement("a");
-    a.href = emptyUrl;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(emptyUrl);
-    return;
-  }
-  const keySet = rows.reduce<Set<string>>((set, row) => {
-    Object.keys(row).forEach((k) => set.add(k));
-    return set;
-  }, new Set<string>());
-  const keys = Array.from(keySet);
-  const csvLines = [keys.join(",")].concat(
-    rows.map((row) =>
-      keys
-        .map((k) => {
-          const v = row[k] ?? "";
-          const s = String(v).replace(/"/g, '""');
-          return `"${s}"`;
-        })
-        .join(",")
-    )
-  );
-  const csv = csvLines.join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
+function formatDuration(s: number | null | undefined): string {
+  if (s == null) return "—";
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}m ${sec}s`;
 }
 
-/* normalizers (kept) */
-function normalizeTimeSeries(raw: any): TimePoint[] {
-  if (!Array.isArray(raw)) return SAFE_EMPTY_SERIES;
-  return raw
-    .map((p) => {
-      try {
-        const ts = p?.ts ? String(p.ts) : new Date().toISOString();
-        const count = Number(p?.count ?? 0);
-        if (!Number.isFinite(count)) return null;
-        return { ts, count };
-      } catch {
-        return null;
-      }
-    })
-    .filter((x): x is TimePoint => x !== null)
-    .sort((a, b) => {
-      const da = isNaN(Number(a.ts)) ? new Date(a.ts).getTime() : Number(a.ts);
-      const db = isNaN(Number(b.ts)) ? new Date(b.ts).getTime() : Number(b.ts);
-      return da - db;
-    });
-}
-function normalizeDevices(raw: any): DeviceGroup[] {
-  if (!Array.isArray(raw)) return SAFE_EMPTY_DEVICES;
-  return raw
-    .map((d) => {
-      const deviceType = d?.deviceType ? String(d.deviceType) : "unknown";
-      const cnt = Number(d?.cnt ?? d?._count ?? 0);
-      if (!Number.isFinite(cnt)) return null;
-      return { deviceType, cnt };
-    })
-    .filter((x): x is DeviceGroup => x !== null);
-}
-function normalizeCats(raw: any): CategoryPct[] {
-  if (!Array.isArray(raw)) return SAFE_EMPTY_CATS;
-  return raw
-    .map((c) => {
-      const category = c?.category ? String(c.category) : "unknown";
-      const cnt = Number(c?.cnt ?? c?.count ?? 0);
-      if (!Number.isFinite(cnt)) return null;
-      return { category, cnt };
-    })
-    .filter((x): x is CategoryPct => x !== null);
-}
-function collapseCategories(cats: CategoryPct[]) {
-  const map = new Map<string, number>();
-  for (const c of cats) {
-    const key = String(c.category ?? "unknown");
-    map.set(key, (map.get(key) || 0) + c.cnt);
-  }
-  return Array.from(map.entries()).map(([category, cnt]) => ({ category, cnt }));
+function todayISO(): string {
+  return new Date().toISOString().slice(0, 10);
 }
 
-/* Tooltip (kept) */
-function AreaDedupTooltip({ active, payload, label }: any) {
-  if (!active || !payload || payload.length === 0) return null;
-  const first = payload.find((p: any) => p.dataKey === "value") ?? payload[0];
-  const value = first?.value ?? first?.payload?.value ?? 0;
-  return (
-    <div className="bg-white border rounded shadow p-2 text-sm">
-      <div className="font-semibold mb-1 text-black">{label}</div>
-      <div className="text-sm">
-        <span className="text-black">visitors: </span>
-        <span className="font-medium" style={{ color: "#5B21B6" }}>
-          {value}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-/* -----------------------
-   Component
-   ----------------------- */
-export default function AdminAnalyticsPage(): React.JSX.Element {
+export default function AdminAnalyticsPage() {
   const [range, setRange] = useState<"day" | "week" | "month">("day");
+  const [selectedDate, setSelectedDate] = useState<string>(todayISO());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [timeSeries, setTimeSeries] = useState<TimePoint[]>(SAFE_EMPTY_SERIES);
-  const [deviceGroups, setDeviceGroups] = useState<DeviceGroup[]>(SAFE_EMPTY_DEVICES);
-  const [avgSeconds, setAvgSeconds] = useState<number | null>(null);
-  const [categoryPct, setCategoryPct] = useState<CategoryPct[]>(SAFE_EMPTY_CATS);
-  const [liveCount, setLiveCount] = useState<number>(0);
-  const [sampleMode, setSampleMode] = useState(false);
-  const [applicationsByCategory, setApplicationsByCategory] = useState<{ category: string; cnt: number }[]>([]);
-  const [applicationsByJob, setApplicationsByJob] = useState<{ job: string; category: string; cnt: number }[]>([]);
+  const [totalVisits, setTotalVisits] = useState(0);
+  const [uniqueSessions, setUniqueSessions] = useState(0);
+  const [liveVisitors, setLiveVisitors] = useState(0);
+  const [avgSessionSeconds, setAvgSessionSeconds] = useState<number | null>(null);
+  const [timeSeries, setTimeSeries] = useState<TimePoint[]>([]);
+  const [hourlyDistribution, setHourlyDistribution] = useState<HourlyPoint[]>([]);
+  const [deviceBreakdown, setDeviceBreakdown] = useState<DevicePoint[]>([]);
+  const [categoryVisits, setCategoryVisits] = useState<CategoryVisit[]>([]);
   const [totalApplications, setTotalApplications] = useState(0);
-  const [hourlyVisitors, setHourlyVisitors] = useState<{ hour: string; count: number }[]>([]);
+  const [applicationsByCategory, setApplicationsByCategory] = useState<AppByCategory[]>([]);
+  const [applicationsByJob, setApplicationsByJob] = useState<AppByJob[]>([]);
 
-  // calendar states
-  const [selectedMonthDate, setSelectedMonthDate] = useState<Date>(() => {
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), 1);
-  });
-  const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(0);
-  const [selectedDayOfMonth, setSelectedDayOfMonth] = useState<number>(() => new Date().getDate());
-
-  // sparklines
-  const SPARK_MAX = 12;
-  const [liveHistory, setLiveHistory] = useState<number[]>([]);
-  const [totalHistory, setTotalHistory] = useState<number[]>([]);
-
-  // prev for delta calc
-  const prevLiveRef = useRef<number | null>(null);
-  const prevTotalRef = useRef<number | null>(null);
-
-  const mountedRef = useRef(true);
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
-
-  const areaDataLocalRef = useRef<Array<{ label: string; value: number }> | null>(null);
-
-  /* build query string depending on range & selectedMonthDate / selectedWeekIndex / selectedDayOfMonth */
-  const buildStatsUrl = (r?: "day" | "week" | "month") => {
-    const q = r ?? range;
-    const params = new URLSearchParams();
-    params.set("range", q);
-    if (q === "month") {
-      params.set("year", String(selectedMonthDate.getFullYear()));
-      params.set("month", String(selectedMonthDate.getMonth() + 1)); // 1-based month
-    } else if (q === "week") {
-      // send a date that lies in the desired week: compute weekStarts for the selected month and pick that index
-      const wstarts = computeWeekStartsForMonth(selectedMonthDate);
-      const idx = Math.min(Math.max(selectedWeekIndex, 0), Math.max(0, wstarts.length - 1));
-      const d = wstarts[idx];
-      params.set("date", d.toISOString().slice(0, 10)); // YYYY-MM-DD
-    } else {
-      // day
-      const y = selectedMonthDate.getFullYear();
-      const m = selectedMonthDate.getMonth();
-      const day = Math.min(Math.max(selectedDayOfMonth, 1), daysInMonth(selectedMonthDate));
-      const iso = new Date(y, m, day).toISOString().slice(0, 10);
-      params.set("date", iso);
-    }
-    return `/api/stats?${params.toString()}`;
-  };
-
-  /* fetchStats - now uses buildStatsUrl() */
-  const fetchStats = async (r?: "day" | "week" | "month") => {
-    if (sampleMode) return;
-    const url = buildStatsUrl(r);
+  const fetchStats = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) {
-        const body = await res.text().catch(() => "");
-        throw new Error(`HTTP ${res.status} ${res.statusText} - ${body.substring(0, 200)}`);
-      }
-      const data = await res.json().catch(() => {
-        throw new Error("Invalid JSON response from /api/stats");
-      });
-      if (data && data.ok === false) throw new Error("/api/stats returned ok=false");
-      if (!mountedRef.current) return;
+      const res = await fetch(
+        `/api/stats?range=${range}&date=${selectedDate}`,
+        { cache: "no-store" }
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || "API error");
 
-      prevLiveRef.current = liveCount;
-      prevTotalRef.current = areaDataLocalRef.current ? areaDataLocalRef.current.reduce((s, p) => s + (p.value ?? 0), 0) : null;
-
-      const ts = normalizeTimeSeries(data?.timeSeries);
-      const dev = normalizeDevices(data?.deviceGroups);
-      const avg = data?.averageSessionSeconds;
-      const cats = collapseCategories(normalizeCats(data?.categoryPct));
-      const live = data?.liveCount ?? (Array.isArray(data?.timeSeries) ? data.timeSeries.reduce((s: number, p: any) => s + (Number(p?.count) || 0), 0) : 0);
-
-      setTimeSeries(ts);
-      setDeviceGroups(dev);
-      setAvgSeconds(Number.isFinite(Number(avg)) ? Math.round(Number(avg)) : null);
-      setCategoryPct(cats);
-      setLiveCount(Number.isFinite(Number(live)) ? Number(live) : 0);
-      setApplicationsByCategory(Array.isArray(data?.applicationsByCategory) ? data.applicationsByCategory : []);
-      setApplicationsByJob(Array.isArray(data?.applicationsByJob) ? data.applicationsByJob : []);
-      setTotalApplications(Number.isFinite(Number(data?.totalApplications)) ? Number(data.totalApplications) : 0);
-      setHourlyVisitors(Array.isArray(data?.hourlyVisitors) ? data.hourlyVisitors : []);
-
-      const totalVisits = Array.isArray(ts) ? ts.reduce((s, p) => s + (Number(p.count) || 0), 0) : 0;
-
-      setLiveHistory((prev) => {
-        const next = [...(prev ?? []), Number.isFinite(Number(live)) ? Number(live) : 0];
-        return next.slice(-SPARK_MAX);
-      });
-      setTotalHistory((prev) => {
-        const next = [...(prev ?? []), Number.isFinite(Number(totalVisits)) ? Number(totalVisits) : 0];
-        return next.slice(-SPARK_MAX);
-      });
-
-      setError(null);
-    } catch (err: any) {
-      console.error("fetchStats error", err);
-      if (!mountedRef.current) return;
-      setError(err?.message ?? String(err));
+      setTotalVisits(data.totalVisits ?? 0);
+      setUniqueSessions(data.uniqueSessions ?? 0);
+      setLiveVisitors(data.liveVisitors ?? 0);
+      setAvgSessionSeconds(data.avgSessionSeconds ?? null);
+      setTimeSeries(data.timeSeries ?? []);
+      setHourlyDistribution(data.hourlyDistribution ?? []);
+      setDeviceBreakdown(data.deviceBreakdown ?? []);
+      setCategoryVisits(data.categoryVisits ?? []);
+      setTotalApplications(data.totalApplications ?? 0);
+      setApplicationsByCategory(data.applicationsByCategory ?? []);
+      setApplicationsByJob(data.applicationsByJob ?? []);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
-      if (mountedRef.current) setLoading(false);
+      setLoading(false);
     }
   };
 
-  // auto-fetch on range or month selection changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    // when range changes, reset week/day selection to sensible defaults inside selectedMonthDate
-    setSelectedWeekIndex(0);
-    setSelectedDayOfMonth(new Date().getDate());
     fetchStats();
-    // polling logic (kept earlier behavior)
-    const pollMs = 600000;
-    const id = setInterval(() => fetchStats(), pollMs);
+    const id = setInterval(fetchStats, 10 * 60 * 1000);
+    return () => clearInterval(id);
+  }, [range, selectedDate]);
 
-    const now = new Date();
-    let msToBoundary = Infinity;
-    if (range === "day") {
-      const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 3);
-      msToBoundary = tomorrow.getTime() - now.getTime();
-    } else if (range === "week") {
-      const day = now.getDay();
-      const daysToNext = (7 - day) || 7;
-      const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysToNext, 0, 0, 3);
-      msToBoundary = next.getTime() - now.getTime();
-    } else {
-      const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 3);
-      msToBoundary = nextMonth.getTime() - now.getTime();
-    }
-
-    let boundaryId: NodeJS.Timeout | null = null;
-    if (isFinite(msToBoundary) && msToBoundary < 24 * 3600 * 1000) {
-      boundaryId = setTimeout(() => fetchStats(), msToBoundary);
-    }
-
-    return () => {
-      clearInterval(id);
-      if (boundaryId) clearTimeout(boundaryId);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [range, selectedMonthDate, selectedWeekIndex, selectedDayOfMonth, sampleMode]);
-
-  /* Chart normalization (adapted to accept month/week/day selections) */
-  const chartData = useMemo(() => {
-    if (!timeSeries || timeSeries.length === 0) {
-      if (range === "day") return Array.from({ length: 24 }).map((_, i) => ({ label: `${pad2(i)}:00`, value: 0 }));
-      if (range === "week") return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => ({ label: d, value: 0 }));
-      // for month, determine dynamic number of weeks for selectedMonthDate
-      const starts = computeWeekStartsForMonth(selectedMonthDate);
-      return starts.map((d, i) => ({ label: `Week ${i + 1}`, value: 0 }));
-    }
-
-    const parsed = timeSeries.map((p) => {
-      const n = Number(p.ts);
-      if (!Number.isNaN(n) && String(n) === String(p.ts)) return { date: null as Date | null, bucket: n, v: p.count };
-      const d = new Date(p.ts);
-      if (!isNaN(d.getTime())) return { date: d, bucket: null as number | null, v: p.count };
-      return { date: null as Date | null, bucket: null as number | null, v: p.count };
-    });
-
-    if (range === "day") {
-      const byHour = new Array<number>(24).fill(0);
-      parsed.forEach((pt) => {
-        if (pt.date) byHour[pt.date.getHours()] += pt.v;
-        else if (pt.bucket !== null && pt.bucket >= 0 && pt.bucket < 24) byHour[pt.bucket] += pt.v;
-      });
-      return byHour.map((v, i) => ({ label: `${pad2(i)}:00`, value: v }));
-    }
-
-    if (range === "week") {
-      const byDay = new Array<number>(7).fill(0);
-      parsed.forEach((pt) => {
-        if (pt.date) byDay[pt.date.getDay()] += pt.v;
-        else if (pt.bucket !== null && pt.bucket >= 0 && pt.bucket < 7) byDay[pt.bucket] += pt.v;
-      });
-      return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d, i) => ({ label: d, value: byDay[i] }));
-    }
-
-    // month: dynamic weeks based on selectedMonthDate
-    const weekStarts = computeWeekStartsForMonth(selectedMonthDate);
-    const byWeek = new Array<number>(weekStarts.length).fill(0);
-
-    const firstWeekday = new Date(selectedMonthDate.getFullYear(), selectedMonthDate.getMonth(), 1).getDay();
-
-    const getWeekIndex = (date: Date) => {
-      const dayOfMonth = date.getDate();
-      const zeroIndex = Math.floor((firstWeekday + (dayOfMonth - 1)) / 7);
-      return Math.max(0, Math.min(zeroIndex, weekStarts.length - 1));
-    };
-
-    parsed.forEach((pt) => {
-      if (pt.date) {
-        const dt = pt.date;
-        if (dt.getMonth() !== selectedMonthDate.getMonth() || dt.getFullYear() !== selectedMonthDate.getFullYear()) return;
-        const idx = getWeekIndex(dt);
-        byWeek[idx] += pt.v;
-      } else if (pt.bucket !== null) {
-        const idx = Math.min(Math.max(Number(pt.bucket) - 1, 0), byWeek.length - 1);
-        byWeek[idx] += pt.v;
-      }
-    });
-
-    return byWeek.map((v, i) => ({ label: `Week ${i + 1}`, value: v }));
-  }, [timeSeries, range, selectedMonthDate]);
-
-  const areaData = useMemo(() => chartData.map((p) => ({ label: p.label, value: p.value })), [chartData]);
-  areaDataLocalRef.current = areaData;
-  const categoryData = useMemo(() => categoryPct.map((c) => ({ name: c.category, value: c.cnt })), [categoryPct]);
-  const deviceData = useMemo(() => deviceGroups.map((d) => ({ name: d.deviceType, value: d.cnt })), [deviceGroups]);
-  const totalDevices = deviceGroups.reduce((s, g) => s + g.cnt, 0) || 0;
-  const totalCategory = categoryPct.reduce((s, c) => s + c.cnt, 0) || 0;
-
-  const PALETTE_DAY = ["#60A5FA", "#2563EB", "#1E40AF"];
-  const PALETTE_WEEK = ["#A78BFA", "#7C3AED", "#4C1D95"];
-  const PALETTE_MONTH = ["#34D399", "#10B981", "#059669"];
-  const DEVICE_COLORS = ["#A3E635", "#60A5FA", "#FDE68A", "#FBCFE8", "#C7B2FF"];
-  const palette = range === "day" ? PALETTE_DAY : range === "week" ? PALETTE_WEEK : PALETTE_MONTH;
-
-  const formatSeconds = (s: number | null) => {
-    if (s === null) return "—";
-    if (s < 60) return `${s}s`;
-    const m = Math.floor(s / 60);
-    const sec = Math.round(s % 60);
-    return `${m}m ${sec}s`;
-  };
-
-  // CSV exporters (kept)
-  const exportVisitsCsv = () => {
-    const rows = areaData.map((r) => ({ label: r.label, visitors: r.value }));
-    downloadCsv(`visits-${range}.csv`, rows);
-  };
-  const exportCategoryCsv = () => {
-    const rows = categoryData.map((r) => ({ category: r.name, visitors: r.value }));
-    downloadCsv(`categories-${range}.csv`, rows);
-  };
-  const exportDeviceCsv = () => {
-    const rows = deviceData.map((r) => ({ device: r.name, visitors: r.value }));
-    downloadCsv(`devices-${range}.csv`, rows);
-  };
-  const exportApplicationsCategoryCsv = () => {
-    downloadCsv(`applications-by-category-${range}.csv`, applicationsByCategory.map((r) => ({ category: r.category, applications: r.cnt })));
-  };
-  const exportApplicationsJobCsv = () => {
-    downloadCsv(`applications-by-job-${range}.csv`, applicationsByJob.slice(0, 10).map((r) => ({ job: r.job, category: r.category, applications: r.cnt })));
-  };
-  const exportTotalApplicationsCsv = () => {
-    downloadCsv(`total-applications-${range}.csv`, [{ range, totalApplications }]);
-  };
-
-  const totalVisits = areaData.reduce((s, p) => s + (Number(p.value) || 0), 0);
-  const prevLive = prevLiveRef.current;
-  const prevTotal = prevTotalRef.current;
-  const liveDelta = prevLive === null ? 0 : liveCount - (prevLive ?? 0);
-  const totalDelta = prevTotal === null ? 0 : totalVisits - (prevTotal ?? 0);
-
-  const renderDelta = (delta: number) => {
-    if (delta === 0) return <span className="text-gray-700">—</span>;
-    const positive = delta > 0;
-    return (
-      <span className={`text-sm font-medium ${positive ? "text-emerald-600" : "text-rose-600"}`}>
-        {positive ? "▲" : "▼"} {Math.abs(delta)}
-      </span>
-    );
-  };
-
-  // sparkline (kept)
-  const Sparkline = ({ data, color }: { data: number[]; color?: string }) => {
-    const chartData = data.map((v, i) => ({ i, v }));
-    const safeData = chartData.length >= 2 ? chartData : [...chartData, { i: chartData.length, v: chartData[chartData.length - 1] ?? 0 }];
-    return (
-      <div style={{ width: 96, height: 28 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={safeData} margin={{ top: 2, right: 6, left: 0, bottom: 2 }}>
-            <Line type="monotone" dataKey="v" stroke={color ?? "#2563eb"} strokeWidth={2} dot={false} isAnimationActive />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-    );
-  };
-
-  // sample payload (kept)
-  const samplePayload = {
-    ok: true,
-    liveCount: 5,
-    deviceGroups: [
-      { deviceType: "desktop", cnt: 3 },
-      { deviceType: "mobile", cnt: 1 },
-      { deviceType: "tablet", cnt: 1 },
-    ],
-    averageSessionSeconds: 92,
-    timeSeries: Array.from({ length: 12 }).map((_, i) => ({
-      ts: new Date(Date.now() - (11 - i) * 3600 * 1000).toISOString(),
-      count: Math.floor(Math.random() * 10),
-    })),
-    categoryPct: [
-      { category: "hr", cnt: 4 },
-      { category: "marketing", cnt: 1 },
-    ],
-  };
-
-  const loadSample = () => {
-    setSampleMode(true);
-    setTimeSeries(normalizeTimeSeries(samplePayload.timeSeries));
-    setDeviceGroups(normalizeDevices(samplePayload.deviceGroups));
-    setAvgSeconds(samplePayload.averageSessionSeconds);
-    setCategoryPct(collapseCategories(normalizeCats(samplePayload.categoryPct)));
-    setLiveCount(samplePayload.liveCount);
-    setLiveHistory((prev) => [...(prev ?? []), samplePayload.liveCount].slice(-SPARK_MAX));
-    setTotalHistory((prev) => [...(prev ?? []), samplePayload.timeSeries.reduce((s: number, p: any) => s + (p.count || 0), 0)].slice(-SPARK_MAX));
-    setError(null);
-  };
-
-  const useLiveData = () => {
-    setSampleMode(false);
-    fetchStats();
-  };
-
-  /* ---------- Calendar helpers ---------- */
-  function daysInMonth(d: Date) {
-    return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-  }
-  function computeWeekStartsForMonth(d: Date) {
-    const year = d.getFullYear();
-    const month = d.getMonth();
-    const firstOfMonth = new Date(year, month, 1);
-    const firstWeekday = firstOfMonth.getDay(); // 0..6
-    const lastOfMonth = new Date(year, month + 1, 0);
-    const daysInM = lastOfMonth.getDate();
-    const numWeeks = Math.ceil((firstWeekday + daysInM) / 7);
-    // produce array of Dates representing start-of-week (calendar) for each week index
-    return Array.from({ length: numWeeks }).map((_, idx) => {
-      const day = 1 - firstWeekday + idx * 7;
-      const d0 = new Date(year, month, day);
-      d0.setHours(0, 0, 0, 0);
-      return d0;
-    });
-  }
-
-  /* ---------- Month nav handlers ---------- */
-  const goToPrevMonth = () => {
-    setSelectedMonthDate((cur) => new Date(cur.getFullYear(), cur.getMonth() - 1, 1));
-    setSelectedWeekIndex(0);
-    setSelectedDayOfMonth(1);
-  };
-  const goToNextMonth = () => {
-    setSelectedMonthDate((cur) => new Date(cur.getFullYear(), cur.getMonth() + 1, 1));
-    setSelectedWeekIndex(0);
-    setSelectedDayOfMonth(1);
-  };
-
-  const weekStarts = useMemo(() => computeWeekStartsForMonth(selectedMonthDate), [selectedMonthDate]);
-  const numDays = daysInMonth(selectedMonthDate);
-
-  /* -----------------------
-     Render
-     ----------------------- */
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4 text-white">Admin · Analytics</h1>
+    <div className="min-h-screen bg-gray-950 text-white p-6">
+      <h1 className="text-2xl font-bold mb-6">Analytics</h1>
 
-      <div className="flex items-center justify-between mb-4 gap-4">
-        <div className="flex gap-3">
-          <button
-            onClick={() => { setRange("day"); setSampleMode(false); }}
-            className={`px-3 py-1 rounded ${range === "day" ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white" : "bg-white text-gray-800 border"}`}
-          >
-            Day
-          </button>
-          <button
-            onClick={() => { setRange("week"); setSampleMode(false); }}
-            className={`px-3 py-1 rounded ${range === "week" ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white" : "bg-white text-gray-800 border"}`}
-          >
-            Week
-          </button>
-          <button
-            onClick={() => { setRange("month"); setSampleMode(false); }}
-            className={`px-3 py-1 rounded ${range === "month" ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white" : "bg-white text-gray-800 border"}`}
-          >
-            Month
-          </button>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {/* Month navigator */}
-          <div className="flex items-center gap-2">
-            <button onClick={goToPrevMonth} className="px-2 py-1 rounded border">◀</button>
-            <div className="px-3 py-1 rounded border bg-black text-sm">
-              {selectedMonthDate.toLocaleString(undefined, { month: "long", year: "numeric" })}
-            </div>
-            <button onClick={goToNextMonth} className="px-2 py-1 rounded border">▶</button>
-          </div>
-
-          {/* Week / Day selectors (contextual) */}
-          {range === "week" && (
-            <select
-              value={selectedWeekIndex}
-              onChange={(e) => setSelectedWeekIndex(Number(e.target.value))}
-              className="px-2 py-1 rounded border bg-black"
+      {/* ROW 1: Controls */}
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <div className="flex gap-2">
+          {(["day", "week", "month"] as const).map((r) => (
+            <button
+              key={r}
+              onClick={() => setRange(r)}
+              className={`px-4 py-2 rounded capitalize text-sm font-medium transition-colors ${
+                range === r
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+              }`}
             >
-              {weekStarts.map((ws, i) => (
-                <option key={i} value={i}>
-                  {`Week ${i + 1} — starts ${ws.toLocaleDateString()}`}
-                </option>
-              ))}
-            </select>
-          )}
-
-          {range === "day" && (
-            <select
-              value={selectedDayOfMonth}
-              onChange={(e) => setSelectedDayOfMonth(Number(e.target.value))}
-              className="px-2 py-1 rounded border bg-black"
-            >
-              {Array.from({ length: numDays }).map((_, i) => {
-                const day = i + 1;
-                return <option key={day} value={day}>{`${pad2(day)} ${selectedMonthDate.toLocaleString(undefined, { month: "short" })}`}</option>;
-              })}
-            </select>
-          )}
-
-          <div className="flex gap-2">
-            <button onClick={() => { setSampleMode(false); fetchStats(); }} className="px-3 py-1 rounded border">Refresh</button>
-            <button onClick={loadSample} className="px-3 py-1 rounded border">Load sample data</button>
-            {sampleMode && <button onClick={useLiveData} className="px-3 py-1 rounded border">Use live data</button>}
-          </div>
+              {r}
+            </button>
+          ))}
         </div>
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          className="px-3 py-2 rounded bg-gray-800 text-white text-sm border border-gray-700 focus:outline-none focus:border-blue-500"
+        />
+        <button
+          onClick={fetchStats}
+          disabled={loading}
+          className="px-4 py-2 rounded bg-gray-800 text-gray-300 hover:bg-gray-700 text-sm transition-colors disabled:opacity-50"
+        >
+          Refresh
+        </button>
+        {loading && <span className="text-sm text-gray-400">Loading…</span>}
       </div>
 
       {error && (
-        <div className="mb-4 rounded border border-rose-300 bg-rose-50 p-3 text-sm text-rose-800">Error loading stats: {error}</div>
+        <div className="mb-4 rounded bg-red-900/40 border border-red-700 p-3 text-sm text-red-300">
+          Error: {error}
+        </div>
       )}
 
-      {/* cards (kept) */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-        <motion.div layout initial={{ opacity: 0.9, scale: 0.995 }} animate={{ opacity: 1, scale: 1 }} className="p-4 rounded-lg shadow bg-white">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-800" title="Active unique sessions that produced events within the last 60 minutes">Live visitors (active sessions in past hour)</p>
-            <button onClick={exportVisitsCsv} className="text-xs text-gray-600 hover:text-gray-800">Export</button>
+      {/* ROW 2: Stat Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        {[
+          { label: "Live Visitors", value: liveVisitors },
+          { label: "Total Visits", value: totalVisits },
+          { label: "Unique Sessions", value: uniqueSessions },
+          { label: "Avg Session Time", value: formatDuration(avgSessionSeconds) },
+          { label: "Total Applications", value: totalApplications },
+        ].map(({ label, value }) => (
+          <div key={label} className="bg-white rounded-lg p-4 shadow">
+            <p className="text-sm text-gray-600 mb-1">{label}</p>
+            <p className="text-3xl font-bold text-gray-900">
+              {loading ? "…" : value}
+            </p>
           </div>
-          <div className="flex items-center gap-3 mt-2">
-            <motion.p layout key={liveCount} className="text-3xl font-semibold text-gray-900">{loading ? "…" : liveCount}</motion.p>
-            <div>{renderDelta(liveDelta)}</div>
-            <div className="ml-auto">
-              <Sparkline data={liveHistory} color={palette[1]} />
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div layout initial={{ opacity: 0.9, scale: 0.995 }} animate={{ opacity: 1, scale: 1 }} className="p-4 rounded-lg shadow bg-white">
-          <p className="text-sm text-gray-800" title="Average duration of recorded sessions (rounded)">Avg session</p>
-          <motion.p layout key={avgSeconds} className="text-3xl font-semibold text-gray-900 mt-2">{loading ? "…" : formatSeconds(avgSeconds)}</motion.p>
-        </motion.div>
-
-        <motion.div layout initial={{ opacity: 0.9, scale: 0.995 }} animate={{ opacity: 1, scale: 1 }} className="p-4 rounded-lg shadow bg-white">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-800" title="Sum of recorded visits (events) across the selected range">Total visits (sum over selected range)</p>
-            <button onClick={exportVisitsCsv} className="text-xs text-gray-600 hover:text-gray-800">Export</button>
-          </div>
-          <div className="flex items-center gap-3 mt-2">
-            <motion.p layout key={totalVisits} className="text-3xl font-semibold text-gray-900">{loading ? "…" : totalVisits}</motion.p>
-            <div>{renderDelta(totalDelta)}</div>
-            <div className="ml-auto">
-              <Sparkline data={totalHistory} color={palette[2]} />
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div layout initial={{ opacity: 0.9, scale: 0.995 }} animate={{ opacity: 1, scale: 1 }} className="p-4 rounded-lg shadow bg-white">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-800" title="Distinct category slugs observed in your visits">Categories tracked</p>
-            <button onClick={exportCategoryCsv} className="text-xs text-gray-600 hover:text-gray-800">Export</button>
-          </div>
-          <motion.p layout key={categoryPct.length} className="text-3xl font-semibold text-gray-900 mt-2">{loading ? "…" : categoryPct.length}</motion.p>
-        </motion.div>
-
-        <motion.div layout initial={{ opacity: 0.9, scale: 0.995 }} animate={{ opacity: 1, scale: 1 }} className="p-4 rounded-lg shadow bg-white">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-800" title="Total job applications submitted in selected range">Total Applications</p>
-            <button onClick={exportTotalApplicationsCsv} className="text-xs text-gray-600 hover:text-gray-800">Export</button>
-          </div>
-          <motion.p layout key={totalApplications} className="text-3xl font-semibold text-gray-900 mt-2">{loading ? "…" : totalApplications}</motion.p>
-        </motion.div>
+        ))}
       </div>
 
-      {/* Visits over time */}
-      <section className="mb-6">
-        <div className="p-4 rounded-lg shadow bg-white">
-          <div className="flex items-start justify-between mb-2">
-            <h2 className="text-lg font-medium text-gray-900">Visits over time ({range})</h2>
-            <div className="flex items-center gap-2">
-              <button onClick={exportVisitsCsv} className="px-2 py-1 text-xs rounded border text-gray-700">Export CSV</button>
-            </div>
-          </div>
-
-          <div style={{ width: "100%", height: 260 }}>
-            <ResponsiveContainer>
-              <AreaChart data={areaData} margin={{ top: 12, right: 12, left: 0, bottom: 6 }}>
-                <defs>
-                  <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={palette[0]} stopOpacity={0.6} />
-                    <stop offset="95%" stopColor={palette[2]} stopOpacity={0.08} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                {/* XAxis: if month, mark selected week tick bold */}
-                <XAxis
-                  dataKey="label"
-                  tick={{ fontSize: 12, fill: "#111827" }}
-                  tickFormatter={(t: string) => t}
-                />
-                <YAxis allowDecimals={false} tick={{ fill: "#111827" }} />
-                <Tooltip content={<AreaDedupTooltip />} />
-                <Area type="monotone" dataKey="value" stroke={palette[1]} fillOpacity={1} fill="url(#colorUv)" name="visitors" />
-                <Line type="monotone" dataKey="value" stroke={palette[2]} strokeWidth={2} dot={false} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-          <p className="mt-2 text-xs text-gray-800">Live-updating chart — refreshed according to range and selected month/week/day.</p>
+      {/* ROW 3: Visits Over Time */}
+      <div className="bg-gray-900 rounded-lg p-4 mb-6">
+        <h2 className="text-lg font-semibold mb-4">Visits Over Time</h2>
+        <div style={{ height: 260 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={timeSeries} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="blueGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.6} />
+                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.05} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+              <XAxis dataKey="label" tick={{ fill: "#9CA3AF", fontSize: 11 }} />
+              <YAxis allowDecimals={false} tick={{ fill: "#9CA3AF" }} />
+              <Tooltip
+                contentStyle={{ backgroundColor: "#1F2937", border: "1px solid #374151", borderRadius: 6 }}
+                labelStyle={{ color: "#F9FAFB" }}
+                itemStyle={{ color: "#60A5FA" }}
+              />
+              <Area
+                type="monotone"
+                dataKey="count"
+                stroke="#3B82F6"
+                fill="url(#blueGrad)"
+                name="Visits"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
-      </section>
+      </div>
 
-      {/* Peak hours (time of day) */}
-      <section className="mb-6">
-        <div className="p-4 rounded-lg shadow bg-white">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Peak hours (time of day)</h2>
-          {hourlyVisitors.length === 0 && !loading ? (
-            <div className="text-sm text-gray-800">No hourly data</div>
+      {/* ROW 4: Peak Hours */}
+      <div className="bg-gray-900 rounded-lg p-4 mb-6">
+        <h2 className="text-lg font-semibold mb-4">Peak Hours</h2>
+        <div style={{ height: 200 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={hourlyDistribution}
+              margin={{ top: 4, right: 12, left: 0, bottom: 0 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+              <XAxis dataKey="hour" tick={{ fill: "#9CA3AF", fontSize: 10 }} interval={2} />
+              <YAxis allowDecimals={false} tick={{ fill: "#9CA3AF" }} />
+              <Tooltip
+                contentStyle={{ backgroundColor: "#1F2937", border: "1px solid #374151", borderRadius: 6 }}
+                labelStyle={{ color: "#F9FAFB" }}
+                itemStyle={{ color: "#A78BFA" }}
+              />
+              <Bar dataKey="count" name="Visits" isAnimationActive={false}>
+                {hourlyDistribution.map((_, i) => (
+                  <Cell key={i} fill="#7C3AED" />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* ROW 5: Device Breakdown + Category Traffic */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div className="bg-gray-900 rounded-lg p-4">
+          <h2 className="text-lg font-semibold mb-4">Device Breakdown</h2>
+          {deviceBreakdown.length === 0 && !loading ? (
+            <p className="text-gray-500 text-sm">No data</p>
           ) : (
-            <div style={{ width: "100%", height: 200 }}>
-              <ResponsiveContainer>
-                <BarChart data={hourlyVisitors} margin={{ top: 8, right: 12, left: 0, bottom: 6 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                  <XAxis dataKey="hour" tick={{ fontSize: 11, fill: "#111827" }} interval={2} />
-                  <YAxis allowDecimals={false} tick={{ fill: "#111827" }} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: "#fff", border: "1px solid #d1d5db", borderRadius: "6px" }}
-                    labelStyle={{ color: "#000", fontWeight: 600 }}
-                    itemStyle={{ color: "#000" }}
-                    formatter={(v: number | undefined) => [v, "visitors"]}
-                  />
-                  <Bar dataKey="count" isAnimationActive>
-                    {hourlyVisitors.map((_, idx) => (
-                      <Cell key={`hr-${idx}`} fill={palette[idx % palette.length]} />
+            <div style={{ height: 240 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={deviceBreakdown}
+                    dataKey="count"
+                    nameKey="deviceType"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                  >
+                    {deviceBreakdown.map((_, i) => (
+                      <Cell key={i} fill={DEVICE_COLORS[i % DEVICE_COLORS.length]} />
                     ))}
-                  </Bar>
-                </BarChart>
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#1F2937", border: "1px solid #374151", borderRadius: 6 }}
+                    itemStyle={{ color: "#F9FAFB" }}
+                    formatter={(v: unknown) => [String(v), "visits"] as [string, string]}
+                  />
+                  <Legend wrapperStyle={{ color: "#9CA3AF" }} />
+                </PieChart>
               </ResponsiveContainer>
             </div>
           )}
-          <p className="mt-2 text-xs text-gray-700">Aggregated hourly distribution of page views across the selected range.</p>
         </div>
-      </section>
 
-      {/* device + category sections (kept unchanged) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-        <motion.div layout initial={{ opacity: 0.95, y: 6 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-lg shadow bg-white">
-          <div className="flex items-start justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-900">Device breakdown</h3>
-            <button onClick={exportDeviceCsv} className="px-2 py-1 text-xs rounded border text-gray-700">Export CSV</button>
-          </div>
-
-          {deviceData.length === 0 && !loading ? (
-            <div className="text-sm text-gray-800">No device data</div>
+        <div className="bg-gray-900 rounded-lg p-4">
+          <h2 className="text-lg font-semibold mb-4">Category Traffic</h2>
+          {categoryVisits.length === 0 && !loading ? (
+            <p className="text-gray-500 text-sm">No data</p>
           ) : (
-            <div className="flex gap-4 items-center">
-              <div style={{ width: 160, height: 160 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={deviceData} dataKey="value" nameKey="name" innerRadius={38} outerRadius={64} paddingAngle={6} isAnimationActive>
-                      {deviceData.map((entry, idx) => (
-                        <Cell key={`cell-${entry.name}-${idx}`} fill={DEVICE_COLORS[idx % DEVICE_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(v: any) => [v, "visitors"]} />
-                    <Legend verticalAlign="bottom" align="center" />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-
-              <div className="flex-1">
-                {deviceData.map((d, i) => {
-                  const pct = totalDevices ? (d.value / totalDevices) * 100 : 0;
-                  return (
-                    <div key={`${d.name}-${i}`} className="flex items-center gap-3 mb-2">
-                      <div className="w-36 text-sm text-gray-900 capitalize">{d.name}</div>
-                      <div className="flex-1 h-4 bg-gray-100 rounded overflow-hidden">
-                        <div
-                          className="h-4"
-                          style={{
-                            width: `${Math.round(pct)}%`,
-                            background: `linear-gradient(90deg, ${DEVICE_COLORS[i % DEVICE_COLORS.length]}, ${DEVICE_COLORS[(i + 1) % DEVICE_COLORS.length]})`,
-                          }}
-                        />
-                      </div>
-                      <div className="w-14 text-right text-sm text-gray-900">{d.value}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </motion.div>
-
-        <motion.div layout initial={{ opacity: 0.95, y: 6 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-lg shadow bg-white lg:col-span-2">
-          <div className="flex items-start justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-900">Visitors by category ({range})</h3>
-            <button onClick={exportCategoryCsv} className="px-2 py-1 text-xs rounded border text-gray-700">Export CSV</button>
-          </div>
-
-          {categoryData.length === 0 && !loading ? (
-            <div className="text-sm text-gray-800">No category data</div>
-          ) : (
-            <div style={{ width: "100%", height: 260 }}>
-              <ResponsiveContainer>
+            <div style={{ height: 240 }}>
+              <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={categoryData}
+                  data={categoryVisits}
                   layout="vertical"
-                  margin={{ top: 10, left: 20, right: 20, bottom: 10 }}
-                  barCategoryGap="10%"
+                  margin={{ top: 4, right: 20, left: 16, bottom: 4 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis type="number" tick={{ fill: "#111827", fontSize: 12 }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis type="number" tick={{ fill: "#9CA3AF", fontSize: 11 }} allowDecimals={false} />
                   <YAxis
-                    dataKey="name"
+                    dataKey="slug"
                     type="category"
-                    width={180}
-                    tick={{ fill: "#111827", fontSize: 12 }}
+                    width={120}
+                    tick={{ fill: "#9CA3AF", fontSize: 11 }}
                   />
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #d1d5db",
-                      borderRadius: "6px",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                    }}
-                    labelStyle={{ color: "#000", fontWeight: 600 }}
-                    itemStyle={{ color: "#000" }}
-                    formatter={(v: any) => [v, "visitors"]}
+                    contentStyle={{ backgroundColor: "#1F2937", border: "1px solid #374151", borderRadius: 6 }}
+                    labelStyle={{ color: "#F9FAFB" }}
+                    itemStyle={{ color: "#38BDF8" }}
+                    formatter={(v: unknown) => [String(v), "visits"] as [string, string]}
                   />
-                  <Bar dataKey="value" isAnimationActive>
-                    {categoryData.map((entry, idx) => (
-                      <Cell key={`cat-${entry.name}-${idx}`} fill={palette[idx % palette.length]} />
+                  <Bar dataKey="count" name="Visits" isAnimationActive={false}>
+                    {categoryVisits.map((_, i) => (
+                      <Cell key={i} fill={CAT_COLORS[i % CAT_COLORS.length]} />
                     ))}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
           )}
-
-          <div className="mt-3 space-y-2">
-            {categoryPct.map((c, i) => {
-              const pct = totalCategory ? (c.cnt / totalCategory) * 100 : 0;
-              return (
-                <div key={`${c.category}-${i}`} className="flex items-center gap-3">
-                  <div className="w-44 text-sm text-gray-900">{c.category}</div>
-                  <div className="flex-1 h-6 bg-gray-100 rounded overflow-hidden">
-                    <div
-                      className="h-6 bg-gradient-to-r from-emerald-400 to-teal-600"
-                      style={{ width: `${Math.round(pct)}%` }}
-                    />
-                  </div>
-                  <div className="w-20 text-right text-sm text-gray-900">{c.cnt}</div>
-                </div>
-              );
-            })}
-          </div>
-        </motion.div>
+        </div>
       </div>
 
-      {/* Applications charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-        <motion.div layout initial={{ opacity: 0.95, y: 6 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-lg shadow bg-white">
-          <div className="flex items-start justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-900">Applications by category ({range})</h3>
-            <button onClick={exportApplicationsCategoryCsv} className="px-2 py-1 text-xs rounded border text-gray-700">Export CSV</button>
-          </div>
+      {/* ROW 6: Applications */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-gray-900 rounded-lg p-4">
+          <h2 className="text-lg font-semibold mb-4">Applications by Category</h2>
           {applicationsByCategory.length === 0 && !loading ? (
-            <div className="text-sm text-gray-800">No application data</div>
+            <p className="text-gray-500 text-sm">No data</p>
           ) : (
-            <div style={{ width: "100%", height: 260 }}>
-              <ResponsiveContainer>
+            <div style={{ height: 240 }}>
+              <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={applicationsByCategory}
                   layout="vertical"
-                  margin={{ top: 10, left: 20, right: 20, bottom: 10 }}
-                  barCategoryGap="10%"
+                  margin={{ top: 4, right: 20, left: 16, bottom: 4 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis type="number" tick={{ fill: "#111827", fontSize: 12 }} />
-                  <YAxis dataKey="category" type="category" width={180} tick={{ fill: "#111827", fontSize: 12 }} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #d1d5db", borderRadius: "6px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
-                    labelStyle={{ color: "#000", fontWeight: 600 }}
-                    itemStyle={{ color: "#000" }}
-                    formatter={(v: number | undefined) => [v, "applications"]}
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis type="number" tick={{ fill: "#9CA3AF", fontSize: 11 }} allowDecimals={false} />
+                  <YAxis
+                    dataKey="category"
+                    type="category"
+                    width={140}
+                    tick={{ fill: "#9CA3AF", fontSize: 11 }}
                   />
-                  <Bar dataKey="cnt" isAnimationActive>
-                    {applicationsByCategory.map((entry, idx) => (
-                      <Cell key={`apcat-${entry.category}-${idx}`} fill={palette[idx % palette.length]} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#1F2937", border: "1px solid #374151", borderRadius: 6 }}
+                    labelStyle={{ color: "#F9FAFB" }}
+                    itemStyle={{ color: "#4ADE80" }}
+                    formatter={(v: unknown) => [String(v), "applications"] as [string, string]}
+                  />
+                  <Bar dataKey="count" name="Applications" isAnimationActive={false}>
+                    {applicationsByCategory.map((_, i) => (
+                      <Cell key={i} fill={APP_COLORS[i % APP_COLORS.length]} />
                     ))}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
           )}
-        </motion.div>
-
-        <motion.div layout initial={{ opacity: 0.95, y: 6 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-lg shadow bg-white">
-          <div className="flex items-start justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-900">Top applied jobs ({range})</h3>
-            <button onClick={exportApplicationsJobCsv} className="px-2 py-1 text-xs rounded border text-gray-700">Export CSV</button>
-          </div>
-          {applicationsByJob.length === 0 && !loading ? (
-            <div className="text-sm text-gray-800">No application data</div>
-          ) : (
-            <div style={{ width: "100%", height: 320 }}>
-              <ResponsiveContainer>
-                <BarChart
-                  data={applicationsByJob.slice(0, 10)}
-                  layout="vertical"
-                  margin={{ top: 10, left: 20, right: 20, bottom: 10 }}
-                  barCategoryGap="10%"
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis type="number" tick={{ fill: "#111827", fontSize: 12 }} />
-                  <YAxis dataKey="job" type="category" width={200} tick={{ fill: "#111827", fontSize: 11 }} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #d1d5db", borderRadius: "6px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
-                    labelStyle={{ color: "#000", fontWeight: 600 }}
-                    itemStyle={{ color: "#000" }}
-                    formatter={(v: number | undefined, _: string | undefined, props: { payload?: { category?: string } }) => [v, `applications (${props?.payload?.category ?? ""})`]}
-                  />
-                  <Bar dataKey="cnt" isAnimationActive>
-                    {applicationsByJob.slice(0, 10).map((entry, idx) => (
-                      <Cell key={`apjob-${entry.job}-${idx}`} fill={palette[idx % palette.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </motion.div>
-      </div>
-
-      <section>
-        <h2 className="text-lg font-medium mb-2 text-gray-900">Notes</h2>
-        <div className="p-4 rounded-lg shadow bg-white text-sm text-gray-800">
-          <p>
-            The dashboard aggregates analytics events from the <code>AnalyticsEvent</code> table and application data from <code>JobApplication</code>.
-            Category visitor stats assume routes like <code>/categories/:slug</code>. Application stats track submissions per job and category.
-            The charts poll the server every 10 minutes for all ranges.
-          </p>
-          <p className="mt-2 text-xs text-gray-700">
-            Use &quot;Load sample data&quot; to preview UI locally. Toggle &quot;Use live data&quot; to go back to live stats.
-          </p>
         </div>
-      </section>
+
+        <div className="bg-gray-900 rounded-lg p-4">
+          <h2 className="text-lg font-semibold mb-4">Top Applied Jobs</h2>
+          {applicationsByJob.length === 0 && !loading ? (
+            <p className="text-gray-500 text-sm">No data</p>
+          ) : (
+            <div style={{ height: 320 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={applicationsByJob}
+                  layout="vertical"
+                  margin={{ top: 4, right: 20, left: 16, bottom: 4 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis type="number" tick={{ fill: "#9CA3AF", fontSize: 11 }} allowDecimals={false} />
+                  <YAxis
+                    dataKey="job"
+                    type="category"
+                    width={180}
+                    tick={{ fill: "#9CA3AF", fontSize: 10 }}
+                  />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#1F2937", border: "1px solid #374151", borderRadius: 6 }}
+                    labelStyle={{ color: "#F9FAFB" }}
+                    itemStyle={{ color: "#4ADE80" }}
+                    formatter={(v: unknown, _: unknown, props: { payload?: AppByJob }) => [
+                      String(v),
+                      `applications (${props?.payload?.category ?? ""})`,
+                    ] as [string, string]}
+                  />
+                  <Bar dataKey="count" name="Applications" isAnimationActive={false}>
+                    {applicationsByJob.map((_, i) => (
+                      <Cell key={i} fill={APP_COLORS[i % APP_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
