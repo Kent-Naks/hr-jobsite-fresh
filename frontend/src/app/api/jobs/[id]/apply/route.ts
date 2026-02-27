@@ -132,6 +132,16 @@ export async function POST(
       console.error("[apply] confirmation email failed:", emailErr);
     }
 
+    // Record application for analytics
+    try {
+      const fullJob = await prisma.job.findUnique({ where: { id }, select: { title: true, categoryId: true } });
+      if (fullJob) {
+        await prisma.jobApplication.create({ data: { jobId: id, categoryId: fullJob.categoryId } });
+      }
+    } catch (appErr) {
+      console.error("[apply] jobApplication record failed:", appErr);
+    }
+
     return NextResponse.json({ ok: true });
   } catch (err: any) {
     console.error("/api/jobs/[id]/apply error", err);

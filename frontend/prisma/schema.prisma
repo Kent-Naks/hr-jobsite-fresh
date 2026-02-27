@@ -10,34 +10,49 @@ datasource db {
 }
 
 model Category {
-  id            Int            @id @default(autoincrement())
-  slug          String         @unique
+  id            Int              @id @default(autoincrement())
+  slug          String           @unique
   label         String
   CategoryCount CategoryCount?
   jobs          Job[]
+  applications  JobApplication[]
 }
 
 model Job {
-  id                  String   @id @default(cuid())
+  id                  String           @id @default(cuid())
   title               String
   description         String
   categoryId          Int
-  category            Category @relation(fields: [categoryId], references: [id])
+  category            Category         @relation(fields: [categoryId], references: [id])
   salaryMin           Int?
   salaryMax           Int?
-  currency            String?  @default("KES")
-  requireCV           Boolean  @default(false)
-  requireCoverLetter  Boolean  @default(false)
+  currency            String?          @default("KES")
+  requireCV           Boolean          @default(false)
+  requireCoverLetter  Boolean          @default(false)
   questions           Json?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
   publishedAt         DateTime?
   expiresAt           DateTime?
-  status              String   @default("draft") // draft | published | archived
+  status              String           @default("draft") // draft | published | archived
+  applications        JobApplication[]
 
   @@index([categoryId])
   @@index([status, publishedAt])
   @@index([status, expiresAt])
+}
+
+model JobApplication {
+  id         String   @id @default(cuid())
+  jobId      String
+  job        Job      @relation(fields: [jobId], references: [id])
+  categoryId Int
+  category   Category @relation(fields: [categoryId], references: [id])
+  createdAt  DateTime @default(now())
+
+  @@index([jobId])
+  @@index([categoryId])
+  @@index([createdAt])
 }
 
 model AnalyticsEvent {
@@ -50,6 +65,7 @@ model AnalyticsEvent {
   ip         String?
   country    String?
   deviceType String?
+  duration   Int?
   createdAt  DateTime @default(now())
 
   @@index([sessionId])

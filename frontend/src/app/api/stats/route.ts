@@ -2,6 +2,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
 function parseDateParam(s: string | null) {
   if (!s) return null;
   const d = new Date(s);
@@ -96,7 +98,6 @@ export async function GET(req: Request) {
       });
     } else {
       // month: dynamic weeks
-      // compute how many weeks this month spans:
       const year = start.getFullYear();
       const month = start.getMonth(); // 0-indexed
       const firstOfMonth = new Date(year, month, 1);
@@ -129,8 +130,6 @@ export async function GET(req: Request) {
       timeSeries = weeks.map((count, idx) => {
         // compute week start date: first cell of calendar + idx*7 days then clamp to month start
         const weekStart = new Date(year, month, 1 - firstWeekday + idx * 7);
-        // If weekStart is before month start, keep it — it's the calendar start for that week.
-        // set time to midnight
         weekStart.setHours(0, 0, 0, 0);
         return { ts: weekStart.toISOString(), count };
       });
@@ -161,8 +160,15 @@ export async function GET(req: Request) {
       cnt: d._count.deviceType,
     }));
 
-    // --- Average session seconds (placeholder) ---
-    const avgSeconds = 90;
+    // --- Real average session seconds ---
+    const durationResult: { avg: number | null }[] = await prisma.$queryRaw`
+      SELECT AVG(duration)::float as avg
+      FROM "AnalyticsEvent"
+      WHERE type = 'unload' AND duration IS NOT NULL
+      AND "createdAt" >= ${start} AND "createdAt" <= ${end}
+    `;
+    const averageSessionSeconds =
+      durationResult[0]?.avg != null ? Math.round(Number(durationResult[0].avg)) : null;
 
     // --- Live users last hour ---
     const lastHour = new Date();
@@ -171,13 +177,82 @@ export async function GET(req: Request) {
       where: { createdAt: { gte: lastHour, lte: now }, type: "pageview" },
     });
 
+    // --- Applications by category ---
+    const appsByCatRaw: { category: string; cnt: bigint }[] = await prisma.$queryRaw`
+      SELECT c.label as category, COUNT(*) as cnt
+      FROM "JobApplication" ja
+      JOIN "Category" c ON ja."categoryId" = c.id
+      WHERE ja."createdAt" >= ${start} AND ja."createdAt" <= ${end}
+      GROUP BY c.label
+      ORDER BY cnt DESC
+    `;
+    const applicationsByCategory = appsByCatRaw.map((r) => ({
+      category: r.category,
+      cnt: Number(r.cnt),
+    }));
+
+    // --- Applications by job ---
+    const appsByJobRaw: { job: string; category: string; cnt: bigint }[] = await prisma.$queryRaw`
+      SELECT j.title as job, c.label as category, COUNT(*) as cnt
+      FROM "JobApplication" ja
+      JOIN "Job" j ON ja."jobId" = j.id
+      JOIN "Category" c ON ja."categoryId" = c.id
+      WHERE ja."createdAt" >= ${start} AND ja."createdAt" <= ${end}
+      GROUP BY j.title, c.label
+      ORDER BY cnt DESC
+      LIMIT 20
+    `;
+    const applicationsByJob = appsByJobRaw.map((r) => ({
+      job: r.job,
+      category: r.category,
+      cnt: Number(r.cnt),
+    }));
+
+    // --- Total applications in range ---
+    const totalApplications = await prisma.jobApplication.count({
+      where: { createdAt: { gte: start, lte: end } },
+    });
+
+    // --- Hourly visitors (always 24 buckets, by hour of day across full range) ---
+    const hourlyRaw: { hour: number; cnt: bigint }[] = await prisma.$queryRaw`
+      SELECT EXTRACT(HOUR FROM "createdAt")::int as hour, COUNT(*) as cnt
+      FROM "AnalyticsEvent"
+      WHERE type = 'pageview'
+      AND "createdAt" >= ${start} AND "createdAt" <= ${end}
+      GROUP BY hour
+      ORDER BY hour
+    `;
+    const hourlyBuckets = new Array(24).fill(0);
+    hourlyRaw.forEach((r) => {
+      const h = Number(r.hour);
+      if (h >= 0 && h < 24) hourlyBuckets[h] = Number(r.cnt);
+    });
+    const hourlyVisitors = hourlyBuckets.map((count, h) => ({
+      hour: `${pad2(h)}:00`,
+      count,
+    }));
+
+    // --- Daily visitors (distinct calendar days with pageviews in range) ---
+    const dailyResult: { cnt: bigint }[] = await prisma.$queryRaw`
+      SELECT COUNT(DISTINCT DATE("createdAt")) as cnt
+      FROM "AnalyticsEvent"
+      WHERE type = 'pageview'
+      AND "createdAt" >= ${start} AND "createdAt" <= ${end}
+    `;
+    const dailyVisitors = Number(dailyResult[0]?.cnt ?? 0);
+
     return NextResponse.json({
       ok: true,
       timeSeries,
       categoryPct,
       deviceGroups,
-      averageSessionSeconds: avgSeconds,
+      averageSessionSeconds,
       liveCount,
+      applicationsByCategory,
+      applicationsByJob,
+      totalApplications,
+      hourlyVisitors,
+      dailyVisitors,
     });
   } catch (err) {
     console.error("stats GET error", err);

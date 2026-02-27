@@ -75,6 +75,7 @@ export async function POST(req: Request) {
       ip,
       country,
       deviceType,
+      duration: body.duration ?? null,
     };
 
     // enqueue event for background processing

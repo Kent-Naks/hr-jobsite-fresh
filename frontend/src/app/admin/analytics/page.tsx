@@ -154,6 +154,10 @@ export default function AdminAnalyticsPage(): React.JSX.Element {
   const [categoryPct, setCategoryPct] = useState<CategoryPct[]>(SAFE_EMPTY_CATS);
   const [liveCount, setLiveCount] = useState<number>(0);
   const [sampleMode, setSampleMode] = useState(false);
+  const [applicationsByCategory, setApplicationsByCategory] = useState<{ category: string; cnt: number }[]>([]);
+  const [applicationsByJob, setApplicationsByJob] = useState<{ job: string; category: string; cnt: number }[]>([]);
+  const [totalApplications, setTotalApplications] = useState(0);
+  const [hourlyVisitors, setHourlyVisitors] = useState<{ hour: string; count: number }[]>([]);
 
   // calendar states
   const [selectedMonthDate, setSelectedMonthDate] = useState<Date>(() => {
@@ -239,6 +243,10 @@ export default function AdminAnalyticsPage(): React.JSX.Element {
       setAvgSeconds(Number.isFinite(Number(avg)) ? Math.round(Number(avg)) : null);
       setCategoryPct(cats);
       setLiveCount(Number.isFinite(Number(live)) ? Number(live) : 0);
+      setApplicationsByCategory(Array.isArray(data?.applicationsByCategory) ? data.applicationsByCategory : []);
+      setApplicationsByJob(Array.isArray(data?.applicationsByJob) ? data.applicationsByJob : []);
+      setTotalApplications(Number.isFinite(Number(data?.totalApplications)) ? Number(data.totalApplications) : 0);
+      setHourlyVisitors(Array.isArray(data?.hourlyVisitors) ? data.hourlyVisitors : []);
 
       const totalVisits = Array.isArray(ts) ? ts.reduce((s, p) => s + (Number(p.count) || 0), 0) : 0;
 
@@ -268,7 +276,7 @@ export default function AdminAnalyticsPage(): React.JSX.Element {
     setSelectedDayOfMonth(new Date().getDate());
     fetchStats();
     // polling logic (kept earlier behavior)
-    const pollMs = range === "day" ? 60 * 1000 : range === "week" ? 5 * 60 * 1000 : 10 * 60 * 1000;
+    const pollMs = 600000;
     const id = setInterval(() => fetchStats(), pollMs);
 
     const now = new Date();
@@ -394,6 +402,15 @@ export default function AdminAnalyticsPage(): React.JSX.Element {
   const exportDeviceCsv = () => {
     const rows = deviceData.map((r) => ({ device: r.name, visitors: r.value }));
     downloadCsv(`devices-${range}.csv`, rows);
+  };
+  const exportApplicationsCategoryCsv = () => {
+    downloadCsv(`applications-by-category-${range}.csv`, applicationsByCategory.map((r) => ({ category: r.category, applications: r.cnt })));
+  };
+  const exportApplicationsJobCsv = () => {
+    downloadCsv(`applications-by-job-${range}.csv`, applicationsByJob.slice(0, 10).map((r) => ({ job: r.job, category: r.category, applications: r.cnt })));
+  };
+  const exportTotalApplicationsCsv = () => {
+    downloadCsv(`total-applications-${range}.csv`, [{ range, totalApplications }]);
   };
 
   const totalVisits = areaData.reduce((s, p) => s + (Number(p.value) || 0), 0);
@@ -580,7 +597,7 @@ export default function AdminAnalyticsPage(): React.JSX.Element {
       )}
 
       {/* cards (kept) */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
         <motion.div layout initial={{ opacity: 0.9, scale: 0.995 }} animate={{ opacity: 1, scale: 1 }} className="p-4 rounded-lg shadow bg-white">
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-800" title="Active unique sessions that produced events within the last 60 minutes">Live visitors (active sessions in past hour)</p>
@@ -621,6 +638,14 @@ export default function AdminAnalyticsPage(): React.JSX.Element {
           </div>
           <motion.p layout key={categoryPct.length} className="text-3xl font-semibold text-gray-900 mt-2">{loading ? "…" : categoryPct.length}</motion.p>
         </motion.div>
+
+        <motion.div layout initial={{ opacity: 0.9, scale: 0.995 }} animate={{ opacity: 1, scale: 1 }} className="p-4 rounded-lg shadow bg-white">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-800" title="Total job applications submitted in selected range">Total Applications</p>
+            <button onClick={exportTotalApplicationsCsv} className="text-xs text-gray-600 hover:text-gray-800">Export</button>
+          </div>
+          <motion.p layout key={totalApplications} className="text-3xl font-semibold text-gray-900 mt-2">{loading ? "…" : totalApplications}</motion.p>
+        </motion.div>
       </div>
 
       {/* Visits over time */}
@@ -647,16 +672,7 @@ export default function AdminAnalyticsPage(): React.JSX.Element {
                 <XAxis
                   dataKey="label"
                   tick={{ fontSize: 12, fill: "#111827" }}
-                  tickFormatter={(t: any, idx: number) => {
-                    // For day, show labels as-is
-                    if (range === "day") return t;
-                    if (range === "week") return t;
-                    // month: label "Week N" - highlight the selectedWeekIndex
-                    if (range === "month") {
-                      return t;
-                    }
-                    return t;
-                  }}
+                  tickFormatter={(t: string) => t}
                 />
                 <YAxis allowDecimals={false} tick={{ fill: "#111827" }} />
                 <Tooltip content={<AreaDedupTooltip />} />
@@ -666,6 +682,38 @@ export default function AdminAnalyticsPage(): React.JSX.Element {
             </ResponsiveContainer>
           </div>
           <p className="mt-2 text-xs text-gray-800">Live-updating chart — refreshed according to range and selected month/week/day.</p>
+        </div>
+      </section>
+
+      {/* Peak hours (time of day) */}
+      <section className="mb-6">
+        <div className="p-4 rounded-lg shadow bg-white">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Peak hours (time of day)</h2>
+          {hourlyVisitors.length === 0 && !loading ? (
+            <div className="text-sm text-gray-800">No hourly data</div>
+          ) : (
+            <div style={{ width: "100%", height: 200 }}>
+              <ResponsiveContainer>
+                <BarChart data={hourlyVisitors} margin={{ top: 8, right: 12, left: 0, bottom: 6 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                  <XAxis dataKey="hour" tick={{ fontSize: 11, fill: "#111827" }} interval={2} />
+                  <YAxis allowDecimals={false} tick={{ fill: "#111827" }} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#fff", border: "1px solid #d1d5db", borderRadius: "6px" }}
+                    labelStyle={{ color: "#000", fontWeight: 600 }}
+                    itemStyle={{ color: "#000" }}
+                    formatter={(v: number | undefined) => [v, "visitors"]}
+                  />
+                  <Bar dataKey="count" isAnimationActive>
+                    {hourlyVisitors.map((_, idx) => (
+                      <Cell key={`hr-${idx}`} fill={palette[idx % palette.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+          <p className="mt-2 text-xs text-gray-700">Aggregated hourly distribution of page views across the selected range.</p>
         </div>
       </section>
 
@@ -785,15 +833,91 @@ export default function AdminAnalyticsPage(): React.JSX.Element {
         </motion.div>
       </div>
 
+      {/* Applications charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <motion.div layout initial={{ opacity: 0.95, y: 6 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-lg shadow bg-white">
+          <div className="flex items-start justify-between mb-2">
+            <h3 className="text-sm font-medium text-gray-900">Applications by category ({range})</h3>
+            <button onClick={exportApplicationsCategoryCsv} className="px-2 py-1 text-xs rounded border text-gray-700">Export CSV</button>
+          </div>
+          {applicationsByCategory.length === 0 && !loading ? (
+            <div className="text-sm text-gray-800">No application data</div>
+          ) : (
+            <div style={{ width: "100%", height: 260 }}>
+              <ResponsiveContainer>
+                <BarChart
+                  data={applicationsByCategory}
+                  layout="vertical"
+                  margin={{ top: 10, left: 20, right: 20, bottom: 10 }}
+                  barCategoryGap="10%"
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis type="number" tick={{ fill: "#111827", fontSize: 12 }} />
+                  <YAxis dataKey="category" type="category" width={180} tick={{ fill: "#111827", fontSize: 12 }} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #d1d5db", borderRadius: "6px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
+                    labelStyle={{ color: "#000", fontWeight: 600 }}
+                    itemStyle={{ color: "#000" }}
+                    formatter={(v: number | undefined) => [v, "applications"]}
+                  />
+                  <Bar dataKey="cnt" isAnimationActive>
+                    {applicationsByCategory.map((entry, idx) => (
+                      <Cell key={`apcat-${entry.category}-${idx}`} fill={palette[idx % palette.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </motion.div>
+
+        <motion.div layout initial={{ opacity: 0.95, y: 6 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-lg shadow bg-white">
+          <div className="flex items-start justify-between mb-2">
+            <h3 className="text-sm font-medium text-gray-900">Top applied jobs ({range})</h3>
+            <button onClick={exportApplicationsJobCsv} className="px-2 py-1 text-xs rounded border text-gray-700">Export CSV</button>
+          </div>
+          {applicationsByJob.length === 0 && !loading ? (
+            <div className="text-sm text-gray-800">No application data</div>
+          ) : (
+            <div style={{ width: "100%", height: 320 }}>
+              <ResponsiveContainer>
+                <BarChart
+                  data={applicationsByJob.slice(0, 10)}
+                  layout="vertical"
+                  margin={{ top: 10, left: 20, right: 20, bottom: 10 }}
+                  barCategoryGap="10%"
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis type="number" tick={{ fill: "#111827", fontSize: 12 }} />
+                  <YAxis dataKey="job" type="category" width={200} tick={{ fill: "#111827", fontSize: 11 }} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #d1d5db", borderRadius: "6px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
+                    labelStyle={{ color: "#000", fontWeight: 600 }}
+                    itemStyle={{ color: "#000" }}
+                    formatter={(v: number | undefined, _: string | undefined, props: { payload?: { category?: string } }) => [v, `applications (${props?.payload?.category ?? ""})`]}
+                  />
+                  <Bar dataKey="cnt" isAnimationActive>
+                    {applicationsByJob.slice(0, 10).map((entry, idx) => (
+                      <Cell key={`apjob-${entry.job}-${idx}`} fill={palette[idx % palette.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </motion.div>
+      </div>
+
       <section>
         <h2 className="text-lg font-medium mb-2 text-gray-900">Notes</h2>
         <div className="p-4 rounded-lg shadow bg-white text-sm text-gray-800">
           <p>
-            The dashboard aggregates analytics events stored in your <code>AnalyticsEvent</code> table.
-            Category stats assume routes like <code>/categories/:slug</code>. The charts poll the server automatically.
+            The dashboard aggregates analytics events from the <code>AnalyticsEvent</code> table and application data from <code>JobApplication</code>.
+            Category visitor stats assume routes like <code>/categories/:slug</code>. Application stats track submissions per job and category.
+            The charts poll the server every 10 minutes for all ranges.
           </p>
           <p className="mt-2 text-xs text-gray-700">
-            Use "Load sample data" to preview UI locally. Toggle "Use live data" to go back to live stats.
+            Use &quot;Load sample data&quot; to preview UI locally. Toggle &quot;Use live data&quot; to go back to live stats.
           </p>
         </div>
       </section>
