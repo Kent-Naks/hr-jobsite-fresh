@@ -36,7 +36,7 @@ export default async function RootLayout({
   const authed = !!session && !!expected && session === expected;
 
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <head>
         <Script
           id="adsbygoogle-init"
