@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation";
 export default function Analytics() {
   const path = usePathname();
   const sidRef = useRef<string | null>(null);
+  const startTimeRef = useRef<number>(Date.now());
   const HEARTBEAT_MS = 2 * 60 * 1000; // 2 minutes
 
   // ensure sid is stable across renders
@@ -25,13 +26,16 @@ export default function Analytics() {
   const send = async (type: string) => {
     const sid = sidRef.current;
     if (!sid) return;
-    const payload = {
+    const payload: Record<string, unknown> = {
       sessionId: sid,
       type,
       path: typeof window !== "undefined" ? window.location.pathname : path || "/",
       referrer: typeof document !== "undefined" ? document.referrer || null : null,
       userAgent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
     };
+    if (type === "unload") {
+      payload.duration = Math.round((Date.now() - startTimeRef.current) / 1000);
+    }
 
     if (type === "unload" && typeof navigator !== "undefined" && (navigator as any).sendBeacon) {
       try {

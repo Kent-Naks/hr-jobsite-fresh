@@ -144,14 +144,22 @@ export default function AdminAnalyticsPage() {
       {/* ROW 2: Stat Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         {[
-          { label: "Live Visitors", value: liveVisitors },
-          { label: "Total Visits", value: totalVisits },
-          { label: "Unique Sessions", value: uniqueSessions },
-          { label: "Avg Session Time", value: formatDuration(avgSessionSeconds) },
-          { label: "Total Applications", value: totalApplications },
-        ].map(({ label, value }) => (
+          { label: "Live Visitors", value: liveVisitors, tip: "People who visited your site in the last 60 minutes" },
+          { label: "Total Visits", value: totalVisits, tip: "Total page views in the selected period. One person viewing 5 pages = 5 visits" },
+          { label: "Unique Sessions", value: uniqueSessions, tip: "Number of individual visitors (browser sessions) in the selected period" },
+          { label: "Avg Session Time", value: formatDuration(avgSessionSeconds), tip: "Average time visitors spend on your site before leaving" },
+          { label: "Total Applications", value: totalApplications, tip: "Number of job applications submitted in the selected period" },
+        ].map(({ label, value, tip }) => (
           <div key={label} className="bg-white rounded-lg p-4 shadow">
-            <p className="text-sm text-gray-600 mb-1">{label}</p>
+            <div className="flex items-center gap-1 mb-1">
+              <span className="text-sm text-gray-600">{label}</span>
+              <div className="relative group/tip cursor-help">
+                <span className="text-gray-400 text-xs">ⓘ</span>
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-48 text-xs bg-gray-800 text-white rounded p-2 hidden group-hover/tip:block z-10 pointer-events-none">
+                  {tip}
+                </div>
+              </div>
+            </div>
             <p className="text-3xl font-bold text-gray-900">
               {loading ? "…" : value}
             </p>
