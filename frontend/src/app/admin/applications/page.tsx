@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import ApplicationsChart from "./ApplicationsChart";
 
@@ -43,6 +44,9 @@ export default async function AdminApplicationsPage() {
 
   return (
     <main className="min-h-screen bg-gray-950 p-6 max-w-5xl mx-auto">
+      <Link href="/admin" className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-white mb-4">
+        ← Back to Admin
+      </Link>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-white">Admin · Applications</h1>
         <span className="text-sm text-gray-400">{applications.length} total</span>

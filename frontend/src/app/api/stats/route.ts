@@ -3,6 +3,41 @@ import { prisma } from "@/lib/prisma";
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
+// Africa/Nairobi = UTC+3, no DST ever
+const NAIROBI_OFFSET_MS = 3 * 60 * 60 * 1000;
+
+/** Returns "YYYY-MM-DD" for a Date in Africa/Nairobi time */
+function toNairobiDateStr(date: Date): string {
+  return new Date(date.getTime() + NAIROBI_OFFSET_MS).toISOString().slice(0, 10);
+}
+
+/** 0–23 hour of day in Africa/Nairobi */
+function nairobiHour(date: Date): number {
+  return (date.getUTCHours() + 3) % 24;
+}
+
+/** 0–6 (Sun=0…Sat=6) day of week for a "YYYY-MM-DD" string in Nairobi */
+function dowForDate(dateStr: string): number {
+  // Noon in Nairobi avoids any midnight edge case
+  return new Date(dateStr + "T12:00:00+03:00").getUTCDay();
+}
+
+/** Add n calendar days to a "YYYY-MM-DD" string, return new "YYYY-MM-DD" */
+function addDays(dateStr: string, days: number): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+}
+
+/** UTC Date = start of "YYYY-MM-DD" in Nairobi (00:00 EAT) */
+function nairobiMidnight(dateStr: string): Date {
+  return new Date(dateStr + "T00:00:00+03:00");
+}
+
+/** UTC Date = end of "YYYY-MM-DD" in Nairobi (23:59:59.999 EAT) */
+function nairobiEndOfDay(dateStr: string): Date {
+  return new Date(dateStr + "T23:59:59.999+03:00");
+}
+
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
@@ -10,38 +45,44 @@ export async function GET(req: Request) {
     const dateParam = url.searchParams.get("date");
 
     const now = new Date();
+    // Reference date in Nairobi — fall back to today in Nairobi if no param given
+    const dateStr = dateParam || toNairobiDateStr(now);
 
-    // Parse date param (YYYY-MM-DD)
-    let ctxDate = now;
-    if (dateParam) {
-      const d = new Date(dateParam + "T00:00:00");
-      if (!isNaN(d.getTime())) ctxDate = d;
-    }
-
-    // Compute start/end
+    // ── Compute start/end as UTC Dates respecting Nairobi day boundaries ──
     let start: Date;
     let end: Date;
+    let rangeYear: number;
+    let rangeMonth: number; // 1-based
+    let firstOfMonthDow: number; // used for monthly week bucketing
 
     if (range === "day") {
-      start = new Date(ctxDate);
-      start.setHours(0, 0, 0, 0);
-      end = new Date(ctxDate);
-      end.setHours(23, 59, 59, 999);
+      start = nairobiMidnight(dateStr);
+      end = nairobiEndOfDay(dateStr);
+      rangeYear = parseInt(dateStr.slice(0, 4));
+      rangeMonth = parseInt(dateStr.slice(5, 7));
+      firstOfMonthDow = 0; // unused for day
     } else if (range === "week") {
-      // Week starts Monday
-      const d = new Date(ctxDate);
-      const day = d.getDay(); // 0=Sun
-      const diffToMon = day === 0 ? -6 : 1 - day;
-      start = new Date(d);
-      start.setDate(d.getDate() + diffToMon);
-      start.setHours(0, 0, 0, 0);
-      end = new Date(start);
-      end.setDate(start.getDate() + 6);
-      end.setHours(23, 59, 59, 999);
+      const dow = dowForDate(dateStr);
+      const diffToMon = dow === 0 ? -6 : 1 - dow;
+      const mondayStr = addDays(dateStr, diffToMon);
+      const sundayStr = addDays(mondayStr, 6);
+      start = nairobiMidnight(mondayStr);
+      end = nairobiEndOfDay(sundayStr);
+      rangeYear = parseInt(mondayStr.slice(0, 4));
+      rangeMonth = parseInt(mondayStr.slice(5, 7));
+      firstOfMonthDow = 0; // unused for week
     } else {
       // month
-      start = new Date(ctxDate.getFullYear(), ctxDate.getMonth(), 1, 0, 0, 0, 0);
-      end = new Date(ctxDate.getFullYear(), ctxDate.getMonth() + 1, 0, 23, 59, 59, 999);
+      const y = parseInt(dateStr.slice(0, 4));
+      const mo = parseInt(dateStr.slice(5, 7));
+      const firstDayStr = `${y}-${pad2(mo)}-01`;
+      const lastDay = new Date(Date.UTC(y, mo, 0)).getUTCDate();
+      const lastDayStr = `${y}-${pad2(mo)}-${pad2(lastDay)}`;
+      start = nairobiMidnight(firstDayStr);
+      end = nairobiEndOfDay(lastDayStr);
+      rangeYear = y;
+      rangeMonth = mo;
+      firstOfMonthDow = dowForDate(firstDayStr);
     }
 
     // 1. totalVisits
@@ -57,7 +98,7 @@ export async function GET(req: Request) {
     `;
     const uniqueSessions = Number(uniqueSessionsRaw[0]?.cnt ?? 0);
 
-    // 3. liveVisitors (last 60 minutes)
+    // 3. liveVisitors (last 60 minutes, always real-time)
     const sixtyMinsAgo = new Date(now.getTime() - 60 * 60 * 1000);
     const liveVisitors = await prisma.analyticsEvent.count({
       where: { createdAt: { gte: sixtyMinsAgo }, type: "pageview" },
@@ -73,7 +114,7 @@ export async function GET(req: Request) {
     const avgSessionSeconds =
       avgRaw[0]?.avg != null ? Math.round(Number(avgRaw[0].avg)) : null;
 
-    // 5. timeSeries — fetch all pageviews in range and bucket client-side
+    // 5. timeSeries — bucket by Nairobi local time
     const tsEvents = await prisma.analyticsEvent.findMany({
       where: { createdAt: { gte: start, lte: end }, type: "pageview" },
       select: { createdAt: true },
@@ -84,15 +125,15 @@ export async function GET(req: Request) {
     if (range === "day") {
       const buckets = new Array(24).fill(0);
       tsEvents.forEach((e) => {
-        buckets[new Date(e.createdAt).getHours()]++;
+        buckets[nairobiHour(e.createdAt)]++;
       });
       timeSeries = buckets.map((count, h) => ({ label: `${pad2(h)}:00`, count }));
     } else if (range === "week") {
-      // Mon(0)..Sun(6) buckets
+      // Mon(0)…Sun(6)
       const buckets = new Array(7).fill(0);
       tsEvents.forEach((e) => {
-        const day = new Date(e.createdAt).getDay(); // 0=Sun
-        const idx = day === 0 ? 6 : day - 1;
+        const dow = new Date(e.createdAt.getTime() + NAIROBI_OFFSET_MS).getUTCDay();
+        const idx = dow === 0 ? 6 : dow - 1;
         buckets[idx]++;
       });
       timeSeries = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d, i) => ({
@@ -100,25 +141,25 @@ export async function GET(req: Request) {
         count: buckets[i],
       }));
     } else {
-      // month: weekly buckets
-      const year = start.getFullYear();
-      const month = start.getMonth();
-      const firstWeekday = new Date(year, month, 1).getDay();
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-      const numWeeks = Math.ceil((firstWeekday + daysInMonth) / 7);
+      // month: weekly buckets using Nairobi dates
+      const daysInMonth = new Date(Date.UTC(rangeYear, rangeMonth, 0)).getUTCDate();
+      const numWeeks = Math.ceil((firstOfMonthDow + daysInMonth) / 7);
       const buckets = new Array(numWeeks).fill(0);
       tsEvents.forEach((e) => {
-        const d = new Date(e.createdAt);
-        if (d.getMonth() !== month || d.getFullYear() !== year) return;
-        const idx = Math.floor((firstWeekday + d.getDate() - 1) / 7);
+        const nDate = toNairobiDateStr(e.createdAt);
+        const eYear = parseInt(nDate.slice(0, 4));
+        const eMo = parseInt(nDate.slice(5, 7));
+        const eDay = parseInt(nDate.slice(8, 10));
+        if (eYear !== rangeYear || eMo !== rangeMonth) return;
+        const idx = Math.floor((firstOfMonthDow + eDay - 1) / 7);
         if (idx >= 0 && idx < numWeeks) buckets[idx]++;
       });
       timeSeries = buckets.map((count, i) => ({ label: `Week ${i + 1}`, count }));
     }
 
-    // 6. hourlyDistribution — always 24 buckets
+    // 6. hourlyDistribution — always 24 buckets in Nairobi hours
     const hourlyRaw: { hour: number; cnt: bigint }[] = await prisma.$queryRaw`
-      SELECT EXTRACT(HOUR FROM "createdAt")::int AS hour, COUNT(*) AS cnt
+      SELECT EXTRACT(HOUR FROM "createdAt" AT TIME ZONE 'Africa/Nairobi')::int AS hour, COUNT(*) AS cnt
       FROM "AnalyticsEvent"
       WHERE type = 'pageview'
       AND "createdAt" >= ${start} AND "createdAt" <= ${end}
@@ -155,10 +196,7 @@ export async function GET(req: Request) {
       GROUP BY slug
       ORDER BY cnt DESC
     `;
-    const categoryVisits = catRaw.map((r) => ({
-      slug: r.slug,
-      count: Number(r.cnt),
-    }));
+    const categoryVisits = catRaw.map((r) => ({ slug: r.slug, count: Number(r.cnt) }));
 
     // 9. totalApplications
     const totalApplications = await prisma.jobApplication.count({
@@ -211,9 +249,7 @@ export async function GET(req: Request) {
       applicationsByJob,
     };
 
-    // Safety: throws if any BigInt leaked through
-    JSON.stringify(response);
-
+    JSON.stringify(response); // throws if BigInt leaked
     return NextResponse.json(response);
   } catch (err) {
     console.error("stats GET error", err);

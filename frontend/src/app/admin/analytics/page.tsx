@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   AreaChart,
   BarChart,
@@ -100,6 +101,9 @@ export default function AdminAnalyticsPage() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6">
+      <Link href="/admin" className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-white mb-4">
+        ← Back to Admin
+      </Link>
       <h1 className="text-2xl font-bold mb-6">Analytics</h1>
 
       {/* ROW 1: Controls */}
