@@ -468,37 +468,58 @@ function sectionsToDescription(sections: Sections): string {
     .join("\n\n");
 }
 
-// ─── Date helpers ─────────────────────────────────────────────────────────────
+// ─── Date helpers (Africa/Nairobi = UTC+3, no DST) ────────────────────────────
 
+/**
+ * Converts a stored UTC datetime to a datetime-local input value in EAT (UTC+3).
+ * If the value is already a datetime-local string without timezone info (user-typed),
+ * it is returned as-is since it's already in EAT.
+ */
 function formatForInputDateTime(v: any): string {
   if (!v) return "";
   if (typeof v === "string") {
-    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(v)) return v.slice(0, 16);
-    const d = new Date(v);
-    if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 16);
+    const s = v.trim();
+    if (!s) return "";
+    // Already a datetime-local value (no tz info) — user-typed, already EAT
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(s)) return s;
+    // Full ISO / RFC string from DB — convert UTC → EAT for display
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) {
+      return new Date(d.getTime() + 3 * 60 * 60 * 1000).toISOString().slice(0, 16);
+    }
     return "";
   }
-  if (v instanceof Date && !Number.isNaN(v.getTime())) return v.toISOString().slice(0, 16);
+  if (v instanceof Date && !isNaN(v.getTime())) {
+    return new Date(v.getTime() + 3 * 60 * 60 * 1000).toISOString().slice(0, 16);
+  }
   return "";
 }
 
+/**
+ * Converts the datetime-local input value (EAT, UTC+3) to a UTC ISO string for the API.
+ * If the value already carries timezone info (e.g. original ISO from DB), it is
+ * re-parsed as-is so an untouched field is not changed.
+ */
 function normalizeDateTimeForWire(input: any): string | null {
   if (input === null || input === undefined || input === "") return null;
   if (typeof input === "string") {
     const s = input.trim();
-    if (s === "") return null;
-    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(s)) return s;
-    const m2 = s.replace(",", "").match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})[ T](\d{1,2}):(\d{2})$/);
-    if (m2) {
-      const [, dd, mm, yyyy, HH, MM] = m2;
-      const pad = (n: string | number) => String(n).padStart(2, "0");
-      return `${yyyy}-${pad(mm)}-${pad(dd)}T${pad(HH)}:${pad(MM)}`;
+    if (!s) return null;
+    // Already a full ISO string with explicit tz (initial state, user never touched field)
+    if (s.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(s)) {
+      const d = new Date(s);
+      return isNaN(d.getTime()) ? null : d.toISOString();
     }
+    // datetime-local value typed by user — treat as EAT (UTC+3)
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(s)) {
+      const d = new Date(s + ":00+03:00");
+      return isNaN(d.getTime()) ? null : d.toISOString();
+    }
+    // Fallback
     const d = new Date(s);
-    if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 16);
-    return s;
+    return isNaN(d.getTime()) ? null : d.toISOString();
   }
-  if (input instanceof Date && !Number.isNaN(input.getTime())) return input.toISOString().slice(0, 16);
+  if (input instanceof Date && !isNaN(input.getTime())) return input.toISOString();
   return null;
 }
 
