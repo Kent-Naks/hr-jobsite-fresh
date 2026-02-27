@@ -11,6 +11,7 @@ type EventRow = {
   ip?: string | null;
   country?: string | null;
   deviceType?: string | null;
+  duration?: number | null;
 };
 
 const buffer: EventRow[] = [];
@@ -22,9 +23,9 @@ let flushing = false;
 export function enqueueEvent(row: EventRow) {
   buffer.push(row);
 
-  if (buffer.length >= FLUSH_BATCH_SIZE) {
-    flush().catch((e) => console.error("analytics flush error", e));
-  }
+  // Always attempt an immediate flush (fire-and-forget) so events are
+  // persisted on serverless platforms where the setInterval may never fire.
+  flush().catch((e) => console.error("analytics flush error", e));
 }
 
 export async function flush() {

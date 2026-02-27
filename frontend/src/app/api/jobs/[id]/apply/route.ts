@@ -137,9 +137,11 @@ export async function POST(
       const fullJob = await prisma.job.findUnique({ where: { id }, select: { title: true, categoryId: true } });
       if (fullJob) {
         await prisma.jobApplication.create({ data: { jobId: id, categoryId: fullJob.categoryId } });
+      } else {
+        console.error("[apply] jobApplication skipped — job not found for id:", id);
       }
     } catch (appErr) {
-      console.error("[apply] jobApplication record failed:", appErr);
+      console.error("[apply] jobApplication.create failed for id:", id, appErr);
     }
 
     return NextResponse.json({ ok: true });
