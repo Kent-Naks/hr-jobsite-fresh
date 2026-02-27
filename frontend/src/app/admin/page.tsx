@@ -12,7 +12,15 @@ function formatDate(d: string | null | undefined) {
   try {
     const dt = new Date(d);
     if (isNaN(dt.getTime())) return "-";
-    return dt.toLocaleString();
+    return dt.toLocaleString("en-KE", {
+      timeZone: "Africa/Nairobi",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
   } catch {
     return "-";
   }
@@ -38,7 +46,11 @@ export default async function AdminHome({
     jobs = await prisma.job.findMany({
       where: {
         ...(q ? { title: { contains: q, mode: "insensitive" } } : {}),
-        ...(status ? { status } : {}),
+        ...(status === "archived"
+          ? { OR: [{ status: "archived" }, { status: "published", expiresAt: { lt: new Date() } }] }
+          : status
+          ? { status }
+          : {}),
         ...(category
           ? { category: { label: { contains: category, mode: "insensitive" } } }
           : {}),
